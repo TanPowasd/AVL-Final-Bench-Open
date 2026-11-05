@@ -1,0 +1,10 @@
+{
+  "step_limit_s": 10.0,
+  "topk": 50,
+  "max_restarts": 3,
+  "quick_sets": [
+    "cpzh",
+    "hive",
+    "scifact"
+  ]
+}

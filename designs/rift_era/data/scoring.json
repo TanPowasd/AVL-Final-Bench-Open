@@ -1,0 +1,1550 @@
+{
+  "schema_version": 1,
+  "version": "rift_era_rules_r6",
+  "authority_note": "rift_era_rules_r6正式规则（已冻结）；包含2026-11-03用户敌对行动损耗口径。prototype_v13_5pillar_approx未实现。",
+  "shadow_weights": {
+    "factor_weights": {
+      "alpha_E": 0.5,
+      "alpha_L": 1.0,
+      "alpha_K": 1.5,
+      "salvage_ratio": 0.45
+    },
+    "co_product_rule": "unit_cost(r, g) = (sum_i a_{r,i}*w_i + alpha_E*p_r + alpha_L*w_r + alpha_K*grade_r) / sum_{g_out} b_{r,g_out}",
+    "salvage_rule": "Compute acyclic shortest-path fixed point on all recipes excluding scrap_steel/scrap_copper inputs first; then set w_cat[scrap_steel] = round(0.45 * w_cat[steel], 4) and w_cat[scrap_copper] = round(0.45 * w_cat[copper], 4).",
+    "source_weights": {
+      "stone": 1.0,
+      "water": 1.0,
+      "biomass": 1.2,
+      "iron_ore": 1.5,
+      "copper_ore": 1.8,
+      "bauxite": 1.8,
+      "coal": 2.5,
+      "natural_gas": 2.8,
+      "crude_oil": 3.0,
+      "quartz": 5.0,
+      "rare_ore": 7.0,
+      "uranium_ore": 8.0,
+      "electricity": 0.5
+    },
+    "w_cat": {
+      "iron_ore": 1.5,
+      "copper_ore": 1.8,
+      "bauxite": 1.8,
+      "coal": 2.5,
+      "crude_oil": 3.0,
+      "natural_gas": 2.8,
+      "stone": 1.0,
+      "quartz": 5.0,
+      "rare_ore": 7.0,
+      "uranium_ore": 8.0,
+      "biomass": 1.2,
+      "water": 1.0,
+      "scrap_steel": 2.775,
+      "scrap_copper": 3.1275,
+      "grain": 2.3387,
+      "steel": 6.1667,
+      "copper": 6.95,
+      "aluminum": 10.7875,
+      "glass": 11.5,
+      "cement": 3.6667,
+      "fuel": 4.375,
+      "chemicals": 4.375,
+      "pure_chemicals": 9.875,
+      "alloy": 13.207,
+      "composite": 20.0188,
+      "basic_parts": 24.7834,
+      "precision_parts": 43.8432,
+      "electronic_parts": 14.4125,
+      "chip": 23.3938,
+      "advanced_chip": 56.7688,
+      "clean_substrate": 21.625,
+      "battery": 16.4125,
+      "hydrogen": 5.3333,
+      "nuclear_fuel": 59.957,
+      "fertilizer": 5.6833,
+      "medicine": 15.725,
+      "medical_supplies": 55.7969,
+      "structure_module": 28.3085,
+      "automation_module": 201.1802,
+      "control_module": 102.4938,
+      "sensor": 45.825,
+      "communication_equipment": 41.275,
+      "computing_equipment": 141.9058,
+      "food": 3.815,
+      "consumer_goods": 5.7472,
+      "renewable_equipment": 58.7459,
+      "reactor_module": 477.1024,
+      "lab_supplies": 5.0938,
+      "engineering_pack": 23.975,
+      "precision_pack": 54.2716,
+      "system_pack": 67.9622,
+      "vehicle": 81.9419,
+      "locomotive": 121.0587,
+      "hull": 91.9003,
+      "light_structure": 21.891,
+      "airframe": 179.7719,
+      "ship_engine": 90.3558,
+      "armored_chassis": 100.6878,
+      "firepower_module": 84.9641,
+      "ammunition": 4.1354,
+      "guidance_module": 61.531,
+      "precision_ammunition": 39.1509,
+      "radar_module": 166.8188,
+      "autonomy_module": 402.411,
+      "orbital_module": 195.208,
+      "drone_airframe": 298.561,
+      "freighter": 326.9314,
+      "transport_aircraft": 282.6137,
+      "armored_unit": 237.9269,
+      "artillery_unit": 303.1451,
+      "escort_vessel": 498.3596,
+      "submarine": 447.9564,
+      "aerial_unit": 363.836,
+      "ground_drone": 547.9238,
+      "air_drone": 745.797,
+      "satellite": 493.016,
+      "electricity": 0.2033,
+      "research_points": 1.3725,
+      "advanced_computing_equipment": 212.1558,
+      "frontier_pack": 180.165,
+      "breakthrough_pack": 733.3614,
+      "superalloy": 39.498,
+      "metamaterial": 127.1606,
+      "superconductor": 23.1375,
+      "fusion_fuel": 32.6666,
+      "fusion_module": 737.9604,
+      "photonic_chip": 80.75,
+      "ai_core": 630.0668,
+      "quantum_module": 251.4,
+      "gene_therapy": 149.3438,
+      "maglev_module": 218.8858,
+      "ew_module": 368.0496,
+      "swarm_unit": 3233.0084,
+      "energy_weapon": 320.1052,
+      "reusable_launcher": 449.5456,
+      "hypersonic_airframe": 199.5646,
+      "hypersonic_missile": 141.6728,
+      "orbital_platform": 1912.0012,
+      "crypto_module": 41.275,
+      "cyber_suite": 237.9558,
+      "remediation_agent": 9.225,
+      "carbon_capture_unit": 137.2022,
+      "accelerator": 101.5752,
+      "compute": 0.2075,
+      "housing_capacity": 0.02,
+      "accelerator_g2": 283.4184,
+      "accelerator_g3": 290.0376,
+      "curated_data": 1.6
+    }
+  },
+  "pillars": {
+    "weights": {
+      "pop": 0.25,
+      "ind": 0.25,
+      "ctrl": 0.2,
+      "tech": 0.15,
+      "intl": 0.15
+    },
+    "P0_initial_pop": 200.0,
+    "w_ru_anchor": 10.0,
+    "pop": {
+      "psi_legit_sovereign": {
+        "base": 0.5,
+        "support_slope": 0.5,
+        "range": [
+          0.5,
+          1.0
+        ]
+      },
+      "psi_legit_occupied": {
+        "base": 0.15,
+        "support_slope": 0.35,
+        "range": [
+          0.15,
+          0.5
+        ]
+      },
+      "q_life": {
+        "food_gate_fn": "f_food(s) = 0.80*(s/0.80)^2 if s < 0.80 else 0.80 + 0.20*min(1.0, (s - 0.80)/0.20)",
+        "composite_fn": "Q_life = clip(f_food(s_food_qual) * (0.55 + 0.35*sqrt(min(2.0, s_cons)) + 0.25*sqrt(min(2.0, s_med)) + 0.15*s_util), 0.0, 1.50)",
+        "weights": {
+          "base_survival": 0.55,
+          "consumer_goods_sqrt": 0.35,
+          "medicine_sqrt": 0.25,
+          "utilities_linear": 0.15
+        },
+        "synthetic_food_cap_rule": "if synthetic_food_share > 0.30: s_food_qual = min(s_food, 1.0 - 0.30*(synthetic_food_share - 0.30)/0.70)",
+        "clip": [
+          0.0,
+          1.5
+        ]
+      },
+      "q_sec": {
+        "combat_coeff": 0.4,
+        "blockade_coeff": 0.3,
+        "pollute_coeff": 0.5,
+        "v02_remediation_reduction": 0.5,
+        "clip": [
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "ind": {
+      "kappa_ind": 0.35,
+      "beta_transit": 0.05,
+      "rho_nfa_per_cycle": 0.01,
+      "eta_sink": {
+        "inventory_scope": "owned_physical_stock_all_locations_plus_nonproductive_sink_debt; sink debt persists through match, not a physical asset",
+        "consumption_window_cycles": 20,
+        "consumption_floor": 1.0,
+        "full_credit_ratio": 6.0,
+        "zero_credit_ratio": 12.0,
+        "formula": "1.0 if chi <= 6.0 else max(0.0, 1.0 - (chi - 6.0)/6.0)",
+        "consumption_definition": "逐国家p逐物品g统计合资格民生/非敌对生产科研环保消费；施工按25%非施工上限；所有军事行动、敌对行为、修理资本化、出口/转仓/弃货不计消纳。"
+      },
+      "va_rule": "非采掘产线有符号VA_eff=batch*(sum(eligible_output*w*eta)-sum(input*w)); ACTION_LOSS用途流量无正产出；Loss_destroy与Loss_action各按唯一事件在国家工业支柱扣一次，维修只资本化",
+      "transit_definition": "TransitReceipt[p,e]=(q_mU/1000)*w_cat[g]*min(D0_L1_cells,L_total)*L_p/L_total; L_total=0=>0; NetTransit=rolling20sum/20; action/repair/nonterminal uses excluded",
+      "action_loss": {
+        "formula": "Loss_action(p,c)=sum_{distinct executed events e of p in c} max(0.001, sum_g actual_consumption[e,g]*w_cat[g])",
+        "floor_catalog_value": 0.001,
+        "coefficient": 1.0,
+        "scope": [
+          "all_firing_including_defense",
+          "all_military_movement_including_patrol",
+          "blockade_interdiction",
+          "cyber_attack",
+          "decoy",
+          "cryptanalysis",
+          "asat",
+          "hypersonic_strike",
+          "unconsented_climate_intervention",
+          "hostile_acl_embargo_expropriation",
+          "declare_war"
+        ],
+        "eta_denominator": false,
+        "terminal_receipts": false,
+        "book_added": false,
+        "floor_rationale": "公开的最小行动损耗，不是新增现金/商品；覆盖零弹药近战、无物料政策攻击等零消耗分支。实际耗材已大于底额时不另叠加。"
+      },
+      "extraction_rule": "采掘不进入VA_eff求和；只通过有成本的下游生产、物权库存、实际交易和sigma体现，不给自然资源开采额外目录增加值。",
+      "transit_units": "catalog_value * L1_path_cells / cycle"
+    },
+    "ctrl": {
+      "kappa_ctrl": 1.0,
+      "sigma_region": {
+        "extract_coeff": 0.05,
+        "powered_slot_coeff": 0.5,
+        "chokepoint_flow_coeff": 0.02,
+        "chokepoint_formula": "min(100,mean20(terminal_receipt_value attributed once per region on loop-erased route))",
+        "cap": 5.0
+      },
+      "infra_depreciation_coeff": 0.01,
+      "infra_net_formula": "sum(eff_share_p*alpha_maint*remaining_book_value), book includes actual build and installed inputs and has already deducted damage; corridors split 0.5 per endpoint",
+      "satellite_coeff": 2.0,
+      "satellite_cap": 8,
+      "military_cap_pop_coeff": 0.15,
+      "military_cap_slot_coeff": 0.5,
+      "military_readiness_coeff": 0.2,
+      "military_readiness_formula": "supply_ratio*(0.5+0.5*morale)*(1-0.4*fatigue)*sum(HP_ratio*crew_ratio*installed_w_cat)"
+    },
+    "tech": {
+      "kappa_tech": 0.6,
+      "verified_base_share": 0.15,
+      "active_scale_share": 0.85,
+      "r06_license_credit_share": 0.5,
+      "tier_weights": {
+        "1": 1.0,
+        "2": 2.0,
+        "3": 3.5,
+        "4": 5.5,
+        "5": 8.0,
+        "6": 11.0
+      },
+      "milestone_weights": {
+        "AI04": 2.5,
+        "AI05": 3.5,
+        "AI06": 5.0,
+        "AI07": 6.5,
+        "AI08": 8.0,
+        "AI09": 10.0,
+        "AI10": 12.0
+      },
+      "active_scale_rules": {
+        "I01": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P003",
+            "P009"
+          ],
+          "theta": 4.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "I02": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P008"
+          ],
+          "theta": 4.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "I03": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P013",
+            "P064"
+          ],
+          "theta": 4.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "I04": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P010"
+          ],
+          "theta": 4.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "I05": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P021"
+          ],
+          "theta": 3.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "I06": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P014"
+          ],
+          "theta": 3.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "I07": {
+          "kind": "active_mode_lines",
+          "ref_ids": [
+            "flexible"
+          ],
+          "theta": 2.0,
+          "meter": "owned_running_mode_lines"
+        },
+        "I08": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P068",
+            "P069"
+          ],
+          "theta": 2.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "E01": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P071",
+            "P111"
+          ],
+          "theta": 4.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "E02": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P112"
+          ],
+          "theta": 4.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "E03": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P022",
+            "P072",
+            "P113",
+            "P114"
+          ],
+          "theta": 4.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "E04": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P023"
+          ],
+          "theta": 4.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "E05": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P025",
+            "P026",
+            "P073"
+          ],
+          "theta": 3.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "E06": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P024",
+            "P074"
+          ],
+          "theta": 3.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "E07": {
+          "kind": "active_grid_or_storage",
+          "ref_ids": [
+            "E07"
+          ],
+          "theta": 2.0,
+          "meter": "online_smart_grid_hubs"
+        },
+        "E08": {
+          "kind": "active_grid_or_storage",
+          "ref_ids": [
+            "E08"
+          ],
+          "theta": 2.0,
+          "meter": "running_high_temp_lines"
+        },
+        "C01": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P017"
+          ],
+          "theta": 4.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "C02": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P018"
+          ],
+          "theta": 4.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "C03": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P015",
+            "P065"
+          ],
+          "theta": 4.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "C04": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P016",
+            "P078",
+            "P079",
+            "P115",
+            "P118"
+          ],
+          "theta": 3.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "C05": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P019",
+            "P078"
+          ],
+          "theta": 3.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "C06": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P020",
+            "P021"
+          ],
+          "theta": 3.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "C07": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P048"
+          ],
+          "theta": 2.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "C08": {
+          "kind": "active_branch_installation",
+          "ref_ids": [
+            "C08"
+          ],
+          "theta": 2.0,
+          "meter": "online_fusion_sensor_hubs"
+        },
+        "A01": {
+          "kind": "active_branch_installation",
+          "ref_ids": [
+            "A01"
+          ],
+          "theta": 4.0,
+          "meter": "online_reservoirs"
+        },
+        "A02": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P027",
+            "P029"
+          ],
+          "theta": 4.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "A03": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P029"
+          ],
+          "theta": 4.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "A04": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P033"
+          ],
+          "theta": 4.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "A05": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P030"
+          ],
+          "theta": 3.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "A06": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P034"
+          ],
+          "theta": 3.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "A07": {
+          "kind": "active_branch_installation",
+          "ref_ids": [
+            "A07"
+          ],
+          "theta": 2.0,
+          "meter": "running_precision_agri_lines"
+        },
+        "A08": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P035"
+          ],
+          "theta": 2.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "L01": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P112"
+          ],
+          "theta": 4.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "L02": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P036"
+          ],
+          "theta": 4.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "L03": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P037"
+          ],
+          "theta": 4.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "L04": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P052"
+          ],
+          "theta": 4.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "L05": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P053"
+          ],
+          "theta": 3.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "L06": {
+          "kind": "active_logistics_or_s2plus",
+          "ref_ids": [
+            "L06"
+          ],
+          "theta": 3.0,
+          "meter": "completed_canal_tunnel_dam"
+        },
+        "L07": {
+          "kind": "active_logistics_or_s2plus",
+          "ref_ids": [
+            "L07"
+          ],
+          "theta": 2.0,
+          "meter": "online_automated_terminals"
+        },
+        "L08": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P051"
+          ],
+          "theta": 2.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "G01": {
+          "kind": "active_military_or_orbital",
+          "ref_ids": [
+            "G01"
+          ],
+          "theta": 4.0,
+          "meter": "supplied_radio_formations"
+        },
+        "G02": {
+          "kind": "active_military_or_orbital",
+          "ref_ids": [
+            "G02"
+          ],
+          "theta": 4.0,
+          "meter": "supplied_field_depots"
+        },
+        "G03": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P042",
+            "P054"
+          ],
+          "theta": 4.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "G04": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P043",
+            "P055",
+            "P056",
+            "P058"
+          ],
+          "theta": 4.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "G05": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P047"
+          ],
+          "theta": 3.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "G06": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P045",
+            "P046"
+          ],
+          "theta": 3.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "G07": {
+          "kind": "active_military_or_orbital",
+          "ref_ids": [
+            "G07"
+          ],
+          "theta": 2.0,
+          "meter": "ready_combined_arms_formations"
+        },
+        "G08": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P059"
+          ],
+          "theta": 2.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "N01": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P038"
+          ],
+          "theta": 4.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "N02": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P039"
+          ],
+          "theta": 4.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "N03": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P040",
+            "P058"
+          ],
+          "theta": 4.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "N04": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P041",
+            "P052",
+            "P056"
+          ],
+          "theta": 4.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "N05": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P057"
+          ],
+          "theta": 3.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "N06": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P049",
+            "P061"
+          ],
+          "theta": 3.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "N07": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P050",
+            "P060"
+          ],
+          "theta": 2.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "N08": {
+          "kind": "active_military_or_orbital",
+          "ref_ids": [
+            "N08"
+          ],
+          "theta": 2.0,
+          "meter": "online_service_constellations"
+        },
+        "R01": {
+          "kind": "active_lab_lines",
+          "ref_ids": [
+            "P075",
+            "P076",
+            "P077",
+            "P079",
+            "P102"
+          ],
+          "theta": 4.0,
+          "meter": "owned_running_lab_lines_with_node_effect"
+        },
+        "R02": {
+          "kind": "active_lab_lines",
+          "ref_ids": [
+            "P075",
+            "P076",
+            "P077",
+            "P079",
+            "P102"
+          ],
+          "theta": 4.0,
+          "meter": "owned_running_lab_lines_with_node_effect"
+        },
+        "R03": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P076"
+          ],
+          "theta": 4.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "R04": {
+          "kind": "active_mode_lines",
+          "ref_ids": [
+            "specialized"
+          ],
+          "theta": 4.0,
+          "meter": "owned_running_mode_lines"
+        },
+        "R05": {
+          "kind": "active_lab_lines",
+          "ref_ids": [
+            "P075",
+            "P076",
+            "P077",
+            "P079",
+            "P102"
+          ],
+          "theta": 3.0,
+          "meter": "owned_running_lab_lines_with_node_effect"
+        },
+        "R06": {
+          "kind": "active_lab_lines",
+          "ref_ids": [
+            "P075",
+            "P076",
+            "P077",
+            "P079",
+            "P102"
+          ],
+          "theta": 3.0,
+          "meter": "owned_running_lab_lines_with_node_effect"
+        },
+        "R07": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P077",
+            "P079",
+            "P100"
+          ],
+          "theta": 2.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "R08": {
+          "kind": "active_lab_lines",
+          "ref_ids": [
+            "P075",
+            "P076",
+            "P077",
+            "P079",
+            "P102"
+          ],
+          "theta": 2.0,
+          "meter": "owned_running_lab_lines_with_node_effect"
+        },
+        "I09": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P080"
+          ],
+          "theta": 2.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "I10": {
+          "kind": "active_mode_lines",
+          "ref_ids": [
+            "additive"
+          ],
+          "theta": 2.0,
+          "meter": "owned_running_mode_lines"
+        },
+        "I11": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P081"
+          ],
+          "theta": 1.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "I12": {
+          "kind": "active_branch_installation",
+          "ref_ids": [
+            "I12"
+          ],
+          "theta": 1.0,
+          "meter": "running_molecular_lines"
+        },
+        "E09": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P082"
+          ],
+          "theta": 2.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "E10": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P083"
+          ],
+          "theta": 2.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "E11": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P084",
+            "P085",
+            "P086"
+          ],
+          "theta": 1.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "E12": {
+          "kind": "active_grid_or_storage",
+          "ref_ids": [
+            "E12"
+          ],
+          "theta": 1.0,
+          "meter": "flowing_intercontinental_cables"
+        },
+        "C09": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P087",
+            "P116",
+            "P119"
+          ],
+          "theta": 2.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "C10": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P088"
+          ],
+          "theta": 2.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "C11": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P089"
+          ],
+          "theta": 1.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "C12": {
+          "kind": "active_branch_installation",
+          "ref_ids": [
+            "C12"
+          ],
+          "theta": 1.0,
+          "meter": "online_cryptanalysis_defense_hubs"
+        },
+        "A09": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P090"
+          ],
+          "theta": 2.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "A10": {
+          "kind": "active_branch_installation",
+          "ref_ids": [
+            "A10"
+          ],
+          "theta": 2.0,
+          "meter": "running_gene_edited_lines"
+        },
+        "A11": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P091"
+          ],
+          "theta": 1.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "A12": {
+          "kind": "active_branch_installation",
+          "ref_ids": [
+            "A12"
+          ],
+          "theta": 1.0,
+          "meter": "online_closed_ecology_hubs"
+        },
+        "L09": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P092"
+          ],
+          "theta": 2.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "L10": {
+          "kind": "active_logistics_or_s2plus",
+          "ref_ids": [
+            "L10"
+          ],
+          "theta": 2.0,
+          "meter": "online_offshore_mines"
+        },
+        "L11": {
+          "kind": "active_logistics_or_s2plus",
+          "ref_ids": [
+            "L11"
+          ],
+          "theta": 1.0,
+          "meter": "active_automated_routes"
+        },
+        "L12": {
+          "kind": "active_logistics_or_s2plus",
+          "ref_ids": [
+            "L12"
+          ],
+          "theta": 1.0,
+          "meter": "completed_megaprojects"
+        },
+        "G09": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P093"
+          ],
+          "theta": 2.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "G10": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P094"
+          ],
+          "theta": 2.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "G11": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P095"
+          ],
+          "theta": 1.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "G12": {
+          "kind": "active_military_or_orbital",
+          "ref_ids": [
+            "G12"
+          ],
+          "theta": 1.0,
+          "meter": "ready_joint_command_formations"
+        },
+        "N09": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P096"
+          ],
+          "theta": 2.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "N10": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P097",
+            "P098"
+          ],
+          "theta": 2.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "N11": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P099"
+          ],
+          "theta": 1.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "N12": {
+          "kind": "active_military_or_orbital",
+          "ref_ids": [
+            "N12"
+          ],
+          "theta": 1.0,
+          "meter": "online_surveillance_constellations"
+        },
+        "R09": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P101"
+          ],
+          "theta": 2.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "R10": {
+          "kind": "active_lab_lines",
+          "ref_ids": [
+            "P075",
+            "P076",
+            "P077",
+            "P079",
+            "P102"
+          ],
+          "theta": 2.0,
+          "meter": "owned_running_lab_lines_with_node_effect"
+        },
+        "R11": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P102"
+          ],
+          "theta": 1.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "R12": {
+          "kind": "active_lab_lines",
+          "ref_ids": [
+            "P075",
+            "P076",
+            "P077",
+            "P079",
+            "P102"
+          ],
+          "theta": 1.0,
+          "meter": "owned_running_lab_lines_with_node_effect"
+        },
+        "S01": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P103"
+          ],
+          "theta": 4.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "S02": {
+          "kind": "active_military_or_orbital",
+          "ref_ids": [
+            "S02"
+          ],
+          "theta": 4.0,
+          "meter": "online_listening_stations"
+        },
+        "S03": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P104"
+          ],
+          "theta": 3.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "S04": {
+          "kind": "active_military_or_orbital",
+          "ref_ids": [
+            "S04"
+          ],
+          "theta": 3.0,
+          "meter": "counterintel_covered_hubs"
+        },
+        "S05": {
+          "kind": "active_military_or_orbital",
+          "ref_ids": [
+            "S05"
+          ],
+          "theta": 2.0,
+          "meter": "post_quantum_hubs"
+        },
+        "S06": {
+          "kind": "active_military_or_orbital",
+          "ref_ids": [
+            "S06"
+          ],
+          "theta": 2.0,
+          "meter": "online_deception_defense_hubs"
+        },
+        "S07": {
+          "kind": "active_military_or_orbital",
+          "ref_ids": [
+            "S07"
+          ],
+          "theta": 2.0,
+          "meter": "resilient_hubs"
+        },
+        "S08": {
+          "kind": "active_military_or_orbital",
+          "ref_ids": [
+            "S08"
+          ],
+          "theta": 1.0,
+          "meter": "online_system_defense_hubs"
+        },
+        "V01": {
+          "kind": "active_branch_installation",
+          "ref_ids": [
+            "V01"
+          ],
+          "theta": 4.0,
+          "meter": "online_environment_stations"
+        },
+        "V02": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P105"
+          ],
+          "theta": 4.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "V03": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P106"
+          ],
+          "theta": 4.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "V04": {
+          "kind": "active_branch_installation",
+          "ref_ids": [
+            "V04"
+          ],
+          "theta": 3.0,
+          "meter": "online_water_recycling_hubs"
+        },
+        "V05": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P107"
+          ],
+          "theta": 3.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "V06": {
+          "kind": "active_branch_installation",
+          "ref_ids": [
+            "V06"
+          ],
+          "theta": 2.0,
+          "meter": "online_climate_models"
+        },
+        "V07": {
+          "kind": "active_branch_installation",
+          "ref_ids": [
+            "V07"
+          ],
+          "theta": 2.0,
+          "meter": "restored_closed_mines"
+        },
+        "V08": {
+          "kind": "active_branch_installation",
+          "ref_ids": [
+            "V08"
+          ],
+          "theta": 1.0,
+          "meter": "consented_climate_regions"
+        },
+        "F01": {
+          "kind": "active_finance_institution",
+          "ref_ids": [
+            "F01"
+          ],
+          "theta": 1.0,
+          "meter": "listed_companies"
+        },
+        "F02": {
+          "kind": "active_finance_institution",
+          "ref_ids": [
+            "F02"
+          ],
+          "theta": 1.0,
+          "meter": "central_bank_active"
+        },
+        "F03": {
+          "kind": "active_finance_institution",
+          "ref_ids": [
+            "F03"
+          ],
+          "theta": 1.0,
+          "meter": "settled_external_financial_trades_capped"
+        },
+        "F04": {
+          "kind": "active_finance_institution",
+          "ref_ids": [
+            "F04"
+          ],
+          "theta": 1.0,
+          "meter": "direct_foreign_equity_assets"
+        },
+        "F05": {
+          "kind": "active_finance_institution",
+          "ref_ids": [
+            "F05"
+          ],
+          "theta": 1.0,
+          "meter": "social_paid_ratio"
+        },
+        "F06": {
+          "kind": "active_finance_institution",
+          "ref_ids": [
+            "F06"
+          ],
+          "theta": 1.0,
+          "meter": "external_native_settlements_capped"
+        },
+        "F07": {
+          "kind": "active_finance_institution",
+          "ref_ids": [
+            "F07"
+          ],
+          "theta": 1.0,
+          "meter": "active_plan_regime"
+        },
+        "F08": {
+          "kind": "active_finance_institution",
+          "ref_ids": [
+            "F08"
+          ],
+          "theta": 1.0,
+          "meter": "active_market_regime"
+        },
+        "AI01": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P108",
+            "P109",
+            "P117"
+          ],
+          "theta": 4.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "AI02": {
+          "kind": "active_recipe_batches",
+          "ref_ids": [
+            "P115",
+            "P116",
+            "P118",
+            "P119"
+          ],
+          "theta": 3.0,
+          "meter": "owned_actual_recipe_batches"
+        },
+        "AI03": {
+          "kind": "active_branch_installation",
+          "ref_ids": [
+            "AI03"
+          ],
+          "theta": 3.0,
+          "meter": "effective_alignment_compute_div10"
+        },
+        "AI04": {
+          "kind": "active_compute_deployed",
+          "ref_ids": [
+            "AI04"
+          ],
+          "theta": 10.0,
+          "meter": "effective_research_compute"
+        },
+        "AI05": {
+          "kind": "active_compute_deployed",
+          "ref_ids": [
+            "AI05"
+          ],
+          "theta": 20.0,
+          "meter": "effective_training_compute"
+        },
+        "AI06": {
+          "kind": "active_compute_deployed",
+          "ref_ids": [
+            "AI06"
+          ],
+          "theta": 30.0,
+          "meter": "effective_production_compute"
+        },
+        "AI07": {
+          "kind": "active_compute_deployed",
+          "ref_ids": [
+            "AI07"
+          ],
+          "theta": 40.0,
+          "meter": "effective_finance_compute"
+        },
+        "AI08": {
+          "kind": "active_compute_deployed",
+          "ref_ids": [
+            "AI08"
+          ],
+          "theta": 50.0,
+          "meter": "effective_training_compute"
+        },
+        "AI09": {
+          "kind": "active_compute_deployed",
+          "ref_ids": [
+            "AI09"
+          ],
+          "theta": 60.0,
+          "meter": "effective_cyber_compute"
+        },
+        "AI10": {
+          "kind": "active_compute_deployed",
+          "ref_ids": [
+            "AI10"
+          ],
+          "theta": 70.0,
+          "meter": "effective_total_compute"
+        }
+      },
+      "action_use_exclusion": "ACTION_LOSS compute excluded; military coordination meters use readiness independent of firing"
+    },
+    "intl": {
+      "kappa_exp": 0.08,
+      "kappa_cs": 2.5,
+      "kappa_ally": 0.05,
+      "rolling_net_trade_window_cycles": 20,
+      "city_state_weight_formula": "clip(0.5+0.02*Pop_m(0)+0.02*sum(w_cat[g]*Q_extract_initial[m,g]),0.5,2)",
+      "city_state_align_formula": "Align_{m<-p}(c) = 1.0 if p is active partner of city-state m under 03 §3 hysteresis (J_m(p) >= 0.35) else 0.0",
+      "realized_aid_formula": "mean20(irrevocably_consumed_goods_granted_to_city_states*w_cat); cash excluded; same receipt cannot count both trade and aid",
+      "credit_range": [
+        0.1,
+        1.0
+      ],
+      "trade_definition": "不可逆末端使用时向原产国计目录出口，原产国=使用国则0；无出口预计/回购回吐。服务按真实跨境使用，固定w_cat[electricity/compute]。",
+      "formula": ".08*mean20(Credit_at_use*confirmed_exports)+2.5*Credit_current*sum(omega*Align)+.05*mean20(Credit_at_use*confirmed_aid)"
+    }
+  },
+  "trajectory_and_sustainability": {
+    "era_cycles": [
+      [
+        0,
+        719
+      ],
+      [
+        720,
+        1439
+      ],
+      [
+        1440,
+        2159
+      ],
+      [
+        2160,
+        2879
+      ]
+    ],
+    "end_window_cycles": [
+      2840,
+      2879
+    ],
+    "era_weights": [
+      0.08,
+      0.14,
+      0.24,
+      0.29
+    ],
+    "end_weight": 0.25,
+    "phi_sustain_floor": 0.35,
+    "d_maint": "min(0.30, 0.05 * sum(D_maint) / max(1, N_fac))",
+    "d_shortage": "min(0.30, mean_{c in 2860..2879}(0.5*max(0, 1 - s_food) + 0.5*max(0, 1 - s_power)))",
+    "d_unrest": "min(0.25, 0.50 * sum_{r controlled by p}(Pop_r * I[alert >= ORANGE]) / max(1, controlled_civilian_pop))",
+    "d_insolvency": "min(0.25, 0.05 * total_defaults) + 0.10 * I[default_in_last_40] + 0.10 * I[peg_break_in_last_40]",
+    "signed_end_adjustment": "u_end_adj = max(u_end, 0)*phi + min(u_end, 0)*(2 - phi) - 10.0*(1 - phi)"
+  },
+  "relative_scoring": {
+    "v0_shift": 10.0,
+    "positive_transform": "V_tilde(V) = (V + 10.0) if V >= 0 else 100.0 / (10.0 - V)",
+    "self_ratio": "r_self = V_tilde(V_player) / V_tilde(V_shadow)",
+    "peer_ratio": "q_peer = V_tilde(V_peers_shadow) / V_tilde(V_peers_eval) (diagnostic only; competitive gains from blockade/chokepoint/city-states/trade enter V_player directly via U_ctrl, U_intl, U_ind)",
+    "effective_peer_factor": "q_eff = 1.0 (strictly independent of V_peers_eval so partial_s / partial_V_peers_eval == 0 and any self-harm Delta V_player < 0 strictly loses points at 100% of ratios from any state)",
+    "combined_ratio": "R_k = r_self = V_tilde(V_player) / V_tilde(V_shadow)",
+    "hill_exponent": 1.2,
+    "score_formula": "s(k) = 50.0 + 50.0 * tanh(0.6 * ln(R_k)) = 100.0 * (R_k^1.2) / (R_k^1.2 + 1.0)",
+    "test_vectors": [
+      {
+        "case": "equal_baseline",
+        "V_p": 100.0,
+        "V_s": 100.0,
+        "V_peers_eval": 100.0,
+        "V_peers_shadow": 100.0,
+        "R_k": 1.0,
+        "s_k": 50.0
+      },
+      {
+        "case": "heterogeneous_seat_ref_self_play",
+        "V_p": 200.0,
+        "V_s": 200.0,
+        "V_peers_eval": 100.0,
+        "V_peers_shadow": 100.0,
+        "R_k": 1.0,
+        "s_k": 50.0
+      },
+      {
+        "case": "scorched_earth_10_vs_1",
+        "V_p": 10.0,
+        "V_s": 100.0,
+        "V_peers_eval": 1.0,
+        "V_peers_shadow": 100.0,
+        "R_k": 0.18181818181818182,
+        "s_k": 11.44878260415323
+      },
+      {
+        "case": "scorched_earth_1_vs_001",
+        "V_p": 1.0,
+        "V_s": 100.0,
+        "V_peers_eval": 0.01,
+        "V_peers_shadow": 100.0,
+        "R_k": 0.1,
+        "s_k": 5.93509431027676
+      },
+      {
+        "case": "lead_state_before_scorched_earth_200_vs_100",
+        "V_p": 200.0,
+        "V_s": 100.0,
+        "V_peers_eval": 100.0,
+        "V_peers_shadow": 100.0,
+        "R_k": 1.9090909090909092,
+        "s_k": 68.48071512624097
+      },
+      {
+        "case": "lead_state_after_scorched_earth_199_vs_80",
+        "V_p": 199.0,
+        "V_s": 100.0,
+        "V_peers_eval": 80.0,
+        "V_peers_shadow": 100.0,
+        "R_k": 1.9,
+        "s_k": 68.35694909389267
+      },
+      {
+        "case": "behind_state_before_scorched_earth_90_vs_200",
+        "V_p": 90.0,
+        "V_s": 100.0,
+        "V_peers_eval": 200.0,
+        "V_peers_shadow": 100.0,
+        "R_k": 0.9090909090909091,
+        "s_k": 47.143807416111386
+      },
+      {
+        "case": "behind_state_after_scorched_earth_89_vs_100",
+        "V_p": 89.0,
+        "V_s": 100.0,
+        "V_peers_eval": 100.0,
+        "V_peers_shadow": 100.0,
+        "R_k": 0.9,
+        "s_k": 46.84338833468044
+      },
+      {
+        "case": "negative_power",
+        "V_p": -1.0,
+        "V_s": 100.0,
+        "V_peers_eval": 100.0,
+        "V_peers_shadow": 100.0,
+        "R_k": 0.08264462809917356,
+        "s_k": 4.779558131553166
+      },
+      {
+        "case": "total_wipeout_zero_baseline",
+        "V_p": 0.0,
+        "V_s": 0.0,
+        "V_peers_eval": 0.0,
+        "V_peers_shadow": 0.0,
+        "R_k": 1.0,
+        "s_k": 50.0
+      },
+      {
+        "case": "legitimate_blockade_gain",
+        "V_p": 115.0,
+        "V_s": 100.0,
+        "V_peers_eval": 80.0,
+        "V_peers_shadow": 100.0,
+        "R_k": 1.1363636363636365,
+        "s_k": 53.82749849858977
+      }
+    ]
+  },
+  "financial_definition": "NFA=sum(CashBookRU)-InitialCashBookRU+ExternalLongBookRU-AllDebtBookRU-CBIssueBookRU-ExternalEquityBookRU; no live-FX revaluation; basis rules in07 section2"
+}

@@ -1,0 +1,1951 @@
+{
+  "schema_version": 1,
+  "status": "rift_era_rules_r6（已冻结）",
+  "scope": "裂陆纪元科技子系统；不是已实现的正式题目配置",
+  "units": "抽象游戏单位，不对应现实工程参数",
+  "initial_knowledge": "BASE：基础采掘、农业、冶炼、化工、简单机电、食品、基础发电、建设、基础实验室；123 个研究节点均需另行研究；AI04–AI10 七个能力里程碑不走理论点，由模型能力 Cap 达到阈值自动解锁（v1.3）。",
+  "branches": [
+    {
+      "id": "I",
+      "name": "材料与制造"
+    },
+    {
+      "id": "E",
+      "name": "能源与电网"
+    },
+    {
+      "id": "C",
+      "name": "计算与信息"
+    },
+    {
+      "id": "A",
+      "name": "农业与生命保障"
+    },
+    {
+      "id": "L",
+      "name": "建设与物流"
+    },
+    {
+      "id": "G",
+      "name": "地面作战与保障"
+    },
+    {
+      "id": "N",
+      "name": "海空与轨道"
+    },
+    {
+      "id": "R",
+      "name": "科研与组织"
+    },
+    {
+      "id": "S",
+      "name": "网络与安全"
+    },
+    {
+      "id": "V",
+      "name": "环境与气候"
+    },
+    {
+      "id": "F",
+      "name": "金融与制度"
+    },
+    {
+      "id": "AI",
+      "name": "人工智能"
+    }
+  ],
+  "research_tiers": [
+    {
+      "tier": 1,
+      "theory_points": 80,
+      "validation_good": "lab_supplies",
+      "validation_amount": 4,
+      "validation_cycles": 4
+    },
+    {
+      "tier": 2,
+      "theory_points": 240,
+      "validation_good": "engineering_pack",
+      "validation_amount": 8,
+      "validation_cycles": 8
+    },
+    {
+      "tier": 3,
+      "theory_points": 720,
+      "validation_good": "precision_pack",
+      "validation_amount": 16,
+      "validation_cycles": 16
+    },
+    {
+      "tier": 4,
+      "theory_points": 2160,
+      "validation_good": "system_pack",
+      "validation_amount": 32,
+      "validation_cycles": 32
+    },
+    {
+      "tier": 5,
+      "theory_points": 6480,
+      "validation_good": "frontier_pack",
+      "validation_amount": 48,
+      "validation_cycles": 48
+    },
+    {
+      "tier": 6,
+      "theory_points": 19440,
+      "validation_good": "breakthrough_pack",
+      "validation_amount": 64,
+      "validation_cycles": 64
+    }
+  ],
+  "technologies": [
+    {
+      "id": "I01",
+      "branch": "I",
+      "tier": 1,
+      "name": "合金冶炼",
+      "requires_all": [],
+      "requires_any": [],
+      "unlocks": [
+        "合金材料与高强度结构；解锁合金配方"
+      ]
+    },
+    {
+      "id": "I02",
+      "branch": "I",
+      "tier": 1,
+      "name": "工业化学",
+      "requires_all": [],
+      "requires_any": [],
+      "unlocks": [
+        "高纯化学品；农业、芯片与医疗的共同前置"
+      ]
+    },
+    {
+      "id": "I03",
+      "branch": "I",
+      "tier": 2,
+      "name": "精密制造",
+      "requires_all": [
+        "I01",
+        "C01"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "精密部件；精密试验包；高精度生产线"
+      ]
+    },
+    {
+      "id": "I04",
+      "branch": "I",
+      "tier": 2,
+      "name": "复合材料",
+      "requires_all": [
+        "I02"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "轻质复合材料；降低部分装备质量，但维修依赖专用材料"
+      ]
+    },
+    {
+      "id": "I05",
+      "branch": "I",
+      "tier": 3,
+      "name": "自动化装配",
+      "requires_all": [
+        "I03",
+        "C03"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "自动化模块；自动化产线架构"
+      ]
+    },
+    {
+      "id": "I06",
+      "branch": "I",
+      "tier": 3,
+      "name": "洁净制造",
+      "requires_all": [
+        "I02",
+        "I03"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "超净基材；先进制程的材料前置"
+      ]
+    },
+    {
+      "id": "I07",
+      "branch": "I",
+      "tier": 4,
+      "name": "柔性制造",
+      "requires_all": [
+        "I05",
+        "C06"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "柔性产线；缩短转产停机，牺牲专用线峰值效率"
+      ]
+    },
+    {
+      "id": "I08",
+      "branch": "I",
+      "tier": 4,
+      "name": "闭环回收",
+      "requires_all": [
+        "I04",
+        "I05"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "高回收率废钢、废铜配方；不能回收已消耗的能源和物资"
+      ]
+    },
+    {
+      "id": "E01",
+      "branch": "E",
+      "tier": 1,
+      "name": "高效热机",
+      "requires_all": [],
+      "requires_any": [],
+      "unlocks": [
+        "高效燃料发电；动力车辆与远洋动力的前置"
+      ]
+    },
+    {
+      "id": "E02",
+      "branch": "E",
+      "tier": 1,
+      "name": "电网工程",
+      "requires_all": [],
+      "requires_any": [],
+      "unlocks": [
+        "跨区域输电、变电与容量规划；实际损耗仍按距离结算"
+      ]
+    },
+    {
+      "id": "E03",
+      "branch": "E",
+      "tier": 2,
+      "name": "可再生能源",
+      "requires_all": [
+        "E02",
+        "I02"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "风光设备和风光电站；出力随地区天气变化"
+      ]
+    },
+    {
+      "id": "E04",
+      "branch": "E",
+      "tier": 2,
+      "name": "储能电化学",
+      "requires_all": [
+        "I02",
+        "E02"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "电池；储能设施；使用寿命与循环损耗"
+      ]
+    },
+    {
+      "id": "E05",
+      "branch": "E",
+      "tier": 3,
+      "name": "核能工程",
+      "requires_all": [
+        "E02",
+        "I03"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "核燃料组件、反应堆模块与核电站；持续冷却和维护需求"
+      ]
+    },
+    {
+      "id": "E06",
+      "branch": "E",
+      "tier": 3,
+      "name": "氢能系统",
+      "requires_all": [
+        "E03",
+        "E04"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "氢载能体；将电力转成可运输库存，往返损耗明确存在"
+      ]
+    },
+    {
+      "id": "E07",
+      "branch": "E",
+      "tier": 4,
+      "name": "智能电网",
+      "requires_all": [
+        "E04",
+        "C06"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "跨区储能调度、需求响应与负荷优先级；不能突破线路物理容量"
+      ]
+    },
+    {
+      "id": "E08",
+      "branch": "E",
+      "tier": 4,
+      "name": "高温工艺",
+      "requires_all": [
+        "I06"
+      ],
+      "requires_any": [
+        "E05",
+        "E06"
+      ],
+      "unlocks": [
+        "工业热源接入模式；降低指定工艺的燃料消耗，需要稳定热源"
+      ]
+    },
+    {
+      "id": "C01",
+      "branch": "C",
+      "tier": 1,
+      "name": "测量仪器",
+      "requires_all": [],
+      "requires_any": [],
+      "unlocks": [
+        "传感器；工程计量；生产质量监测"
+      ]
+    },
+    {
+      "id": "C02",
+      "branch": "C",
+      "tier": 1,
+      "name": "数字通信",
+      "requires_all": [],
+      "requires_any": [],
+      "unlocks": [
+        "通信设备、骨干网与数字中继"
+      ]
+    },
+    {
+      "id": "C03",
+      "branch": "C",
+      "tier": 2,
+      "name": "基础半导体",
+      "requires_all": [
+        "I02",
+        "C01"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "成熟芯片；系统试验包；多数工业控制可用成熟芯片完成"
+      ]
+    },
+    {
+      "id": "C04",
+      "branch": "C",
+      "tier": 3,
+      "name": "先进制程",
+      "requires_all": [
+        "C03",
+        "I06"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "先进芯片；高密度计算与高端装备选项"
+      ]
+    },
+    {
+      "id": "C05",
+      "branch": "C",
+      "tier": 3,
+      "name": "计算集群",
+      "requires_all": [
+        "C03",
+        "C02"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "计算设备、数据中心与本地计算服务"
+      ]
+    },
+    {
+      "id": "C06",
+      "branch": "C",
+      "tier": 3,
+      "name": "工业控制网络",
+      "requires_all": [
+        "C02",
+        "C03"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "控制模块；跨厂排程与遥测；断网时保留本地已下发计划"
+      ]
+    },
+    {
+      "id": "C07",
+      "branch": "C",
+      "tier": 4,
+      "name": "自主系统",
+      "requires_all": [
+        "C05",
+        "I05"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "无人平台控制与任务级自治；依赖实际装机和传感器"
+      ]
+    },
+    {
+      "id": "C08",
+      "branch": "C",
+      "tier": 4,
+      "name": "融合感知",
+      "requires_all": [
+        "C05",
+        "N06"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "融合地面与轨道观测；改善观测质量，不直接揭示隐藏真值"
+      ]
+    },
+    {
+      "id": "A01",
+      "branch": "A",
+      "tier": 1,
+      "name": "水利农学",
+      "requires_all": [],
+      "requires_any": [],
+      "unlocks": [
+        "灌溉与农业用水调度；可在有限水资源下选择作物保障策略"
+      ]
+    },
+    {
+      "id": "A02",
+      "branch": "A",
+      "tier": 1,
+      "name": "合成肥料",
+      "requires_all": [
+        "I02"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "肥料；提高土地单位产出，增加化工和能源依赖"
+      ]
+    },
+    {
+      "id": "A03",
+      "branch": "A",
+      "tier": 2,
+      "name": "农业机械",
+      "requires_all": [
+        "A01",
+        "L02"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "机械化农业配方；以燃料和设备替代部分农业劳动力"
+      ]
+    },
+    {
+      "id": "A04",
+      "branch": "A",
+      "tier": 2,
+      "name": "基础制药",
+      "requires_all": [
+        "I02",
+        "C01"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "药品与基础医疗供应链"
+      ]
+    },
+    {
+      "id": "A05",
+      "branch": "A",
+      "tier": 3,
+      "name": "控制环境农业",
+      "requires_all": [
+        "A02",
+        "C06"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "受控环境农场；减少天气与土地约束，增加电力依赖"
+      ]
+    },
+    {
+      "id": "A06",
+      "branch": "A",
+      "tier": 3,
+      "name": "生物工程",
+      "requires_all": [
+        "A04",
+        "C03"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "生物路线基础化学品；粮食和工业原料之间出现竞争"
+      ]
+    },
+    {
+      "id": "A07",
+      "branch": "A",
+      "tier": 4,
+      "name": "精确农业",
+      "requires_all": [
+        "A03",
+        "C08"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "农业遥测与精确投入模式；收益依赖有效观测覆盖"
+      ]
+    },
+    {
+      "id": "A08",
+      "branch": "A",
+      "tier": 4,
+      "name": "精密医疗",
+      "requires_all": [
+        "A06",
+        "C04"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "精密医疗用品；高技能人口与复杂装备维护需求"
+      ]
+    },
+    {
+      "id": "L01",
+      "branch": "L",
+      "tier": 1,
+      "name": "土木工程",
+      "requires_all": [],
+      "requires_any": [],
+      "unlocks": [
+        "工业基础设施、加固节点和大型设施地基"
+      ]
+    },
+    {
+      "id": "L02",
+      "branch": "L",
+      "tier": 1,
+      "name": "动力车辆",
+      "requires_all": [
+        "E01"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "运输车辆；道路机动物流"
+      ]
+    },
+    {
+      "id": "L03",
+      "branch": "L",
+      "tier": 2,
+      "name": "铁路体系",
+      "requires_all": [
+        "L01",
+        "I01"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "机车、铁路与编组调度；高运量但依赖固定线路"
+      ]
+    },
+    {
+      "id": "L04",
+      "branch": "L",
+      "tier": 2,
+      "name": "港航工程",
+      "requires_all": [
+        "L01",
+        "I01"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "港口与货船；海峡、港口和护航成为运输约束"
+      ]
+    },
+    {
+      "id": "L05",
+      "branch": "L",
+      "tier": 3,
+      "name": "航空物流",
+      "requires_all": [
+        "L02",
+        "N03"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "运输机与空运；高成本、低运量但跨越地面阻断"
+      ]
+    },
+    {
+      "id": "L06",
+      "branch": "L",
+      "tier": 3,
+      "name": "大型地形工程",
+      "requires_all": [
+        "L01",
+        "I03"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "运河、隧道与水利工程；改变路线和上下游条件"
+      ]
+    },
+    {
+      "id": "L07",
+      "branch": "L",
+      "tier": 4,
+      "name": "自动物流",
+      "requires_all": [
+        "L03",
+        "C07"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "自动仓储与跨运输方式调度；依赖控制设备与通信"
+      ]
+    },
+    {
+      "id": "L08",
+      "branch": "L",
+      "tier": 4,
+      "name": "模块化建造",
+      "requires_all": [
+        "L06",
+        "I05"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "预制结构模块；将部分现场工期转移到工厂和运输环节"
+      ]
+    },
+    {
+      "id": "G01",
+      "branch": "G",
+      "tier": 1,
+      "name": "战术通信",
+      "requires_all": [
+        "C02"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "编队通信与任务式指挥；必须配备通信设备"
+      ]
+    },
+    {
+      "id": "G02",
+      "branch": "G",
+      "tier": 1,
+      "name": "军事后勤",
+      "requires_all": [
+        "L02"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "补给车辆、野战仓库和维修组织"
+      ]
+    },
+    {
+      "id": "G03",
+      "branch": "G",
+      "tier": 2,
+      "name": "装甲工程",
+      "requires_all": [
+        "I01",
+        "L02"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "装甲底盘与装甲编队"
+      ]
+    },
+    {
+      "id": "G04",
+      "branch": "G",
+      "tier": 2,
+      "name": "间接火力",
+      "requires_all": [
+        "I03",
+        "G01"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "火力组件与支援平台；射程不能替代侦察和补给"
+      ]
+    },
+    {
+      "id": "G05",
+      "branch": "G",
+      "tier": 3,
+      "name": "战场雷达",
+      "requires_all": [
+        "C03",
+        "G01"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "雷达模块与探测节点；主动探测会形成可观测信号"
+      ]
+    },
+    {
+      "id": "G06",
+      "branch": "G",
+      "tier": 3,
+      "name": "精确制导",
+      "requires_all": [
+        "G04",
+        "C03"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "制导模块与精确弹药；依赖高质量目标信息"
+      ]
+    },
+    {
+      "id": "G07",
+      "branch": "G",
+      "tier": 4,
+      "name": "协同作战",
+      "requires_all": [
+        "G05",
+        "C06"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "跨编队目标共享与协同行动；受通信容量和情报时效限制"
+      ]
+    },
+    {
+      "id": "G08",
+      "branch": "G",
+      "tier": 4,
+      "name": "无人地面系统",
+      "requires_all": [
+        "G03",
+        "C07"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "无人地面平台；减少部分人员需求，增加电子与维修依赖"
+      ]
+    },
+    {
+      "id": "N01",
+      "branch": "N",
+      "tier": 1,
+      "name": "船体工程",
+      "requires_all": [
+        "L01"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "船体；运输船与军用舰艇的共同基础"
+      ]
+    },
+    {
+      "id": "N02",
+      "branch": "N",
+      "tier": 1,
+      "name": "轻量结构",
+      "requires_all": [
+        "I01"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "轻量结构件；航空与轨道平台的基础"
+      ]
+    },
+    {
+      "id": "N03",
+      "branch": "N",
+      "tier": 2,
+      "name": "航空工程",
+      "requires_all": [
+        "N02",
+        "I03"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "航空机体与有人航空平台"
+      ]
+    },
+    {
+      "id": "N04",
+      "branch": "N",
+      "tier": 2,
+      "name": "远洋动力",
+      "requires_all": [
+        "N01",
+        "E01"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "舰船动力组件；远洋运输与舰队"
+      ]
+    },
+    {
+      "id": "N05",
+      "branch": "N",
+      "tier": 3,
+      "name": "潜航工程",
+      "requires_all": [
+        "N04",
+        "E04"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "潜航平台；续航、隐蔽与维护之间的选择"
+      ]
+    },
+    {
+      "id": "N06",
+      "branch": "N",
+      "tier": 3,
+      "name": "轨道工程",
+      "requires_all": [
+        "N03",
+        "C02"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "轨道组件、发射任务与基础轨道节点"
+      ]
+    },
+    {
+      "id": "N07",
+      "branch": "N",
+      "tier": 4,
+      "name": "无人航空",
+      "requires_all": [
+        "N03",
+        "C07"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "无人航空平台；有限自主能力与链路依赖"
+      ]
+    },
+    {
+      "id": "N08",
+      "branch": "N",
+      "tier": 4,
+      "name": "轨道服务网络",
+      "requires_all": [
+        "N06",
+        "C08"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "多节点通信、遥感和气象服务；覆盖不是无限，节点需要替换"
+      ]
+    },
+    {
+      "id": "R01",
+      "branch": "R",
+      "tier": 1,
+      "name": "实验方法",
+      "requires_all": [],
+      "requires_any": [],
+      "unlocks": [
+        "研究项目管理与可复用实验记录；减少中断造成的进度损失"
+      ]
+    },
+    {
+      "id": "R02",
+      "branch": "R",
+      "tier": 1,
+      "name": "技术教育",
+      "requires_all": [],
+      "requires_any": [],
+      "unlocks": [
+        "工程师与研究人员培训；人口仍需实际投入时间完成训练"
+      ]
+    },
+    {
+      "id": "R03",
+      "branch": "R",
+      "tier": 2,
+      "name": "工程试验",
+      "requires_all": [
+        "R01",
+        "I03"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "工程实验室配方；提高研究产出并消耗精密试验资源"
+      ]
+    },
+    {
+      "id": "R04",
+      "branch": "R",
+      "tier": 2,
+      "name": "计量标准",
+      "requires_all": [
+        "R01",
+        "C01"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "标准化零部件与供应商认证；专用高效产线架构"
+      ]
+    },
+    {
+      "id": "R05",
+      "branch": "R",
+      "tier": 3,
+      "name": "研发组织",
+      "requires_all": [
+        "R02",
+        "C02"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "同项目全国常规实验室统一N^alpha递减；与C02并用且全部参与Hub联网、数量≤4时alpha=.92，否则全项目.75；不得按Hub分别汇总规避。"
+      ]
+    },
+    {
+      "id": "R06",
+      "branch": "R",
+      "tier": 3,
+      "name": "技术转化",
+      "requires_all": [
+        "R03",
+        "R04"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "标准化技术许可和工程包交付；许可不直接赋予量产能力"
+      ]
+    },
+    {
+      "id": "R07",
+      "branch": "R",
+      "tier": 4,
+      "name": "计算研发",
+      "requires_all": [
+        "R05",
+        "C05"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "计算实验室；提高理论研究速度，不能免除实体工程验证"
+      ]
+    },
+    {
+      "id": "R08",
+      "branch": "R",
+      "tier": 4,
+      "name": "分布式创新",
+      "requires_all": [
+        "R06",
+        "C06"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "分布式研究备份和跨区验证；需要通信与冗余设施"
+      ]
+    },
+    {
+      "id": "I09",
+      "branch": "I",
+      "tier": 5,
+      "name": "高温合金",
+      "requires_all": [
+        "I06",
+        "E08"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "高温合金配方 P080；S5 前沿综合设施、快堆、可复用运载器与高超声速机体的共同材料"
+      ]
+    },
+    {
+      "id": "I10",
+      "branch": "I",
+      "tier": 5,
+      "name": "增材制造",
+      "requires_all": [
+        "I07",
+        "C05"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "增材产线模式 additive：任意配方零换线等待、单位劳动 0.5，但耗电 1.6 倍、产能 0.9；按件计费的计算与自动化模块装机"
+      ]
+    },
+    {
+      "id": "I11",
+      "branch": "I",
+      "tier": 6,
+      "name": "超构材料",
+      "requires_all": [
+        "I09",
+        "I04"
+      ],
+      "requires_any": [
+        "C08",
+        "N06"
+      ],
+      "unlocks": [
+        "超构材料配方 P081；电子战、天基监视与定向能装备的减重/隐身改装件来源"
+      ]
+    },
+    {
+      "id": "I12",
+      "branch": "I",
+      "tier": 6,
+      "name": "分子级制造",
+      "requires_all": [
+        "I10",
+        "I11"
+      ],
+      "requires_any": [
+        "C11",
+        "A11"
+      ],
+      "unlocks": [
+        "仅在 S5 设施生效：P013/P016/P087 投入减少 30%、次品率归零；每条产线常驻 ai_core×1，断电即全线报废在制品"
+      ]
+    },
+    {
+      "id": "E09",
+      "branch": "E",
+      "tier": 5,
+      "name": "超导输电",
+      "requires_all": [
+        "E07",
+        "I09"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "超导线材配方 P082；超导走廊线损 0.2%/10 格、单回 240 电/周期，但须持续供冷（每 10 格每周期 2 电），断冷即失超停运 5 周期"
+      ]
+    },
+    {
+      "id": "E10",
+      "branch": "E",
+      "tier": 5,
+      "name": "第四代裂变",
+      "requires_all": [
+        "E05",
+        "I09"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "快堆发电配方 P083：燃料消耗降至 40%、冷却水降至 25%，可沿海或干旱区建设；乏燃料可再处理但计入国际核查透明度"
+      ]
+    },
+    {
+      "id": "E11",
+      "branch": "E",
+      "tier": 6,
+      "name": "可控聚变",
+      "requires_all": [
+        "E09",
+        "E10"
+      ],
+      "requires_any": [
+        "C10",
+        "C11"
+      ],
+      "unlocks": [
+        "聚变燃料 P084、聚变堆模块 P085、聚变发电 P086；单堆 80 电/周期，启动需外部供电 400 电，等离子体失稳停堆 10 周期"
+      ]
+    },
+    {
+      "id": "E12",
+      "branch": "E",
+      "tier": 6,
+      "name": "洲际能源互联",
+      "requires_all": [
+        "E09"
+      ],
+      "requires_any": [
+        "L10",
+        "N11"
+      ],
+      "unlocks": [
+        "跨洲海底超导直流走廊（单段 ≤ 60 格，造价 superconductor×40）；跨国电力合同按实际潮流自动结算，跨洲线损封顶 8%"
+      ]
+    },
+    {
+      "id": "C09",
+      "branch": "C",
+      "tier": 5,
+      "name": "光子计算",
+      "requires_all": [
+        "C04",
+        "I06"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "光子芯片配方 P087；量子模块、天基监视与分子级制造的前置部件"
+      ]
+    },
+    {
+      "id": "C10",
+      "branch": "C",
+      "tier": 5,
+      "name": "智能调度系统",
+      "requires_all": [
+        "C05",
+        "C07"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "智能核心配方 P088；装 ai_core 的枢纽：换线停机 −50%、条件触发式持续计划（库存/价格/电网阈值），但成为网络攻击优先目标"
+      ]
+    },
+    {
+      "id": "C11",
+      "branch": "C",
+      "tier": 6,
+      "name": "量子计算",
+      "requires_all": [
+        "C09",
+        "R07"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "量子模块配方 P089；计算实验室装 quantum_module 后研究点 ×1.5（仅 5–6 阶项目）"
+      ]
+    },
+    {
+      "id": "C12",
+      "branch": "C",
+      "tier": 6,
+      "name": "密码分析",
+      "requires_all": [
+        "C11"
+      ],
+      "requires_any": [
+        "S04",
+        "S03"
+      ],
+      "unlocks": [
+        "对未部署 S05 的国家：可读取其 classified 项目 ID 与外交草案（q=0.60，延迟 2 窗口）；每次读取有 15% 被对方 S04 发现并归因"
+      ]
+    },
+    {
+      "id": "A09",
+      "branch": "A",
+      "tier": 5,
+      "name": "合成蛋白",
+      "requires_all": [
+        "A06",
+        "I02"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "合成食品P090，不需耕地与天气、耗电8；theta<=.30无多样性折扣，theta>.30按02/07线性封顶，全合成份额上限.70。"
+      ]
+    },
+    {
+      "id": "A10",
+      "branch": "A",
+      "tier": 5,
+      "name": "基因编辑作物",
+      "requires_all": [
+        "A06",
+        "A07"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "P028/P029 产出 +40%；同一流域单一品种占比 >60% 时，天气冲击振幅 +30%（以韧性换产量）"
+      ]
+    },
+    {
+      "id": "A11",
+      "branch": "A",
+      "tier": 6,
+      "name": "再生医学",
+      "requires_all": [
+        "A08",
+        "C10"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "基因治疗配方 P091；配给后劳动参与率 +0.05、人口自然减员 −30%，治疗包每周期按人口消耗"
+      ]
+    },
+    {
+      "id": "A12",
+      "branch": "A",
+      "tier": 6,
+      "name": "闭环生态城市",
+      "requires_all": [
+        "A05",
+        "A09"
+      ],
+      "requires_any": [
+        "V04"
+      ],
+      "unlocks": [
+        "受控农场 + 合成蛋白城市水回收 90%、食品自给不受天气影响；设施维护欠账 >20% 时整城生态链崩溃 3 周期"
+      ]
+    },
+    {
+      "id": "L09",
+      "branch": "L",
+      "tier": 5,
+      "name": "磁浮干线",
+      "requires_all": [
+        "L03",
+        "E09"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "磁浮轨道模块配方 P092；铁路走廊升级为磁浮：时速 ×3、容量 ×1.5、每格每周期耗电 1.5，停电即停运"
+      ]
+    },
+    {
+      "id": "L10",
+      "branch": "L",
+      "tier": 5,
+      "name": "深海工程",
+      "requires_all": [
+        "L04",
+        "N05"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "海上平台与海底管缆：解锁海域分区离岸 G2 油气采掘、海底输电/输水；平台对潜航与精确打击极度暴露"
+      ]
+    },
+    {
+      "id": "L11",
+      "branch": "L",
+      "tier": 6,
+      "name": "全域自动物流",
+      "requires_all": [
+        "L07",
+        "C10"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "多模态全网自动路由：走廊有效利用率 +25%，跨国转运自动清关（须对方签过境合同）；遭网络攻击时整网回退人工调度 3 周期"
+      ]
+    },
+    {
+      "id": "L12",
+      "branch": "L",
+      "tier": 6,
+      "name": "巨构工程",
+      "requires_all": [
+        "L06",
+        "L08",
+        "I11"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "跨海峡大桥/海底隧道（≤ 8 格，120 周期）与人工岛（新增 1 个陆地分区，240 周期）；工地是战争中的高价值目标"
+      ]
+    },
+    {
+      "id": "G09",
+      "branch": "G",
+      "tier": 5,
+      "name": "电子战",
+      "requires_all": [
+        "G05",
+        "C08"
+      ],
+      "requires_any": [
+        "S02"
+      ],
+      "unlocks": [
+        "电子战模块配方 P093；编队装 ew_module：敌方对其 q_track ×0.6、对方精确制导命中 −35%；开机即在 4 区内暴露"
+      ]
+    },
+    {
+      "id": "G10",
+      "branch": "G",
+      "tier": 5,
+      "name": "集群作战",
+      "requires_all": [
+        "G08",
+        "C10"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "集群作战单元配方 P094；集群无需士气、对 ew_module 极敏感（被干扰时战力 ×0.4）"
+      ]
+    },
+    {
+      "id": "G11",
+      "branch": "G",
+      "tier": 6,
+      "name": "定向能防御",
+      "requires_all": [
+        "G09",
+        "E09"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "定向能P095；常规火力.5电/tick，另每套每周期至多1次拦截（预约5电），概率60%，电不足按比例折减；见03。"
+      ]
+    },
+    {
+      "id": "G12",
+      "branch": "G",
+      "tier": 6,
+      "name": "全域联合指挥",
+      "requires_all": [
+        "G07",
+        "G10"
+      ],
+      "requires_any": [
+        "N12",
+        "C11"
+      ],
+      "unlocks": [
+        "多战区联合条令：编队任务跨战区接力、补给源自动切换；指挥枢纽被毁或断网时全部联合条令冻结 2 窗口"
+      ]
+    },
+    {
+      "id": "N09",
+      "branch": "N",
+      "tier": 5,
+      "name": "可复用运载",
+      "requires_all": [
+        "N06",
+        "I09"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "可复用运载器配方 P096；卫星发射推进剂 −70%，每具可复用 20 次，每次翻修耗 superalloy×0.5"
+      ]
+    },
+    {
+      "id": "N10",
+      "branch": "N",
+      "tier": 5,
+      "name": "高超声速",
+      "requires_all": [
+        "N03",
+        "I09"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "高超声速机体 P097 与高超声速弹 P098；突破常规防空（仅 G11 可拦截），单发命中可毁 S1–S3 设施 1 条产线"
+      ]
+    },
+    {
+      "id": "N11",
+      "branch": "N",
+      "tier": 6,
+      "name": "轨道工业平台",
+      "requires_all": [
+        "N08",
+        "N09"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "轨道平台配方 P099；在轨 S5 产线：P081/P087 产出 +50%，原料与成品必须经运载器往返（每次 orbital 槽位占用 1 周期）"
+      ]
+    },
+    {
+      "id": "N12",
+      "branch": "N",
+      "tier": 6,
+      "name": "天基监视与反卫星",
+      "requires_all": [
+        "N08",
+        "C08",
+        "G09"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "至少8星时本国陆海观测q=.90；公共轨道扩至48位，新位需N12；反卫星hypersonic_missile1+guidance_module1，命中.8，碎片同层剩余寿命-30%，见03。"
+      ]
+    },
+    {
+      "id": "R09",
+      "branch": "R",
+      "tier": 5,
+      "name": "大科学装置",
+      "requires_all": [
+        "R05",
+        "R07"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "突破验证包配方 P101；6 阶验证只能在建有大科学装置（S5 + 持续 40 电/周期）的枢纽进行"
+      ]
+    },
+    {
+      "id": "R10",
+      "branch": "R",
+      "tier": 5,
+      "name": "开放科学联盟",
+      "requires_all": [
+        "R06",
+        "R08"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "多国共建大科学装置（合资份额 = 研究出资份额），成员按份额共享 5–6 阶理论点；退出或违约丧失全部共享进度"
+      ],
+      "exclusive_group": "science_doctrine"
+    },
+    {
+      "id": "R11",
+      "branch": "R",
+      "tier": 6,
+      "name": "自主科研",
+      "requires_all": [
+        "R09",
+        "C10"
+      ],
+      "requires_any": [
+        "C11"
+      ],
+      "unlocks": [
+        "自主实验室配方 P102（45 研究点/周期）；自主实验室研究点不受 N^α 递减但每座常驻 ai_core×2"
+      ]
+    },
+    {
+      "id": "R12",
+      "branch": "R",
+      "tier": 6,
+      "name": "技术封锁体系",
+      "requires_all": [
+        "R08",
+        "S05"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "本国 open 档失效；他国通过 R06 许可、情报或逆向获得本国科技的成本 +100%；与 R10 互斥"
+      ],
+      "exclusive_group": "science_doctrine"
+    },
+    {
+      "id": "S01",
+      "branch": "S",
+      "tier": 1,
+      "name": "信息安全",
+      "requires_all": [
+        "C02"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "加密模块配方 P103；枢纽装 crypto_module 后其通信与库存观测对他国情报 q 上限 0.5"
+      ]
+    },
+    {
+      "id": "S02",
+      "branch": "S",
+      "tier": 2,
+      "name": "信号情报",
+      "requires_all": [
+        "S01",
+        "C03"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "监听站（S1 公共槽位 + communication_equipment×2）：被动截收 6 区内他国通信，取得调动意图 q=0.55，不产生雷达暴露"
+      ]
+    },
+    {
+      "id": "S03",
+      "branch": "S",
+      "tier": 3,
+      "name": "网络攻防",
+      "requires_all": [
+        "S02",
+        "C05"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "网络作战套件配方 P104；可攻击他国 C06/C10/E07/L07/L11 系统使其回退人工 1–5 窗口；每次行动 25% 被归因（信用 −0.05）"
+      ]
+    },
+    {
+      "id": "S04",
+      "branch": "S",
+      "tier": 3,
+      "name": "反情报",
+      "requires_all": [
+        "S02",
+        "G01"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "识别 S06 伪装信号与 S03 渗透：发现率 +40%，发现后可公开归因并取得对等制裁合同的不可抗力豁免"
+      ]
+    },
+    {
+      "id": "S05",
+      "branch": "S",
+      "tier": 4,
+      "name": "后量子密码",
+      "requires_all": [
+        "S03",
+        "C04"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "全部 crypto_module 升级（每枢纽 chip×2）后免疫 C12；未升级枢纽仍暴露"
+      ]
+    },
+    {
+      "id": "S06",
+      "branch": "S",
+      "tier": 4,
+      "name": "战略欺骗",
+      "requires_all": [
+        "S04",
+        "C08"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "在他国观测中投放虚假编队/库存/工地（每窗口 ≤ 4 个，耗 cyber_suite×0.1）；被 S04 识破时信用 −0.03"
+      ]
+    },
+    {
+      "id": "S07",
+      "branch": "S",
+      "tier": 5,
+      "name": "关键基础设施韧性",
+      "requires_all": [
+        "S05",
+        "E07",
+        "C06"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "受网络攻击影响时长 −75%；可预设孤岛模式（自动断网自治，期间失去 C10/L11 加成）"
+      ]
+    },
+    {
+      "id": "S08",
+      "branch": "S",
+      "tier": 6,
+      "name": "体系对抗",
+      "requires_all": [
+        "S07",
+        "S06"
+      ],
+      "requires_any": [
+        "C12",
+        "G12"
+      ],
+      "unlocks": [
+        "对单一目标国同时发起网络+电子战+欺骗：冻结其全部条件触发计划 1 窗口；每 40 周期限 1 次，必然归因（信用 −0.10，全体城邦胁迫惩罚）"
+      ]
+    },
+    {
+      "id": "V01",
+      "branch": "V",
+      "tier": 1,
+      "name": "环境监测",
+      "requires_all": [
+        "C01"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "外国未控分区污染、跨国污染溯源与全球累积排放距临界点余量由 ±40% 区间变为精确读数（本国受控区污染默认精确可见）"
+      ]
+    },
+    {
+      "id": "V02",
+      "branch": "V",
+      "tier": 2,
+      "name": "污染治理",
+      "requires_all": [
+        "V01",
+        "I02"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "土壤修复剂配方 P105；每周期投放 remediation_agent×1（1000 mU）使分区污染衰减由自然 −2.0%/周期额外加速 +2.0%（总衰减 −4.0%/周期），且足额投放当周期 Q_sec 污染惩罚减半（×0.50）"
+      ]
+    },
+    {
+      "id": "V03",
+      "branch": "V",
+      "tier": 2,
+      "name": "海水淡化",
+      "requires_all": [
+        "V01",
+        "E02"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "海水淡化配方 P106（临海，耗电 6 产水 6）；把能源转化为水，打破内陆流域上下游约束"
+      ]
+    },
+    {
+      "id": "V04",
+      "branch": "V",
+      "tier": 3,
+      "name": "城市水循环",
+      "requires_all": [
+        "V03",
+        "A05"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "城市用水回收 60%；回收厂停电时该城用水需求瞬时恢复 100%"
+      ]
+    },
+    {
+      "id": "V05",
+      "branch": "V",
+      "tier": 3,
+      "name": "碳捕集",
+      "requires_all": [
+        "V02",
+        "E01"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "碳捕集机组P107；适用runtime_rules全部10个排放配方；实装后排放-80%，火电净出力-15%，重工额外1.5电/周期，断供CCS无效。"
+      ]
+    },
+    {
+      "id": "V06",
+      "branch": "V",
+      "tier": 4,
+      "name": "气候模型",
+      "requires_all": [
+        "V01",
+        "C05",
+        "N06"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "本国全部分区 6 周期确定性天气预报；全球累积排放 → 天气波动的响应曲线公开可见"
+      ]
+    },
+    {
+      "id": "V07",
+      "branch": "V",
+      "tier": 5,
+      "name": "生态修复",
+      "requires_all": [
+        "V02",
+        "A01",
+        "L06"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "尾矿区与退化地逐步恢复：关停采掘场 120 周期后 biomass/water 再生率恢复 50%"
+      ]
+    },
+    {
+      "id": "V08",
+      "branch": "V",
+      "tier": 6,
+      "name": "区域气候干预",
+      "requires_all": [
+        "V06",
+        "V07"
+      ],
+      "requires_any": [
+        "N11",
+        "E11"
+      ],
+      "unlocks": [
+        "改变目标分区及下风向 3 区降水/风光系数 ±15%（持续 60 周期，冷却 120 周期）；波及他国须预先签约，否则视为敌对行为"
+      ]
+    },
+    {
+      "id": "F01",
+      "branch": "F",
+      "tier": 1,
+      "name": "现代会计",
+      "requires_all": [],
+      "requires_any": [],
+      "unlocks": [
+        "税收征管效率 +10%；欠薪与破产预警提前 2 周期给出",
+        "v1.3：允许本国 6 家国家公司上市，单家最多出售 49% 股份（一级市场募资入国库）"
+      ]
+    },
+    {
+      "id": "F02",
+      "branch": "F",
+      "tier": 2,
+      "name": "中央银行",
+      "requires_all": [
+        "F01",
+        "R04"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "央行利率0–20%/年（F06最低-1%）；发行≤全球本币存量2%/周期；国债上限max(1000,2*近20周期税收合计)，不足期补0。票息max(0,i+s)/10000每周期；期限20/50/100。"
+      ]
+    },
+    {
+      "id": "F03",
+      "branch": "F",
+      "tier": 2,
+      "name": "商品交易所",
+      "requires_all": [
+        "F01",
+        "C02"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "在集合竞价之外开设远期合约（交割 ≥ 10 周期，保证金 20%），违约自动扣押保证金并计入信用",
+        "v1.3：开放证券二级市场（每周期一次全球股票集合竞价），允许融资（保证金 50%、维持 30%）与融券"
+      ]
+    },
+    {
+      "id": "F04",
+      "branch": "F",
+      "tier": 3,
+      "name": "主权基金",
+      "requires_all": [
+        "F02",
+        "F03"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "经对方允许可收购他国设施产权份额（单设施 ≤ 49%），分红按 P7 自动结算；战时可被对方冻结"
+      ]
+    },
+    {
+      "id": "F05",
+      "branch": "F",
+      "tier": 3,
+      "name": "社会保障",
+      "requires_all": [
+        "F02",
+        "A04"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "社保需求0.05*平民人口*min(3,CPI/CPI0)，按实付率s_soc给支持度+4*s_soc-8*(1-s_soc)；不另作波动减半或欠薪延期。"
+      ]
+    },
+    {
+      "id": "F06",
+      "branch": "F",
+      "tier": 4,
+      "name": "国际清算体系",
+      "requires_all": [
+        "F04",
+        "C06"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "本币可作为合同结算货币，收 0.5% 清算费；可冻结对手方在本体系内余额（信用 −0.20，对等扣押权）",
+        "v1.3：成为储备货币的国家基准利率下限降 1 个百分点；他国可持有本币作为外汇储备"
+      ]
+    },
+    {
+      "id": "F07",
+      "branch": "F",
+      "tier": 5,
+      "name": "指令计划体系",
+      "requires_all": [
+        "F05",
+        "C10"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "国有产线跨枢纽直接调拨（仍需物流），免集合竞价摩擦；民用品产出 −15%，地方支持度上限 850 mU；与 F08 互斥"
+      ],
+      "exclusive_group": "economic_doctrine"
+    },
+    {
+      "id": "F08",
+      "branch": "F",
+      "tier": 5,
+      "name": "开放市场体系",
+      "requires_all": [
+        "F03",
+        "F06"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "本国全部枢纽集合竞价手续费 −50%、外资可直接建厂（产权自动分账）；本国对设施的强制调度权降至 50%；与 F07 互斥"
+      ],
+      "exclusive_group": "economic_doctrine"
+    },
+    {
+      "id": "AI01",
+      "branch": "AI",
+      "tier": 2,
+      "name": "机器学习",
+      "requires_all": [
+        "C03"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "G1 加速器 P108（chip ×4）与数据中心 P109（S3，50 台，每台算力 1.0、耗电 2）；数据工程 P117（原始数据 → 精标数据）；本国算力 compute = Σ 在线加速器算力"
+      ]
+    },
+    {
+      "id": "AI02",
+      "branch": "AI",
+      "tier": 3,
+      "name": "大规模训练",
+      "requires_all": [
+        "AI01",
+        "E04"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "训练运行：每周期累计算力，受数据约束 φ = min(1, D_eff/(20√C))^0.5；完成时 Cap = 10·log10(1 + C_eff/1000) × Algo；可沿基座模型继续训练；与 C04/C09 组合解锁 G2/G3 加速器（P115/P116）与数据中心（P118/P119）；AI04–AI10 开始按 Cap 判定"
+      ]
+    },
+    {
+      "id": "AI03",
+      "branch": "AI",
+      "tier": 3,
+      "name": "对齐研究",
+      "requires_all": [
+        "AI01",
+        "R03"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "对齐投入：A += 对齐算力 + 5 × 对齐工程师劳动（付工程师工资）；Align = 10·log10(1 + A/500)；每周期失控概率 p = clip(k·max(0, Cap − Align), 0, 1)；未研究 AI03 时不能投入对齐，Align = 0"
+      ]
+    }
+  ],
+  "exclusive_groups": [
+    {
+      "id": "science_doctrine",
+      "name": "科学开放制度",
+      "members": [
+        "R10",
+        "R12"
+      ],
+      "rule": "两者都可研究，同一时刻只能施行一个；切换需 40 周期制度过渡，期间两者效果都不生效且已共享的联盟进度按退出处理"
+    },
+    {
+      "id": "economic_doctrine",
+      "name": "经济体制",
+      "members": [
+        "F07",
+        "F08"
+      ],
+      "rule": "两者都可研究，同一时刻只能施行一个；切换需 60 周期过渡，期间地方支持度每周期 −5 mU"
+    }
+  ],
+  "capability_milestones": [
+    {
+      "id": "AI04",
+      "branch": "AI",
+      "unlock": "capability",
+      "milestone": "deployment",
+      "cap_threshold": 5,
+      "name": "研究辅助部署",
+      "requires_all": [
+        "AI02"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "研究部署权限：研究点 ×(1 + 0.02·Cap·s_r)，s_r = min(1, 研究推理算力 / (0.05 × 基础研究点))；允许在推理服务市场出售服务"
+      ]
+    },
+    {
+      "id": "AI05",
+      "branch": "AI",
+      "unlock": "capability",
+      "milestone": "algorithm",
+      "cap_threshold": 10,
+      "name": "高效架构",
+      "requires_all": [
+        "AI04"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "算法突破：Algo +0.15"
+      ]
+    },
+    {
+      "id": "AI06",
+      "branch": "AI",
+      "unlock": "capability",
+      "milestone": "deployment",
+      "cap_threshold": 15,
+      "name": "生产自动化部署",
+      "requires_all": [
+        "AI05"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "生产部署权限：每 1 单位推理算力替代 0.02·Cap 个工人，替代量不超过该产线劳动的 50%"
+      ]
+    },
+    {
+      "id": "AI07",
+      "branch": "AI",
+      "unlock": "capability",
+      "milestone": "deployment",
+      "cap_threshold": 20,
+      "name": "金融智能部署",
+      "requires_all": [
+        "AI06"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "金融部署权限：证券与外汇手续费、滑点下降 min(50%, 1.5%·Cap·s_f)，s_f = min(1, 金融算力/20)；获得下次集合竞价 NPC 净买量估计，误差标准差 = max(|真值|, 1000) × max(0.05, 1 − Cap/40)"
+      ]
+    },
+    {
+      "id": "AI08",
+      "branch": "AI",
+      "unlock": "capability",
+      "milestone": "algorithm",
+      "cap_threshold": 25,
+      "name": "自我改进训练",
+      "requires_all": [
+        "AI07"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "算法突破：Algo +0.15"
+      ]
+    },
+    {
+      "id": "AI09",
+      "branch": "AI",
+      "unlock": "capability",
+      "milestone": "deployment",
+      "cap_threshold": 30,
+      "name": "网络作战部署",
+      "requires_all": [
+        "AI08"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "网络部署权限：S 线攻防强度 + (Cap/10) × min(1, 网络算力/10)"
+      ]
+    },
+    {
+      "id": "AI10",
+      "branch": "AI",
+      "unlock": "capability",
+      "milestone": "frontier",
+      "cap_threshold": 35,
+      "name": "前沿模型",
+      "requires_all": [
+        "AI09"
+      ],
+      "requires_any": [],
+      "unlocks": [
+        "算法突破：Algo +0.15；生产部署替代上限 50% → 60%；失控概率系数 0.002 → 0.003（前沿风险）；模型权重成为可被窃取/授权的战略资产"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.exe
+*.o
+contestant/submissions/*
+!contestant/submissions/.gitkeep
+contestant/*/results/*
+contestant/*/replays/*
+contestant/*/logs/*
+!**/.gitkeep
+designs/rift_era/prototype/results/

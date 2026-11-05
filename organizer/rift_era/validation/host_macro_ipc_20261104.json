@@ -1,0 +1,9 @@
+{
+  "scope": "read_only_host_preflight_and_private_pipe_probe",
+  "full_sandbox_accepted": false,
+  "cgroup_path": "/sys/fs/cgroup/ws",
+  "delegation_preflight": false,
+  "delegation_error": "delegated root must enable cpu, memory and pids controllers",
+  "requested_input_capacity_bytes": 536870912,
+  "input_pipe_error": "ENOMEM"
+}

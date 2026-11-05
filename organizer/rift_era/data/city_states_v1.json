@@ -1,0 +1,29 @@
+{
+  "version": "rift_city_state_economy_v2",
+  "status": "implementation candidate; full-world acceptance pending",
+  "population_units": [10, 20],
+  "population_draw": "world.draw(seed, attempt, city_population, city_id, 10, 20)",
+  "deposits": "terrain-specific declared geological candidates; no random mineral draw",
+  "terrain_minerals": {
+    "plain": ["stone", "natural_gas"],
+    "hill": ["coal", "iron_ore"],
+    "forest": ["coal", "copper_ore"],
+    "desert": ["crude_oil", "quartz"],
+    "mountain": ["rare_ore", "uranium_ore"]
+  },
+  "initial_generator": "BASE P070 in one fully embodied S1 plant; consumes actual coal/water and wages",
+  "initial_power_buffer_units": {"coal": 30, "water": 30, "basic_parts": 2, "cement": 1},
+  "power_buffer_rule": "declared one-time initial endowment, thirty coal/water supplies fifteen full-load cycles; operating purchases require actual RU and local supply",
+  "initial_housing_capacity_units": 100,
+  "initial_water_sites": 1,
+  "initial_mine_sites": 2,
+  "initial_stock": "none; no unprovided safety inventory",
+  "population_skills": "general_worker only; active labor share 0.65",
+  "resident_buy_limit_ru": "10*w_cat; local stock only; food, consumer_goods, medicine, water order",
+  "resident_buy_cap": "one standard basket per cycle",
+  "mineral_sale_cap": "one G1 cycle output per site, less actual twenty-cycle self-use reserve",
+  "partner_proposal": "city_state_treaty registers a candidate; funded terms commit only at four-cycle selection",
+  "resource_jv": "one deterministic city mine; twenty percent of full G1 original materials and 200 RU, escrowed at proposal; prior direct shares survive expiry",
+  "protection": "protect/threat inputs from actual surviving ground and sea units in city or adjacent regions",
+  "city_population": "existing population.grow formula with actual city basket and housing health; no population cap"
+}

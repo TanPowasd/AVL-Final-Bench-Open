@@ -1,0 +1,23 @@
+{
+  "format": "afb-contestant-kit/2",
+  "submission": "agents/submissions/my_agent.py",
+  "unified_submission": "../submissions/backbone.py",
+  "files": {
+    "README.md": "73de9bf461a3445361168d1a51ff46466564a394c84beec96f9c1bab37d7e0cf",
+    "agents/baselines/blank.py": "cbe1527a84d6d01a5cfbd278a8295687201dca3238eb7fd52ce55f36519a45da",
+    "agents/baselines/greedy.py": "d4a945f1cd5466c0aae9527030b07bd8fad9adf2e73dfe9cbffb4fc9de2530f9",
+    "agents/baselines/shortest.py": "2796f9288cfd160c158ea99a5c7763800beec0de0f8bf667496aa6dc2313077c",
+    "agents/starter.py": "b93dd58a9d839dd887a8c35ac206df8ece3423e9f9b147650830dc616a80259e",
+    "agents/submissions/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "config/format.json": "3c05950633edf55eea1a8460b857416160784e0e40b38a54c543971521faa447",
+    "config/workspace.json": "9cf4ab89de1894470affdf88a76c64adc0bb0f95a07d131fe986f271c8b47963",
+    "engine/engine.py": "9c76b219ab81ab02d08ad694aec829e5da798e7330d8ee1d820edc8f98815b46",
+    "engine/mapgen.py": "3679a65ab0ff94c4891d18559a2fbf4f6ff0005d98efcedb467f3337ddaa6c07",
+    "engine/policy.py": "cacb4bc392c90802255f348faba5ee4186099ff82f85c0b4ee5eb0197e56ab71",
+    "logs/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "replays/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "results/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scripts/run_match.py": "73352a5696e7f78745ec2e9c5050a726ad68f74656ee5c79302ab46d90136719",
+    "scripts/spar.py": "153cb15deb976d8b55ddb684bf1d8efc45d946404990dd022bb06f7bca069433"
+  }
+}

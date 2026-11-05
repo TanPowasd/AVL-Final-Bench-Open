@@ -1,0 +1,27 @@
+{
+  "scope": "component_and_local_integration_regression",
+  "full_rules_accepted": false,
+  "full_match_tests_executed": false,
+  "official": false,
+  "started_utc": "2026-11-04T12:56:37.317368+00:00",
+  "elapsed_seconds": 278.15227871900424,
+  "engine_hash_before": "0862dd983e68f67442f55eb70ba318c06606dcb3294fd2b82fbf029b4756b787",
+  "engine_hash_after": "0862dd983e68f67442f55eb70ba318c06606dcb3294fd2b82fbf029b4756b787",
+  "tests_hash_before": "66ed1bb427424035ff43f2f1b2776a8382853c0b01906ededfedf813795515c1",
+  "tests_hash_after": "66ed1bb427424035ff43f2f1b2776a8382853c0b01906ededfedf813795515c1",
+  "rules_hash": "4527218afd4b2eddc4783d408c6162e156d8d1734cb52f55322f444f7c549716",
+  "runtime": {
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+    "implementation": "CPython",
+    "architecture": "x86_64",
+    "platform": "Linux-6.1.176-x86_64-with-glibc2.39",
+    "libc": "glibc:2.39"
+  },
+  "tests_run": 206,
+  "failures": 1,
+  "errors": 0,
+  "skipped": 0,
+  "source_unchanged": true,
+  "passed": false,
+  "output": ".....................................................................F........................................................................................................................................\n======================================================================\nFAIL: test_all_seats_receive_filtered_initial_state_and_replay_reexecutes (test_driver.MatchDriverTests.test_all_seats_receive_filtered_initial_state_and_replay_reexecutes)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"<repo>/organizer/rift_era/tests/test_driver.py\", line 63, in test_all_seats_receive_filtered_initial_state_and_replay_reexecutes\n    self.assertFalse(any(report['faults'].values()))\nAssertionError: True is not false\n\n----------------------------------------------------------------------\nRan 206 tests in 278.051s\n\nFAILED (failures=1)\n"
+}

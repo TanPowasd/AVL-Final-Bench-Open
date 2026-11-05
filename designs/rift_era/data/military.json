@@ -1,0 +1,276 @@
+{
+  "schema_version": 1,
+  "version": "rift_era_rules_r6",
+  "domain_channel": {
+    "Land": "ground",
+    "Air": "aa",
+    "Sea-Surface": "sea",
+    "Sea-Sub": "asw"
+  },
+  "units": {
+    "infantry": {
+      "domain": "Land",
+      "recipe_id": null,
+      "installed": {
+        "ammunition": 2
+      },
+      "crew": 1,
+      "hp": 100,
+      "firepower": {
+        "ground": 18,
+        "aa": 6,
+        "sea": 2,
+        "asw": 0
+      },
+      "armor": 10,
+      "hops_per_cycle": 1,
+      "range_hops": 0,
+      "combat_tick": {
+        "ammunition": 0.5,
+        "fuel": 0,
+        "battery": 0
+      },
+      "can_melee": true
+    },
+    "motorized": {
+      "domain": "Land",
+      "recipe_id": "P036",
+      "installed": {
+        "vehicle": 1
+      },
+      "crew": 2,
+      "hp": 120,
+      "firepower": {
+        "ground": 26,
+        "aa": 10,
+        "sea": 4,
+        "asw": 0
+      },
+      "armor": 22,
+      "hops_per_cycle": 3,
+      "range_hops": 0,
+      "combat_tick": {
+        "ammunition": 0.8,
+        "fuel": 0.6,
+        "battery": 0
+      },
+      "can_melee": true
+    },
+    "armored": {
+      "domain": "Land",
+      "recipe_id": "P054",
+      "installed": {
+        "armored_unit": 1
+      },
+      "crew": 2,
+      "hp": 180,
+      "firepower": {
+        "ground": 48,
+        "aa": 8,
+        "sea": 8,
+        "asw": 0
+      },
+      "armor": 55,
+      "hops_per_cycle": 2,
+      "range_hops": 0,
+      "combat_tick": {
+        "ammunition": 1.2,
+        "fuel": 1.2,
+        "battery": 0
+      },
+      "can_melee": true
+    },
+    "artillery": {
+      "domain": "Land",
+      "recipe_id": "P055",
+      "installed": {
+        "artillery_unit": 1
+      },
+      "crew": 2,
+      "hp": 90,
+      "firepower": {
+        "ground": 56,
+        "aa": 22,
+        "sea": 28,
+        "asw": 0
+      },
+      "armor": 12,
+      "hops_per_cycle": 1,
+      "range_hops": 1,
+      "combat_tick": {
+        "ammunition": 2,
+        "fuel": 0.6,
+        "battery": 0
+      },
+      "can_melee": false
+    },
+    "ground_drone": {
+      "domain": "Land",
+      "recipe_id": "P059",
+      "installed": {
+        "ground_drone": 1
+      },
+      "crew": 0.2,
+      "hp": 85,
+      "firepower": {
+        "ground": 32,
+        "aa": 12,
+        "sea": 4,
+        "asw": 0
+      },
+      "armor": 20,
+      "hops_per_cycle": 2,
+      "range_hops": 0,
+      "combat_tick": {
+        "ammunition": 0.8,
+        "fuel": 0,
+        "battery": 0.5
+      },
+      "can_melee": true
+    },
+    "escort": {
+      "domain": "Sea-Surface",
+      "recipe_id": "P056",
+      "installed": {
+        "escort_vessel": 1
+      },
+      "crew": 3,
+      "hp": 240,
+      "firepower": {
+        "ground": 24,
+        "aa": 36,
+        "sea": 52,
+        "asw": 40
+      },
+      "armor": 48,
+      "hops_per_cycle": 3,
+      "range_hops": 1,
+      "combat_tick": {
+        "ammunition": 1.5,
+        "fuel": 1.5,
+        "battery": 0
+      },
+      "can_melee": false
+    },
+    "submarine": {
+      "domain": "Sea-Sub",
+      "recipe_id": "P057",
+      "installed": {
+        "submarine": 1
+      },
+      "crew": 2,
+      "hp": 160,
+      "firepower": {
+        "ground": 18,
+        "aa": 0,
+        "sea": 68,
+        "asw": 45
+      },
+      "armor": 30,
+      "hops_per_cycle": 2,
+      "range_hops": 1,
+      "combat_tick": {
+        "ammunition": 1.5,
+        "fuel": 1,
+        "battery": 0
+      },
+      "can_melee": false
+    },
+    "aircraft": {
+      "domain": "Air",
+      "recipe_id": "P058",
+      "installed": {
+        "aerial_unit": 1
+      },
+      "crew": 1,
+      "hp": 110,
+      "firepower": {
+        "ground": 46,
+        "aa": 54,
+        "sea": 48,
+        "asw": 28
+      },
+      "armor": 18,
+      "hops_per_cycle": 5,
+      "range_hops": 2,
+      "combat_tick": {
+        "ammunition": 1.5,
+        "fuel": 1.8,
+        "battery": 0
+      },
+      "can_melee": false
+    },
+    "air_drone": {
+      "domain": "Air",
+      "recipe_id": "P060",
+      "installed": {
+        "air_drone": 1
+      },
+      "crew": 0.1,
+      "hp": 75,
+      "firepower": {
+        "ground": 34,
+        "aa": 28,
+        "sea": 30,
+        "asw": 18
+      },
+      "armor": 12,
+      "hops_per_cycle": 4,
+      "range_hops": 2,
+      "combat_tick": {
+        "ammunition": 1,
+        "fuel": 0,
+        "battery": 0.8
+      },
+      "can_melee": false
+    },
+    "swarm": {
+      "domain": "Air",
+      "recipe_id": "P094",
+      "installed": {
+        "swarm_unit": 1
+      },
+      "crew": 0.2,
+      "hp": 80,
+      "firepower": {
+        "ground": 42,
+        "aa": 38,
+        "sea": 35,
+        "asw": 20
+      },
+      "armor": 15,
+      "hops_per_cycle": 4,
+      "range_hops": 1,
+      "combat_tick": {
+        "ammunition": 1,
+        "fuel": 0,
+        "battery": 1
+      },
+      "can_melee": false
+    },
+    "energy_weapon": {
+      "domain": "Land",
+      "recipe_id": "P095",
+      "installed": {
+        "energy_weapon": 1
+      },
+      "crew": 0.5,
+      "hp": 150,
+      "firepower": {
+        "ground": 30,
+        "aa": 85,
+        "sea": 40,
+        "asw": 0
+      },
+      "armor": 45,
+      "hops_per_cycle": 1,
+      "range_hops": 1,
+      "combat_tick": {
+        "ammunition": 0,
+        "fuel": 0.4,
+        "battery": 0
+      },
+      "can_melee": false
+    }
+  }
+}

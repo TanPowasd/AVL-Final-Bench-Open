@@ -1,0 +1,26 @@
+{
+  "version": "rift_world_atlas_v1",
+  "status": "implementation candidate; component properties checked, full balance acceptance separate",
+  "region_rows": 20,
+  "region_columns": 24,
+  "land_regions": 380,
+  "hub_count": 250,
+  "road_target": 1180,
+  "countries": 8,
+  "country_regions": 20,
+  "city_count_min": 36,
+  "city_count_max": 48,
+  "bootstrap_ticks": 150,
+  "maximum_attempts": 256,
+  "starting_finite_reserves_mU": {
+    "coal": 48000000,
+    "iron_ore": 48000000,
+    "copper_ore": 27000000,
+    "stone": 48000000,
+    "quartz": 18000000,
+    "biomass": 5000000,
+    "water": 0
+  },
+  "remote_reserves_range_mU": [8000000, 48000000],
+  "remote_grades_mU": [600, 1500]
+}

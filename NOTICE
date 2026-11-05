@@ -1,0 +1,41 @@
+AVL Final Bench
+Copyright 2026 TanPowasd
+
+本仓库的代码和文档按 Apache License 2.0 授权，以下第三方内容除外。
+这些内容保留各自的权利和许可，不受 Apache-2.0 覆盖，使用者需要自行确认是否合规。
+
+一、题面
+
+ball_machine、fruehlingsbeginn、partition 三题的题面来自洛谷（luogu.com.cn）原题，
+版权归原作者和平台所有，此处仅为评测练习引用。
+
+二、mem_recall 开发数据（contestant/mem_recall/data/dev/）
+
+每个数据文件的 license 字段记录了来源。
+
+数据集                     许可
+lme                        MIT（xiaowu0162/LongMemEval）
+convomem、membench、tmd    MIT（HF KaLM-Embedding/LMEB 数据卡标注）
+realtalk                   Apache-2.0（danny911kr/REALTALK）
+hive                       CC BY 4.0（FuRongJun-1999/hive-memory-bench，须署名）
+arguana、nfcorpus、
+scidocs、scifact           CC BY-SA 4.0（HF BeIR 数据卡标注）
+locomo                     CC BY-NC 4.0（snap-research/locomo，仅限非商业用途）
+perltqa                    CC BY-NC 4.0（Elvin-Yiming-Du/PerLTQA，仅限非商业用途）
+
+以下数据的许可未核实或存疑，不作任何授权保证：
+
+DuRetrieval、EcomRetrieval、MMarcoRetrieval、MedicalRetrieval、VideoRetrieval
+    HF C-MTEB 数据卡无 license 字段，上游许可未核实
+kmb
+    HF KaLM-Embedding/LMEB 标注 MIT，KnowMeBench 上游许可未核实
+locomo_zh
+    justis-xu/memory-eval-zh 标注 MIT，但源数据 LoCoMo 为 CC BY-NC 4.0，建议按较严者理解
+
+权利人如对收录有异议，请提 issue，我们会及时处理。
+
+三、自建数据
+
+cpzh、cpzh_bodydate、cpzh_dialog、cpzh_long 为作者自建。
+文件内 license 字段的 LicenseRef-TanPowasd-Proprietary 是早期标记，为保持校验和未修改。
+这四份数据现按 Apache-2.0 开放，以本文件为准。

@@ -1,0 +1,1286 @@
+{
+  "version": "rift_era_rules_r6",
+  "mechanisms": [
+    {
+      "id": "POP",
+      "name": "人口·住房·口粮·医疗",
+      "layer": "econ"
+    },
+    {
+      "id": "LAB",
+      "name": "劳动·工资·技能",
+      "layer": "econ"
+    },
+    {
+      "id": "IND",
+      "name": "工业·配方·设施",
+      "layer": "econ"
+    },
+    {
+      "id": "ENV",
+      "name": "采掘·衰竭·环境",
+      "layer": "econ"
+    },
+    {
+      "id": "PWR",
+      "name": "电力（机组/电网/储能/调度/电价）",
+      "layer": "econ"
+    },
+    {
+      "id": "LOG",
+      "name": "物流走廊",
+      "layer": "econ"
+    },
+    {
+      "id": "RES",
+      "name": "研究·科技",
+      "layer": "econ"
+    },
+    {
+      "id": "AI",
+      "name": "AI（算力/芯片/数据/训练/推理/对齐）",
+      "layer": "econ"
+    },
+    {
+      "id": "FX",
+      "name": "货币·外汇·央行·利率·通胀",
+      "layer": "econ"
+    },
+    {
+      "id": "EQ",
+      "name": "股市·国家公司",
+      "layer": "econ"
+    },
+    {
+      "id": "BND",
+      "name": "债券·信用利差",
+      "layer": "econ"
+    },
+    {
+      "id": "FIS",
+      "name": "财政·税·补贴·治理支持度",
+      "layer": "econ"
+    },
+    {
+      "id": "TRD",
+      "name": "贸易·中立城邦",
+      "layer": "econ"
+    },
+    {
+      "id": "MIL",
+      "name": "军事",
+      "layer": "mil"
+    },
+    {
+      "id": "DIP",
+      "name": "外交·履约信用",
+      "layer": "mil"
+    },
+    {
+      "id": "INT",
+      "name": "情报·网络",
+      "layer": "mil"
+    },
+    {
+      "id": "SCO",
+      "name": "计分",
+      "layer": "sink"
+    }
+  ],
+  "existing": [
+    {
+      "id": "E01",
+      "from": "POP",
+      "to": [
+        "LAB"
+      ],
+      "what": "劳动单位 = 0.65 P",
+      "ref": "02 人口动态"
+    },
+    {
+      "id": "E02",
+      "from": "POP",
+      "to": [
+        "PWR"
+      ],
+      "what": "B1 市政负荷 0.4 电/20 人",
+      "ref": "05 负荷带"
+    },
+    {
+      "id": "E03",
+      "from": "POP",
+      "to": [
+        "AI"
+      ],
+      "what": "原始数据 D_raw += 0.02 P",
+      "ref": "04 AI·数据"
+    },
+    {
+      "id": "E04",
+      "from": "POP",
+      "to": [
+        "IND",
+        "TRD"
+      ],
+      "what": "民生篮子需求（food/water/consumer_goods/medicine）",
+      "ref": "02 宏观 §2"
+    },
+    {
+      "id": "E05",
+      "from": "POP",
+      "to": [
+        "SCO"
+      ],
+      "what": "U_pop ∝ Pop·Q_life",
+      "ref": "07 §1.1"
+    },
+    {
+      "id": "E06",
+      "from": "LAB",
+      "to": [
+        "IND"
+      ],
+      "what": "产线/采掘劳动占用",
+      "ref": "05 地点库存与生产"
+    },
+    {
+      "id": "E07",
+      "from": "LAB",
+      "to": [
+        "RES"
+      ],
+      "what": "实验室劳动、R02 工程师培养",
+      "ref": "02 治理 §1"
+    },
+    {
+      "id": "E08",
+      "from": "LAB",
+      "to": [
+        "MIL"
+      ],
+      "what": "军职人力",
+      "ref": "03 §1"
+    },
+    {
+      "id": "E09",
+      "from": "LAB",
+      "to": [
+        "FIS",
+        "POP"
+      ],
+      "what": "工资入居民池、工资与消费税",
+      "ref": "02 宏观 §1"
+    },
+    {
+      "id": "E10",
+      "from": "IND",
+      "to": [
+        "PWR"
+      ],
+      "what": "产线耗电（B3）；电站装机",
+      "ref": "05 电力系统"
+    },
+    {
+      "id": "E11",
+      "from": "IND",
+      "to": [
+        "POP"
+      ],
+      "what": "住宅区 P110、食品/药品供给",
+      "ref": "02 人口动态"
+    },
+    {
+      "id": "E12",
+      "from": "IND",
+      "to": [
+        "LOG"
+      ],
+      "what": "车辆/机车/船/飞机配方",
+      "ref": "05 配方"
+    },
+    {
+      "id": "E13",
+      "from": "IND",
+      "to": [
+        "MIL"
+      ],
+      "what": "装备整机",
+      "ref": "03 §1"
+    },
+    {
+      "id": "E14",
+      "from": "IND",
+      "to": [
+        "AI"
+      ],
+      "what": "加速器 P108/P115/P116、数据中心",
+      "ref": "05 AI 算力设施"
+    },
+    {
+      "id": "E15",
+      "from": "IND",
+      "to": [
+        "EQ"
+      ],
+      "what": "现金利润=实收收入-实付费用；估值盈余只作报价参考，不生现金（C17）",
+      "ref": "02 证券 §1"
+    },
+    {
+      "id": "E16",
+      "from": "IND",
+      "to": [
+        "ENV"
+      ],
+      "what": "采掘耗竭储量",
+      "ref": "02 资源采掘"
+    },
+    {
+      "id": "E17",
+      "from": "IND",
+      "to": [
+        "SCO"
+      ],
+      "what": "VA_eff",
+      "ref": "07 §1.2"
+    },
+    {
+      "id": "E18",
+      "from": "ENV",
+      "to": [
+        "IND"
+      ],
+      "what": "原料采出、尾矿衰减 η_dep",
+      "ref": "02 资源采掘"
+    },
+    {
+      "id": "E19",
+      "from": "ENV",
+      "to": [
+        "POP"
+      ],
+      "what": "用水、biomass",
+      "ref": "02 宏观 §2"
+    },
+    {
+      "id": "E20",
+      "from": "ENV",
+      "to": [
+        "FIS"
+      ],
+      "what": "支持度 −10 Pollute_r",
+      "ref": "提案 D (1)"
+    },
+    {
+      "id": "E21",
+      "from": "ENV",
+      "to": [
+        "PWR"
+      ],
+      "what": "来水 Q_r；全球排放→天气振幅",
+      "ref": "05 天气；提案 G"
+    },
+    {
+      "id": "E22",
+      "from": "ENV",
+      "to": [
+        "SCO"
+      ],
+      "what": "Q_sec 污染扣减",
+      "ref": "07 §1.1"
+    },
+    {
+      "id": "E23",
+      "from": "PWR",
+      "to": [
+        "IND"
+      ],
+      "what": "B3 切负荷产线按比例",
+      "ref": "05 负荷带"
+    },
+    {
+      "id": "E24",
+      "from": "PWR",
+      "to": [
+        "AI"
+      ],
+      "what": "B4 推理失效/B5 训练放缓、max_price",
+      "ref": "05 负荷带；数据中心柔性负荷"
+    },
+    {
+      "id": "E25",
+      "from": "PWR",
+      "to": [
+        "RES"
+      ],
+      "what": "B2 欠供研究点减少",
+      "ref": "05 负荷带"
+    },
+    {
+      "id": "E26",
+      "from": "PWR",
+      "to": [
+        "FIS"
+      ],
+      "what": "B1 欠供支持度 −10δ；价格上限补贴",
+      "ref": "05 负荷带；电价"
+    },
+    {
+      "id": "E27",
+      "from": "PWR",
+      "to": [
+        "POP"
+      ],
+      "what": "Q_life 市政电项",
+      "ref": "05 负荷带"
+    },
+    {
+      "id": "E28",
+      "from": "PWR",
+      "to": [
+        "TRD"
+      ],
+      "what": "跨境电力（RU）",
+      "ref": "02 电力市场"
+    },
+    {
+      "id": "E29",
+      "from": "PWR",
+      "to": [
+        "ENV"
+      ],
+      "what": "燃料消耗",
+      "ref": "05 机组类型"
+    },
+    {
+      "id": "E30",
+      "from": "PWR",
+      "to": [
+        "LOG"
+      ],
+      "what": "电气化铁路 0.8 电",
+      "ref": "02 物流表"
+    },
+    {
+      "id": "E31",
+      "from": "PWR",
+      "to": [
+        "SCO"
+      ],
+      "what": "Φ_sustain 断供电力",
+      "ref": "07 §2"
+    },
+    {
+      "id": "E32",
+      "from": "LOG",
+      "to": [
+        "IND",
+        "PWR"
+      ],
+      "what": "原料/燃料交付",
+      "ref": "02 物流"
+    },
+    {
+      "id": "E33",
+      "from": "LOG",
+      "to": [
+        "TRD"
+      ],
+      "what": "枢纽转运、过境",
+      "ref": "02 物流"
+    },
+    {
+      "id": "E34",
+      "from": "LOG",
+      "to": [
+        "MIL"
+      ],
+      "what": "补给半径",
+      "ref": "03 §3"
+    },
+    {
+      "id": "E35",
+      "from": "LOG",
+      "to": [
+        "SCO"
+      ],
+      "what": "NetTransit=滚动20期合资格末端回执(物量*w_cat*L1消环距离份额)/20；行动/修理无回执",
+      "ref": "07 §1.2"
+    },
+    {
+      "id": "E36",
+      "from": "RES",
+      "to": [
+        "IND",
+        "PWR",
+        "LOG",
+        "MIL",
+        "AI",
+        "ENV",
+        "FX",
+        "EQ",
+        "FIS",
+        "INT"
+      ],
+      "what": "科技解锁（配方/机组/走廊/装备/AI01–03/V/F/S 线）",
+      "ref": "04"
+    },
+    {
+      "id": "E37",
+      "from": "RES",
+      "to": [
+        "POP"
+      ],
+      "what": "发展指数 D、医疗 M",
+      "ref": "02 人口动态"
+    },
+    {
+      "id": "E38",
+      "from": "RES",
+      "to": [
+        "DIP"
+      ],
+      "what": "R06 许可",
+      "ref": "03 技术扩散"
+    },
+    {
+      "id": "E39",
+      "from": "RES",
+      "to": [
+        "SCO"
+      ],
+      "what": "U_tech",
+      "ref": "07 §1.4"
+    },
+    {
+      "id": "E40",
+      "from": "AI",
+      "to": [
+        "RES"
+      ],
+      "what": "AI04 研究加成",
+      "ref": "04 AI·部署"
+    },
+    {
+      "id": "E41",
+      "from": "AI",
+      "to": [
+        "LAB"
+      ],
+      "what": "AI06 生产替代劳动",
+      "ref": "04 AI·部署"
+    },
+    {
+      "id": "E42",
+      "from": "AI",
+      "to": [
+        "EQ"
+      ],
+      "what": "AI07 手续费/NPC 信号；失控事件证券 −5%",
+      "ref": "04 AI·部署；对齐"
+    },
+    {
+      "id": "E43",
+      "from": "AI",
+      "to": [
+        "INT"
+      ],
+      "what": "AI09 网络强度",
+      "ref": "04 AI·部署"
+    },
+    {
+      "id": "E44",
+      "from": "AI",
+      "to": [
+        "TRD"
+      ],
+      "what": "推理服务出口",
+      "ref": "04 推理服务市场"
+    },
+    {
+      "id": "E45",
+      "from": "AI",
+      "to": [
+        "PWR"
+      ],
+      "what": "数据中心负荷",
+      "ref": "05 数据中心柔性负荷"
+    },
+    {
+      "id": "E46",
+      "from": "FX",
+      "to": [
+        "TRD"
+      ],
+      "what": "进出口按 e 结算",
+      "ref": "02 货币 §6"
+    },
+    {
+      "id": "E47",
+      "from": "FX",
+      "to": [
+        "EQ"
+      ],
+      "what": "外国买家换汇",
+      "ref": "02 证券 §3"
+    },
+    {
+      "id": "E48",
+      "from": "FX",
+      "to": [
+        "FIS"
+      ],
+      "what": "通胀 >5% 支持度惩罚；发行入国库",
+      "ref": "02 货币 §4–5"
+    },
+    {
+      "id": "E49",
+      "from": "FX",
+      "to": [
+        "LAB"
+      ],
+      "what": "工资 20 周期滞后指数化",
+      "ref": "02 货币 §5"
+    },
+    {
+      "id": "E50",
+      "from": "FX",
+      "to": [
+        "BND"
+      ],
+      "what": "票面 c = i + s",
+      "ref": "02 债券 §1"
+    },
+    {
+      "id": "E51",
+      "from": "FX",
+      "to": [
+        "SCO"
+      ],
+      "what": "真实FX成交形成历史RU账面成本；仅改变实时汇率不重估NFA的现金/基线/发行负债",
+      "ref": "07 v1.3 §2"
+    },
+    {
+      "id": "E52",
+      "from": "EQ",
+      "to": [
+        "FIS"
+      ],
+      "what": "IPO 入国库、分红",
+      "ref": "02 证券 §2/§6"
+    },
+    {
+      "id": "E53",
+      "from": "EQ",
+      "to": [
+        "SCO"
+      ],
+      "what": "NFA 股票",
+      "ref": "07 v1.3 §2"
+    },
+    {
+      "id": "E54",
+      "from": "BND",
+      "to": [
+        "FIS"
+      ],
+      "what": "付息、存量上限",
+      "ref": "02 债券 §1"
+    },
+    {
+      "id": "E55",
+      "from": "BND",
+      "to": [
+        "FX"
+      ],
+      "what": "违约 Δln e −0.05",
+      "ref": "02 债券 §3"
+    },
+    {
+      "id": "E56",
+      "from": "BND",
+      "to": [
+        "EQ"
+      ],
+      "what": "违约→危机→公允价 ×0.8",
+      "ref": "02 危机"
+    },
+    {
+      "id": "E57",
+      "from": "BND",
+      "to": [
+        "DIP"
+      ],
+      "what": "违约 Credit −0.3",
+      "ref": "02 债券 §3"
+    },
+    {
+      "id": "E58",
+      "from": "BND",
+      "to": [
+        "SCO"
+      ],
+      "what": "NFA 债券；d_insolvency",
+      "ref": "07 v1.3"
+    },
+    {
+      "id": "E59",
+      "from": "FIS",
+      "to": [
+        "LAB"
+      ],
+      "what": "欠薪旷工；警级劳动效率",
+      "ref": "02 宏观 §4；治理"
+    },
+    {
+      "id": "E60",
+      "from": "FIS",
+      "to": [
+        "FX"
+      ],
+      "what": "货币发行",
+      "ref": "02 央行"
+    },
+    {
+      "id": "E61",
+      "from": "FIS",
+      "to": [
+        "BND"
+      ],
+      "what": "发行国债；税收作利差分母",
+      "ref": "02 债券"
+    },
+    {
+      "id": "E62",
+      "from": "FIS",
+      "to": [
+        "POP"
+      ],
+      "what": "黄/橙警人口外流",
+      "ref": "02 治理 §2"
+    },
+    {
+      "id": "E63",
+      "from": "FIS",
+      "to": [
+        "PWR"
+      ],
+      "what": "电价上限补贴、负荷带排序",
+      "ref": "05 电价；06 governance"
+    },
+    {
+      "id": "E64",
+      "from": "FIS",
+      "to": [
+        "SCO"
+      ],
+      "what": "ψ_legit、d_unrest",
+      "ref": "07"
+    },
+    {
+      "id": "E65",
+      "from": "TRD",
+      "to": [
+        "FX"
+      ],
+      "what": "贸易差额 TB/GDP",
+      "ref": "02 汇率"
+    },
+    {
+      "id": "E66",
+      "from": "TRD",
+      "to": [
+        "IND"
+      ],
+      "what": "进口原料与高阶品",
+      "ref": "02 集合竞价"
+    },
+    {
+      "id": "E67",
+      "from": "TRD",
+      "to": [
+        "DIP"
+      ],
+      "what": "城邦 EMA 效用",
+      "ref": "03 外交 §2"
+    },
+    {
+      "id": "E68",
+      "from": "TRD",
+      "to": [
+        "AI"
+      ],
+      "what": "加速器出口管制与转口泄漏",
+      "ref": "04 出口管制"
+    },
+    {
+      "id": "E69",
+      "from": "TRD",
+      "to": [
+        "SCO"
+      ],
+      "what": "U_intl 外贸",
+      "ref": "07 §1.5"
+    },
+    {
+      "id": "E70",
+      "from": "MIL",
+      "to": [
+        "EQ",
+        "FX"
+      ],
+      "what": "战争→危机（公允价 ×0.8、Δln e −0.01）",
+      "ref": "02 危机"
+    },
+    {
+      "id": "E71",
+      "from": "MIL",
+      "to": [
+        "FIS"
+      ],
+      "what": "军饷优先级、动员疲劳、bombard 支持度 −300",
+      "ref": "02 §4；03 §3；提案 D"
+    },
+    {
+      "id": "E72",
+      "from": "MIL",
+      "to": [
+        "IND",
+        "LOG",
+        "PWR"
+      ],
+      "what": "bombard 毁设施与走廊（含电站、高压线）",
+      "ref": "03 §3；05 电网区域"
+    },
+    {
+      "id": "E73",
+      "from": "MIL",
+      "to": [
+        "POP"
+      ],
+      "what": "军职人力永久扣除",
+      "ref": "03 §1"
+    },
+    {
+      "id": "E74",
+      "from": "MIL",
+      "to": [
+        "DIP"
+      ],
+      "what": "撕毁停战 −0.35",
+      "ref": "03 外交 §1"
+    },
+    {
+      "id": "E75",
+      "from": "MIL",
+      "to": [
+        "SCO"
+      ],
+      "what": "U_ctrl、Q_sec与行动国Loss_action；敌方受损本身不给分",
+      "ref": "07"
+    },
+    {
+      "id": "E76",
+      "from": "DIP",
+      "to": [
+        "BND"
+      ],
+      "what": "信用利差项为10*(1-Credit)个百分点/年；完整s=1+4*债务/年化税基+10*(1-Credit)+5*近100周期违约周期数+战争利差（02）",
+      "ref": "02 债券 §2"
+    },
+    {
+      "id": "E77",
+      "from": "DIP",
+      "to": [
+        "TRD"
+      ],
+      "what": "合同、城邦",
+      "ref": "03 外交"
+    },
+    {
+      "id": "E78",
+      "from": "DIP",
+      "to": [
+        "AI"
+      ],
+      "what": "数据/模型授权",
+      "ref": "04 AI·数据/权重"
+    },
+    {
+      "id": "E79",
+      "from": "DIP",
+      "to": [
+        "PWR"
+      ],
+      "what": "跨境电力合同",
+      "ref": "05 电价与跨境"
+    },
+    {
+      "id": "E80",
+      "from": "DIP",
+      "to": [
+        "RES"
+      ],
+      "what": "R06 许可",
+      "ref": "03 技术扩散"
+    },
+    {
+      "id": "E81",
+      "from": "DIP",
+      "to": [
+        "SCO"
+      ],
+      "what": "Credit 乘子",
+      "ref": "07 §1.5"
+    },
+    {
+      "id": "E82",
+      "from": "INT",
+      "to": [
+        "IND",
+        "PWR",
+        "LOG"
+      ],
+      "what": "S03 攻击 C06/E07/L07",
+      "ref": "04 S03"
+    },
+    {
+      "id": "E83",
+      "from": "INT",
+      "to": [
+        "MIL"
+      ],
+      "what": "追踪质量 q",
+      "ref": "03 迷雾"
+    },
+    {
+      "id": "E84",
+      "from": "INT",
+      "to": [
+        "AI"
+      ],
+      "what": "窃取权重（接口）",
+      "ref": "04 AI·权重"
+    },
+    {
+      "id": "E85",
+      "from": "INT",
+      "to": [
+        "DIP"
+      ],
+      "what": "归因信用 −0.05",
+      "ref": "04 S03"
+    },
+    {
+      "id": "E86",
+      "from": "INT",
+      "to": [
+        "RES"
+      ],
+      "what": "C12 读取 classified",
+      "ref": "04 C12"
+    }
+  ],
+  "new": [
+    {
+      "id": "C01",
+      "from": "PWR",
+      "to": [
+        "EQ",
+        "IND"
+      ],
+      "name": "电价进入增加值与公司利润",
+      "formula": "每笔电力receipt实际付款进入用电成本/发电收入，按05逐路径成交报价，不按统计均价重结算",
+      "cap": "λ̄ ≤ 价格上限 50（既有）",
+      "prototype": true,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C02",
+      "from": "PWR",
+      "to": [
+        "FX"
+      ],
+      "name": "电价与民生物价进入通胀（成本推动）",
+      "formula": "CPI_p = Σ_g ω_g p_g/p_g^0，ω = food 0.40 / consumer_goods 0.30 / electricity 0.15 / medicine 0.15，p 为人口加权枢纽价；π_p = EMA_0.1[0.5(g_M − g_Y) + 0.5·clip(Δln CPI_p, ±0.02)]",
+      "cap": "Δln CPI 单周期截断 ±0.02",
+      "prototype": true,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C03",
+      "from": "PWR",
+      "to": [
+        "EQ"
+      ],
+      "name": "切负荷/黑网压低公司公允价，严重黑网触发危机",
+      "formula": "V_k ← V_k·max(0.7, 1 − 0.5 σ̄_k)，σ̄_k = 公司设施近 5 周期 B2–B4 欠供率均值（黑网 tick 计 1）；某电网黑网 tick ≥ 30% 且覆盖 ≥ 30% 人口 → 本国危机触发",
+      "cap": "因子 ≥ 0.7；危机 10 周期内同因不叠加",
+      "prototype": true,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C04",
+      "from": "PWR",
+      "to": [
+        "FIS"
+      ],
+      "name": "黑网事件额外扣支持度",
+      "formula": "受黑网分区每个黑网周期 Support −20 mU（计入既有 −45 下限截断）",
+      "cap": "既有 clip(−45, +25)",
+      "prototype": true,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C05",
+      "from": "PWR",
+      "to": [
+        "POP"
+      ],
+      "name": "停电削弱医疗（医院在 B1）",
+      "formula": "M_eff = M·(1 − 0.5 δ̄_B1)，δ̄_B1 为人口加权 B1 欠供率；死亡率用 M_eff",
+      "cap": "M_eff ∈ [0.5M, M]",
+      "prototype": true,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C06",
+      "from": "FX",
+      "to": [
+        "PWR",
+        "IND",
+        "TRD"
+      ],
+      "name": "进口平价：汇率传导到进口燃料/原料价格与机组边际成本",
+      "formula": "近 5 周期净进口的物品 g：枢纽参考价 p_g ≥ p_g^RU/e_p·(1 + τ_tariff)(1 + 0.002)；该价进入 05 调度第 2 步 MC、C01 的 VA 与 C02 的 CPI",
+      "cap": "随 |Δln e| ≤ 0.05/周期 自然限速",
+      "prototype": true,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C07",
+      "from": "FX",
+      "to": [
+        "AI"
+      ],
+      "name": "进口芯片/加速器成本随汇率",
+      "formula": "C06 的进口平价同样适用于 chip/advanced_chip/photonic_chip/accelerator*；数据中心扩建的本币成本随 1/e 变化",
+      "cap": "同 C06",
+      "prototype": true,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C08",
+      "from": "FX",
+      "to": [
+        "EQ"
+      ],
+      "name": "利率进入估值倍数",
+      "formula": "基本面公允价=max(.10,m*100*mean20(Pi_val)/1000000)，m=clip(1/(i/100+.05),5,15)；交易本币价可变，计分金融头寸使用07历史RU成本/发生时冻结汇率，不按当前e重估基线与外部权益",
+      "cap": "m ∈ [5, 15]",
+      "prototype": true,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C09",
+      "from": "FX",
+      "to": [
+        "POP",
+        "IND"
+      ],
+      "name": "利率与物价进入住宅建设成本",
+      "formula": "建造 P110 除消耗 cement 20 + steel 5 外，另从国库支付本币 150·(1 + i_p/20)·CPI_p/CPI_p^0（住房仍由玩家/Bot 显式建造）",
+      "cap": "随 i_p ∈ [0, 20%] 与 CPI 比值截断 ≤ 3 自然受限",
+      "prototype": true,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C10",
+      "from": "FX",
+      "to": [
+        "FX"
+      ],
+      "name": "实际利率抑制通胀",
+      "formula": "π_p = EMA_0.1[0.5(g_M − g_Y) + 0.5·clip(Δln CPI_p, ±0.02) − clip(2×10^-5·(i_p − 10^4 π_p^{prev} − 2), −2×10^-4, 2×10^-4)]",
+      "cap": "单周期输入截断 ±2×10^-4（年化 ≤ 2 个百分点）",
+      "prototype": true,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C11",
+      "from": "IND",
+      "to": [
+        "POP"
+      ],
+      "name": "住宅区持续消耗水泥",
+      "formula": "P110 维护：每 20 周期 cement × 0.2；欠缴按既有 D_maint 规则降可用率，容量 = 100·α_avail",
+      "cap": "α_avail ≥ 0.20（既有）",
+      "prototype": true,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C12",
+      "from": "FX",
+      "to": [
+        "POP"
+      ],
+      "name": "通胀压低出生率",
+      "formula": "b ← b·max(0.7, 1 − 0.02·max(0, π_ann − 5))，π_ann = 10^4 π_p（%）",
+      "cap": "因子 ≥ 0.7",
+      "prototype": true,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C13",
+      "from": "FX",
+      "to": [
+        "FIS"
+      ],
+      "name": "社保支出按 CPI 指数化",
+      "formula": "社保需求=0.05*平民人口*min(3,CPI/CPI0)，有限财政实付，支持效果按实付率",
+      "cap": "CPI 比值截断 ≤ 3",
+      "prototype": true,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C14",
+      "from": "AI",
+      "to": [
+        "AI"
+      ],
+      "name": "合成数据（自我数据生成，带模型崩溃折扣）",
+      "formula": "持 AI04：P117 产出 ×(1 + min(0.5, 0.02 Cap))，增量单独记入 D_syn（不混入 D_cur^human）；D_eff = D_cur^human + 0.5·min(D_syn, D_cur^human) + 0.3 D_raw + 0.8 D_lic",
+      "cap": "合成数据有效量 ≤ 0.5 × 人工精标量",
+      "prototype": true,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C15",
+      "from": "AI",
+      "to": [
+        "PWR"
+      ],
+      "name": "AI 电网调度（新部署项 grid，需 AI06）",
+      "formula": "读取上一周期Cap与a_grid_eff：s=min(1,a_grid/max(1,.01*peak_load)); 线损/停运乘(1-min(.3,.01*Cap*s))",
+      "cap": "两项各 ≤ −30%",
+      "prototype": true,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C16",
+      "from": "AI",
+      "to": [
+        "EQ"
+      ],
+      "name": "AI 提高全球市场效率（NPC 动态）",
+      "formula": "Cap_w = 金融部署算力 ≥ 20 的国家中最高 Cap；NPC 基本面偏离阈值 5% → max(2%, 5% − 0.1%·Cap_w)；动量池 ×(1 − min(0.5, Cap_w/70))",
+      "cap": "阈值 ≥ 2%，动量池 ≥ 50%",
+      "prototype": true,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C17",
+      "from": "LAB",
+      "to": [
+        "EQ"
+      ],
+      "name": "公司现金利润扣工资与估值参考盈余（区分现金与估值账本）",
+      "formula": "Pi_cash=realized_revenue-paid_input-paid_power-paid_wage-paid_maintenance；Pi_val=max(.15*VA,VA-W)-Maint只作公允价，不生现金",
+      "cap": "现金亏损由国库承担或转欠薪；Π_{k,cash} ≤ 0 时不征税不派息",
+      "prototype": true,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C18",
+      "from": "AI",
+      "to": [
+        "INT"
+      ],
+      "name": "AI 增强情报融合（需 AI09）",
+      "formula": "C08 多源误差额外收窄 min(20%, 0.5%·Cap·s_c)，s_c = min(1, a_cyber/10)",
+      "cap": "≤ 20%",
+      "prototype": false,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C19",
+      "from": "AI",
+      "to": [
+        "MIL"
+      ],
+      "name": "AI 增强无人作战（需 AI09 + 在网 + a_cyber 算力）",
+      "formula": "编队处于通信在网状态且分配 a_cyber 算力时，ground_drone/air_drone/swarm_unit 有效火力 ×(1 + min(0.15, 0.004·Cap·min(1, a_cyber/10)))",
+      "cap": "≤ +15%",
+      "prototype": false,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C20",
+      "from": "EQ",
+      "to": [
+        "FIS"
+      ],
+      "name": "公司所得税：税基含实现现金利润",
+      "formula": "tau_effective=min(0.55,tau_tax*(1.1 if F01 else 1.0)); T_p=tau_effective*(实付工资+已交付居民消费额+sum_k max(0,Pi_k_cash)); 税后可分配现金利润=(1-tau_effective)*max(0,Pi_k_cash)，按d_k及持股比例派息；未派发留CorpCash，不以未实现产出征税",
+      "cap": "tau_tax∈[0.05,0.50]；F01乘数1.1；tau_effective≤0.55；转账受实际现金/预留约束",
+      "prototype": true,
+      "lag": "本周期P7已实现现金流；税率及F01资格用周期初冻结值"
+    },
+    {
+      "id": "C21",
+      "from": "PWR",
+      "to": [
+        "ENV"
+      ],
+      "name": "排放进入分区污染存量",
+      "formula": "Pol_new=max(0,(.98-.02*s_V02)*Pol_old+sum(e_recipe*batch*(1-.8*CCS))); Pollute=Pol/(Pol+100); e_recipe见runtime_rules，P093不治理；E_new=.99*E_old+本期净排放",
+      "cap": "Pollute ∈ [0,1)，存量稳态 = 50·排放",
+      "prototype": true,
+      "lag": "本期实际排放及投药，前期污染存量"
+    },
+    {
+      "id": "C22",
+      "from": "ENV",
+      "to": [
+        "POP"
+      ],
+      "name": "污染提高死亡率",
+      "formula": "d ← d·(1 + 0.5·Pollute)（人口加权）",
+      "cap": "因子 ≤ 1.5",
+      "prototype": true,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C23",
+      "from": "ENV",
+      "to": [
+        "IND"
+      ],
+      "name": "污染降低农业产出",
+      "formula": "P028/P029 产出 ×(1 − 0.2·Pollute_r)；P030 受控农业不受影响",
+      "cap": "≥ 0.8",
+      "prototype": true,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C24",
+      "from": "ENV",
+      "to": [
+        "EQ"
+      ],
+      "name": "储量寿命进入采掘公司估值",
+      "formula": "采掘公司 V_k ×max(0.3, min(1, L_k/200)^0.5)，L_k = 剩余储量/近 20 周期平均采出（周期）",
+      "cap": "≥ 0.3",
+      "prototype": true,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C25",
+      "from": "MIL",
+      "to": [
+        "PWR"
+      ],
+      "name": "战区机组强迫停运上升",
+      "formula": "战区（03§0 WAR且实际交火/封锁区）机组停运率×(1+2*(1-Q_sec))；资产健康按05缩发电/线路容量，P4损毁从下tickP3生效",
+      "cap": "≤ ×3",
+      "prototype": false,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C26",
+      "from": "MIL",
+      "to": [
+        "TRD",
+        "AI"
+      ],
+      "name": "交战自动禁运受管制与军用物品",
+      "formula": "仅03§0 relation=WAR的双方自动禁运；aggressor/defender由war_id固定，盟友/中立不自动成为敌人；未履约归责见03；主动敌对政策自身扣Loss_action",
+      "cap": "仅限交战期",
+      "prototype": false,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C27",
+      "from": "MIL",
+      "to": [
+        "BND"
+      ],
+      "name": "战争推高利差",
+      "formula": "各国取活跃WAR角色加息最大值：aggressor+2pp、defender+1pp，不逐战争相加；全部WAR结束后20周期线性退出",
+      "cap": "停战后 20 周期线性退出",
+      "prototype": false,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C28",
+      "from": "DIP",
+      "to": [
+        "PWR"
+      ],
+      "name": "信用约束跨境电力",
+      "formula": "跨国线路可用容量 ×min(1, min(Credit_a, Credit_b)/0.6)；Credit < 0.3 不得新签电力合同",
+      "cap": "因子 ∈ [0.17, 1]",
+      "prototype": false,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C29",
+      "from": "DIP",
+      "to": [
+        "FX"
+      ],
+      "name": "信用调节套息资金（利差项）",
+      "formula": "汇率方程利差项乘 Credit_p：0.5 κ_cap Credit_p ((i_p − π_{ann,p}) − (i_w − π_{ann,w})) / 10000（战略原型把名义利差 /10000 与通胀差拆项）",
+      "cap": "Credit ∈ [0.1, 1]",
+      "prototype": true,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C30",
+      "from": "EQ",
+      "to": [
+        "IND"
+      ],
+      "name": "二级发售融资投向设施（固定总股本 100 万股）",
+      "formula": "上市公司每 100 周期可向市场追加出售 ≤ 100,000 股国有存量股（10% 固定总股本，累计外部持股仍 ≤ 490,000 股即 49%），募资进公司建设专户 CapexEscrow[p,k]，只能用于本行业设施建材采购与建设（撤项退回专户，不退国库）",
+      "cap": "≤ 100,000 股/100 周期，外部累计 ≤ 49%",
+      "prototype": true,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C31",
+      "from": "EQ",
+      "to": [
+        "FX"
+      ],
+      "name": "跨境证券资金流进入汇率（资本账户）",
+      "formula": "Δln e_p += κ_cap·clip(0.01·NetPortfolioInflow_p/GDP_p, −0.01, 0.01)（股票+债券净买入，RU）",
+      "cap": "±0.01，且总量受 |Δln e| ≤ 0.05",
+      "prototype": true,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C32",
+      "from": "FIS",
+      "to": [
+        "POP"
+      ],
+      "name": "社会不稳定压低出生率",
+      "formula": "Support < 300 的分区 b ×0.8（人口加权）",
+      "cap": "因子 0.8",
+      "prototype": true,
+      "lag": "上一周期 P7 结算值"
+    },
+    {
+      "id": "C33",
+      "from": "INT",
+      "to": [
+        "EQ"
+      ],
+      "name": "网络攻击交易与清算系统",
+      "formula": "S03 目标增加 F03/F06：被攻击国下一次证券竞价暂停 1 次，计危机触发 1 周期；归因规则同 S03",
+      "cap": "每 40 周期 ≤ 1 次",
+      "prototype": false,
+      "lag": "上一周期 P7 结算值"
+    }
+  ]
+}

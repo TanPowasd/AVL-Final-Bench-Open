@@ -1,0 +1,39 @@
+{
+  "seeds": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "configs": [
+    {
+      "cache_size": 8,
+      "universe": 64,
+      "length": 3000
+    },
+    {
+      "cache_size": 32,
+      "universe": 256,
+      "length": 5000
+    },
+    {
+      "cache_size": 64,
+      "universe": 4096,
+      "length": 5000
+    }
+  ],
+  "step_timeout_s": 1.0,
+  "total_timeout_s": 20.0,
+  "scoring": {
+    "version": "scoring_v2",
+    "max_score": 100,
+    "opponent_count": 5,
+    "component_weights": {
+      "defense": 0.5,
+      "attack": 0.5
+    },
+    "default_seed_count": 64,
+    "scenario_sampling": "per_run_random",
+    "seed_source": "os_csprng"
+  }
+}

@@ -1,0 +1,1461 @@
+{
+  "schema_version": 1,
+  "rules_version": "rift_era_rules_r4",
+  "author": "Astra",
+  "scope": "Independent arithmetic and data-contract fixtures; not formal-engine integration tests. Cases exercise formulas and catalogs, not a newly implemented engine.",
+  "cases": [
+    {
+      "case": "military_catalog_refs",
+      "ar": [
+        "AR-041"
+      ],
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "case": "military_goods",
+      "ar": [
+        "AR-021",
+        "AR-041"
+      ],
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "case": "whole_goods_set",
+      "ar": [
+        "AR-014",
+        "AR-040"
+      ],
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "case": "startup_production_power",
+      "ar": [
+        "AR-012"
+      ],
+      "actual": 23.400000000000002,
+      "expected": 23.4,
+      "status": "PASS"
+    },
+    {
+      "case": "startup_reserved_workers",
+      "ar": [
+        "AR-012"
+      ],
+      "actual": 124.50000000000001,
+      "expected": 124.5,
+      "status": "PASS"
+    },
+    {
+      "case": "startup_total_power",
+      "ar": [
+        "AR-012"
+      ],
+      "actual": 35.78,
+      "expected": 35.78,
+      "status": "PASS"
+    },
+    {
+      "case": "startup_total_water",
+      "ar": [
+        "AR-012"
+      ],
+      "actual": 31.155999999999995,
+      "expected": 31.156,
+      "status": "PASS"
+    },
+    {
+      "case": "startup_coal",
+      "ar": [
+        "AR-012"
+      ],
+      "actual": 18.156,
+      "expected": 18.156,
+      "status": "PASS"
+    },
+    {
+      "case": "initial_formations_crew",
+      "ar": [
+        "AR-018"
+      ],
+      "actual": 6,
+      "expected": 6,
+      "status": "PASS"
+    },
+    {
+      "case": "warehouse_positive",
+      "ar": [
+        "AR-012"
+      ],
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "case": "whole_release",
+      "ar": [
+        "AR-040"
+      ],
+      "actual": 1000,
+      "expected": 1000,
+      "status": "PASS"
+    },
+    {
+      "case": "whole_residual",
+      "ar": [
+        "AR-040"
+      ],
+      "actual": 250000,
+      "expected": 250000,
+      "status": "PASS"
+    },
+    {
+      "case": "input_credit_100_microbatches",
+      "ar": [
+        "AR-013",
+        "AR-040"
+      ],
+      "actual": [
+        10,
+        0
+      ],
+      "expected": [
+        10,
+        0
+      ],
+      "status": "PASS"
+    },
+    {
+      "case": "equity_conservation_all_structures",
+      "ar": [
+        "AR-010",
+        "AR-039"
+      ],
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "case": "debt_cap_mean_floor",
+      "ar": [
+        "AR-011"
+      ],
+      "actual": 1000,
+      "expected": 1000,
+      "status": "PASS"
+    },
+    {
+      "case": "reject_wrong_inside_floor",
+      "ar": [
+        "AR-011"
+      ],
+      "actual": 1500,
+      "expected": 1500,
+      "status": "PASS"
+    },
+    {
+      "case": "interest_priority",
+      "ar": [
+        "AR-036"
+      ],
+      "actual": [
+        100.0,
+        0.0
+      ],
+      "expected": [
+        100,
+        0
+      ],
+      "status": "PASS"
+    },
+    {
+      "case": "reserve_not_default",
+      "ar": [
+        "AR-036"
+      ],
+      "actual": [
+        1000,
+        1000,
+        false
+      ],
+      "expected": [
+        1000,
+        1000,
+        false
+      ],
+      "status": "PASS"
+    },
+    {
+      "case": "on_feasibility_2121_states",
+      "ar": [
+        "AR-015"
+      ],
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "case": "lossy_grid_cash",
+      "ar": [
+        "AR-017",
+        "AR-045"
+      ],
+      "actual": [
+        90.0,
+        100.0,
+        100.0
+      ],
+      "expected": [
+        90,
+        100,
+        100
+      ],
+      "status": "PASS"
+    },
+    {
+      "case": "b5_price_bound",
+      "ar": [
+        "AR-016",
+        "AR-045"
+      ],
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "case": "dry_reservoir_no_water_creation",
+      "ar": [
+        "AR-028"
+      ],
+      "actual": [
+        0.0,
+        100.0
+      ],
+      "expected": [
+        0,
+        100
+      ],
+      "status": "PASS"
+    },
+    {
+      "case": "migration_total_capacity",
+      "ar": [
+        "AR-019"
+      ],
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "case": "migration_no_fabricated_skills",
+      "ar": [
+        "AR-019"
+      ],
+      "actual": [
+        0,
+        1000,
+        0
+      ],
+      "expected": [
+        0,
+        1000,
+        0
+      ],
+      "status": "PASS"
+    },
+    {
+      "case": "casualties_old_hp",
+      "ar": [
+        "AR-046"
+      ],
+      "actual": [
+        [
+          75,
+          3
+        ],
+        [
+          25,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "expected": [
+        [
+          75,
+          3
+        ],
+        [
+          25,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "status": "PASS"
+    },
+    {
+      "case": "multicarrier_loop_erasure",
+      "ar": [
+        "AR-005",
+        "AR-044"
+      ],
+      "actual": [
+        "A"
+      ],
+      "expected": [
+        "A"
+      ],
+      "status": "PASS"
+    },
+    {
+      "case": "roundtrip_without_consumption_exports",
+      "ar": [
+        "AR-044"
+      ],
+      "actual": 0,
+      "expected": 0,
+      "status": "PASS"
+    },
+    {
+      "case": "copy_transform",
+      "ar": [
+        "AR-025"
+      ],
+      "actual": 3215.3691330919,
+      "expected": 3215.3691330919005,
+      "status": "PASS"
+    },
+    {
+      "case": "score_equal_baseline",
+      "ar": [
+        "AR-003",
+        "AR-004",
+        "AR-043"
+      ],
+      "actual": 50.0,
+      "expected": 50.0,
+      "status": "PASS"
+    },
+    {
+      "case": "score_heterogeneous_seat_ref_self_play",
+      "ar": [
+        "AR-003",
+        "AR-004",
+        "AR-043"
+      ],
+      "actual": 50.0,
+      "expected": 50.0,
+      "status": "PASS"
+    },
+    {
+      "case": "score_scorched_earth_10_vs_1",
+      "ar": [
+        "AR-003",
+        "AR-004",
+        "AR-043"
+      ],
+      "actual": 11.44878260415323,
+      "expected": 11.44878260415323,
+      "status": "PASS"
+    },
+    {
+      "case": "score_scorched_earth_1_vs_001",
+      "ar": [
+        "AR-003",
+        "AR-004",
+        "AR-043"
+      ],
+      "actual": 5.93509431027676,
+      "expected": 5.93509431027676,
+      "status": "PASS"
+    },
+    {
+      "case": "score_lead_state_before_scorched_earth_200_vs_100",
+      "ar": [
+        "AR-003",
+        "AR-004",
+        "AR-043"
+      ],
+      "actual": 68.48071512624097,
+      "expected": 68.48071512624097,
+      "status": "PASS"
+    },
+    {
+      "case": "score_lead_state_after_scorched_earth_199_vs_80",
+      "ar": [
+        "AR-003",
+        "AR-004",
+        "AR-043"
+      ],
+      "actual": 68.35694909389267,
+      "expected": 68.35694909389267,
+      "status": "PASS"
+    },
+    {
+      "case": "score_behind_state_before_scorched_earth_90_vs_200",
+      "ar": [
+        "AR-003",
+        "AR-004",
+        "AR-043"
+      ],
+      "actual": 47.143807416111386,
+      "expected": 47.143807416111386,
+      "status": "PASS"
+    },
+    {
+      "case": "score_behind_state_after_scorched_earth_89_vs_100",
+      "ar": [
+        "AR-003",
+        "AR-004",
+        "AR-043"
+      ],
+      "actual": 46.84338833468044,
+      "expected": 46.84338833468044,
+      "status": "PASS"
+    },
+    {
+      "case": "score_negative_power",
+      "ar": [
+        "AR-003",
+        "AR-004",
+        "AR-043"
+      ],
+      "actual": 4.779558131553166,
+      "expected": 4.779558131553166,
+      "status": "PASS"
+    },
+    {
+      "case": "score_total_wipeout_zero_baseline",
+      "ar": [
+        "AR-003",
+        "AR-004",
+        "AR-043"
+      ],
+      "actual": 50.0,
+      "expected": 50.0,
+      "status": "PASS"
+    },
+    {
+      "case": "score_legitimate_blockade_gain",
+      "ar": [
+        "AR-003",
+        "AR-004",
+        "AR-043"
+      ],
+      "actual": 53.82749849858977,
+      "expected": 53.82749849858977,
+      "status": "PASS"
+    },
+    {
+      "case": "q_life_all_one",
+      "ar": [
+        "AR-002",
+        "AR-018"
+      ],
+      "actual": 1.2999999999999998,
+      "expected": 1.3,
+      "status": "PASS"
+    },
+    {
+      "case": "r3_c10_positive_feedback_pole",
+      "ar": [
+        "AR-033"
+      ],
+      "actual": 0.9450000000000001,
+      "expected": 0.945,
+      "status": "PASS"
+    },
+    {
+      "case": "runtime_unchanged_ids",
+      "ar": [
+        "AR-041"
+      ],
+      "actual": 119,
+      "expected": 119,
+      "status": "PASS"
+    },
+    {
+      "case": "all_130_activation_meters",
+      "ar": [
+        "AR-043"
+      ],
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "case": "initial_native_supply",
+      "ar": [
+        "AR-007"
+      ],
+      "actual": 650000,
+      "expected": 650000,
+      "status": "PASS"
+    },
+    {
+      "case": "finite_fx_two_leg",
+      "ar": [
+        "AR-007"
+      ],
+      "actual": [
+        100,
+        50
+      ],
+      "expected": [
+        100,
+        50
+      ],
+      "status": "PASS"
+    },
+    {
+      "case": "foreign_currency_debt_at_issuer_rate",
+      "ar": [
+        "AR-008"
+      ],
+      "actual": 150,
+      "expected": 150,
+      "status": "PASS"
+    },
+    {
+      "case": "retained_profit_dividend_split",
+      "ar": [
+        "AR-010"
+      ],
+      "actual": [
+        12.75,
+        12.25,
+        25.0
+      ],
+      "expected": [
+        12.75,
+        12.25,
+        25
+      ],
+      "status": "PASS"
+    },
+    {
+      "case": "current_credit_does_not_reweight_receipt",
+      "ar": [
+        "AR-044"
+      ],
+      "actual": 80.0,
+      "expected": 80,
+      "status": "PASS"
+    },
+    {
+      "case": "accelerator_refill_preserves_age",
+      "ar": [
+        "AR-026"
+      ],
+      "actual": 9.975000000000001,
+      "expected": 9.975,
+      "status": "PASS"
+    }
+  ],
+  "round5_checks": {
+    "scope": "文本/数据交叉断言及边界算术；不是正式引擎集成测试",
+    "checks": [
+      {
+        "case": "limit_facilities_per_nation",
+        "review_item": "GR-002",
+        "status": "PASS",
+        "evidence": {
+          "json": 512,
+          "document": 512
+        }
+      },
+      {
+        "case": "limit_mines_per_nation",
+        "review_item": "GR-002",
+        "status": "PASS",
+        "evidence": {
+          "json": 128,
+          "document": 128
+        }
+      },
+      {
+        "case": "limit_corridors_global",
+        "review_item": "GR-002",
+        "status": "PASS",
+        "evidence": {
+          "json": 4096,
+          "document": 4096
+        }
+      },
+      {
+        "case": "limit_models_per_nation",
+        "review_item": "GR-002",
+        "status": "PASS",
+        "evidence": {
+          "json": 16,
+          "document": 16
+        }
+      },
+      {
+        "case": "limit_formations_per_nation",
+        "review_item": "GR-002",
+        "status": "PASS",
+        "evidence": {
+          "json": 64,
+          "document": 64
+        }
+      },
+      {
+        "case": "limit_shipments_per_nation",
+        "review_item": "GR-002",
+        "status": "PASS",
+        "evidence": {
+          "json": 512,
+          "document": 512
+        }
+      },
+      {
+        "case": "limit_active_orders_per_nation",
+        "review_item": "GR-002",
+        "status": "PASS",
+        "evidence": {
+          "json": 256,
+          "document": 256
+        }
+      },
+      {
+        "case": "limit_contracts_per_nation",
+        "review_item": "GR-002",
+        "status": "PASS",
+        "evidence": {
+          "json": 128,
+          "document": 128
+        }
+      },
+      {
+        "case": "limit_plans_per_nation",
+        "review_item": "GR-002",
+        "status": "PASS",
+        "evidence": {
+          "json": 64,
+          "document": 64
+        }
+      },
+      {
+        "case": "limit_visible_tracks_per_observer",
+        "review_item": "GR-002",
+        "status": "PASS",
+        "evidence": {
+          "json": 8192,
+          "document": 8192
+        }
+      },
+      {
+        "case": "formation_domain_enum",
+        "review_item": "GR-002",
+        "status": "PASS",
+        "evidence": {
+          "document": [
+            "Air",
+            "Land",
+            "Sea-Sub",
+            "Sea-Surface"
+          ],
+          "data": [
+            "Air",
+            "Land",
+            "Sea-Sub",
+            "Sea-Surface"
+          ]
+        }
+      },
+      {
+        "case": "intel_op_enum",
+        "review_item": "GR-002",
+        "status": "PASS",
+        "evidence": [
+          "C12_cryptanalysis",
+          "S06_decoy"
+        ]
+      },
+      {
+        "case": "cyber_op_enum",
+        "review_item": "GR-002",
+        "status": "PASS",
+        "evidence": [
+          "S03_infiltrate",
+          "S03_steal_tech",
+          "S08_paralyze"
+        ]
+      },
+      {
+        "case": "legacy_enums_absent",
+        "review_item": "GR-002",
+        "status": "PASS",
+        "evidence": "旧指令枚举/滑窗去重字段不再出现在接口正文"
+      },
+      {
+        "case": "snapshot_limits",
+        "review_item": "GR-002",
+        "status": "PASS",
+        "evidence": {
+          "chunk_bytes": 262144,
+          "total_bytes": 16777216
+        }
+      },
+      {
+        "case": "seq_replay_after_4096",
+        "review_item": "GR-002",
+        "status": "PASS",
+        "evidence": "水位5000时旧seq1仍拒绝，与最近256回执是否留存无关；规范断言，非引擎运行"
+      },
+      {
+        "case": "no_retrospective_SOC",
+        "review_item": "GR-001",
+        "status": "PASS",
+        "evidence": {
+          "prior_pump_ratio": 0.8,
+          "SOC_mU": 60,
+          "expected_P3a": "SCRAM; SOC仍60（其后真实调度另计）"
+        }
+      },
+      {
+        "case": "auto_last_8",
+        "review_item": "GR-001",
+        "status": "PASS",
+        "evidence": {
+          "median": 10.0,
+          "last": 8,
+          "current_price": 15,
+          "actual": "charge",
+          "expected": "charge"
+        }
+      },
+      {
+        "case": "auto_last_8.5",
+        "review_item": "GR-001",
+        "status": "PASS",
+        "evidence": {
+          "median": 10.0,
+          "last": 8.5,
+          "current_price": 15,
+          "actual": "idle",
+          "expected": "idle"
+        }
+      },
+      {
+        "case": "auto_last_10",
+        "review_item": "GR-001",
+        "status": "PASS",
+        "evidence": {
+          "median": 10.0,
+          "last": 10,
+          "current_price": 15,
+          "actual": "idle",
+          "expected": "idle"
+        }
+      },
+      {
+        "case": "auto_last_11.5",
+        "review_item": "GR-001",
+        "status": "PASS",
+        "evidence": {
+          "median": 10.0,
+          "last": 11.5,
+          "current_price": 15,
+          "actual": "idle",
+          "expected": "idle"
+        }
+      },
+      {
+        "case": "auto_last_12",
+        "review_item": "GR-001",
+        "status": "PASS",
+        "evidence": {
+          "median": 10.0,
+          "last": 12,
+          "current_price": 15,
+          "actual": "discharge",
+          "expected": "discharge"
+        }
+      },
+      {
+        "case": "auto_empty_history",
+        "review_item": "GR-001",
+        "status": "PASS",
+        "evidence": "无历史不申报任一边；黑网不覆盖预选方向"
+      },
+      {
+        "case": "credit_spread_sync",
+        "review_item": "GR-003",
+        "status": "PASS",
+        "evidence": {
+          "Credit": 0.5,
+          "credit_spread_pp": 5.0
+        }
+      },
+      {
+        "case": "effective_tax_formula_sync",
+        "review_item": "GR-003",
+        "status": "PASS",
+        "evidence": "tau_effective=min(0.55,tau_tax*(1.1 if F01 else 1.0))"
+      },
+      {
+        "case": "effective_tax_boundary",
+        "review_item": "GR-003",
+        "status": "PASS",
+        "evidence": {
+          "tau_tax": 0.5,
+          "F01": true,
+          "tau_effective": 0.55,
+          "tax_on_cash_base100": 55
+        }
+      },
+      {
+        "case": "legacy_vehicle_exemption",
+        "review_item": "P2",
+        "status": "PASS",
+        "evidence": "T=0存量可用，不授权P036新增制造"
+      }
+    ]
+  },
+  "round6_checks": {
+    "version": "rift_era_rules_r6",
+    "scope": "独立目录/文本断言、算术与冻结其他实益的比较；不是完整引擎运行",
+    "checks": [
+      {
+        "case": "action_never_consumption_or_receipt",
+        "or_ids": [
+          "OR-001"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "burn_does_not_lower_eta_numerator",
+        "or_ids": [
+          "OR-001"
+        ],
+        "actual": 500.0,
+        "expected": 500.0,
+        "status": "PASS"
+      },
+      {
+        "case": "barrage_no_gains_upper_income_minus_loss",
+        "or_ids": [
+          "OR-001",
+          "OR-011"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "barrage_no_gains_score_below_baseline",
+        "or_ids": [
+          "OR-001",
+          "OR-011"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "patrol_loop_upper_income_minus_loss",
+        "or_ids": [
+          "OR-001",
+          "OR-011"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "patrol_loop_score_below_baseline",
+        "or_ids": [
+          "OR-001",
+          "OR-011"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "cyber_at_credit_point1",
+        "or_ids": [
+          "OR-001",
+          "OR-011"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "zero_material_hostile_loss",
+        "or_ids": [
+          "OR-011"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "zero_material_hostile_V",
+        "or_ids": [
+          "OR-011"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "C12_no_action_count_meter",
+        "or_ids": [
+          "OR-002"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "S06_no_action_count_meter",
+        "or_ids": [
+          "OR-002"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "S08_no_action_count_meter",
+        "or_ids": [
+          "OR-002"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "V08_no_action_count_meter",
+        "or_ids": [
+          "OR-002"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "war_states",
+        "or_ids": [
+          "OR-003"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "war_requires_explicit_and_allies_orthogonal",
+        "or_ids": [
+          "OR-003"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "mutual_declaration_and_truce_exit",
+        "or_ids": [
+          "OR-003"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "blockade_0_100",
+        "or_ids": [
+          "OR-004"
+        ],
+        "actual": 0,
+        "expected": 0,
+        "status": "PASS"
+      },
+      {
+        "case": "blockade_100_0",
+        "or_ids": [
+          "OR-004"
+        ],
+        "actual": 1,
+        "expected": 1,
+        "status": "PASS"
+      },
+      {
+        "case": "blockade_25_25",
+        "or_ids": [
+          "OR-004"
+        ],
+        "actual": 0.25,
+        "expected": 0.25,
+        "status": "PASS"
+      },
+      {
+        "case": "blockade_substitution_U_positive_after_Phi_loss",
+        "or_ids": [
+          "OR-004"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "blockade_substitution_finite_40cycle_V",
+        "or_ids": [
+          "OR-004"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "energy_substitution_U",
+        "or_ids": [
+          "OR-004",
+          "OR-005"
+        ],
+        "actual": 0.06648931552098146,
+        "expected": 0.06648931552098146,
+        "status": "PASS"
+      },
+      {
+        "case": "energy_substitution_U_positive",
+        "or_ids": [
+          "OR-004"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "line_health_1",
+        "or_ids": [
+          "OR-005"
+        ],
+        "actual": 60,
+        "expected": 60,
+        "status": "PASS"
+      },
+      {
+        "case": "line_health_0.25",
+        "or_ids": [
+          "OR-005"
+        ],
+        "actual": 15.0,
+        "expected": 15,
+        "status": "PASS"
+      },
+      {
+        "case": "line_health_0",
+        "or_ids": [
+          "OR-005"
+        ],
+        "actual": 0,
+        "expected": 0,
+        "status": "PASS"
+      },
+      {
+        "case": "S1_book",
+        "or_ids": [
+          "OR-012"
+        ],
+        "actual": 108.5672,
+        "expected": 108.5672,
+        "status": "PASS"
+      },
+      {
+        "case": "S1_salvage_loss",
+        "or_ids": [
+          "OR-012"
+        ],
+        "actual": 100.2422,
+        "expected": 100.2422,
+        "status": "PASS"
+      },
+      {
+        "case": "P066_recycle_VA",
+        "or_ids": [
+          "OR-012"
+        ],
+        "actual": -0.94995,
+        "expected": -0.94995,
+        "status": "PASS"
+      },
+      {
+        "case": "repair_not_double_counted",
+        "or_ids": [
+          "OR-001",
+          "OR-005"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "repair_book_conserved",
+        "or_ids": [
+          "OR-005"
+        ],
+        "actual": 108.5672,
+        "expected": 108.5672,
+        "status": "PASS"
+      },
+      {
+        "case": "fx_live_1",
+        "or_ids": [
+          "OR-006"
+        ],
+        "actual": -200,
+        "expected": -200,
+        "status": "PASS"
+      },
+      {
+        "case": "fx_live_0.5",
+        "or_ids": [
+          "OR-006"
+        ],
+        "actual": -200,
+        "expected": -200,
+        "status": "PASS"
+      },
+      {
+        "case": "fx_live_0.05",
+        "or_ids": [
+          "OR-006"
+        ],
+        "actual": -200,
+        "expected": -200,
+        "status": "PASS"
+      },
+      {
+        "case": "NFA_query_formula_uses_book",
+        "or_ids": [
+          "OR-006"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "transit_receipt_sum",
+        "or_ids": [
+          "OR-007"
+        ],
+        "actual": 305.2,
+        "expected": 305.2,
+        "status": "PASS"
+      },
+      {
+        "case": "transit_mean20",
+        "or_ids": [
+          "OR-007"
+        ],
+        "actual": 9.155999999999999,
+        "expected": 9.155999999999999,
+        "status": "PASS"
+      },
+      {
+        "case": "short_debt_rate_subscripts",
+        "or_ids": [
+          "OR-008"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "liquidation_no_ID_priority",
+        "or_ids": [
+          "OR-008"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "healthy_relocation_population_conservation",
+        "or_ids": [
+          "OR-009"
+        ],
+        "actual": 144,
+        "expected": 144,
+        "status": "PASS"
+      },
+      {
+        "case": "CPU_match_budget",
+        "or_ids": [
+          "OR-010"
+        ],
+        "actual": 1,
+        "expected": 1,
+        "status": "PASS"
+      },
+      {
+        "case": "eta_per_good_no_extraction_VA",
+        "or_ids": [
+          "OR-013"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "batch_fixed_manifest",
+        "or_ids": [
+          "OR-014"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "research_split_penalty",
+        "or_ids": [
+          "OR-015"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "world_pool_pressure_present",
+        "or_ids": [
+          "OR-016"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "P090_theta_synced",
+        "or_ids": [
+          "OR-017"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "reservoir_public_install",
+        "or_ids": [
+          "OR-017"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "AI_local_budget_sync",
+        "or_ids": [
+          "OR-017"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "orbit_berth_and_error_code",
+        "or_ids": [
+          "OR-017"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "conditional_window_clock",
+        "or_ids": [
+          "OR-017"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "NPC_service_and_resident_rationing",
+        "or_ids": [
+          "OR-017"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "score_equal_baseline",
+        "or_ids": [
+          "OR-011"
+        ],
+        "actual": 50.0,
+        "expected": 50.0,
+        "status": "PASS"
+      },
+      {
+        "case": "score_heterogeneous_seat_ref_self_play",
+        "or_ids": [
+          "OR-011"
+        ],
+        "actual": 50.0,
+        "expected": 50.0,
+        "status": "PASS"
+      },
+      {
+        "case": "score_scorched_earth_10_vs_1",
+        "or_ids": [
+          "OR-011"
+        ],
+        "actual": 11.44878260415323,
+        "expected": 11.44878260415323,
+        "status": "PASS"
+      },
+      {
+        "case": "score_scorched_earth_1_vs_001",
+        "or_ids": [
+          "OR-011"
+        ],
+        "actual": 5.93509431027676,
+        "expected": 5.93509431027676,
+        "status": "PASS"
+      },
+      {
+        "case": "score_lead_state_before_scorched_earth_200_vs_100",
+        "or_ids": [
+          "OR-011"
+        ],
+        "actual": 68.48071512624097,
+        "expected": 68.48071512624097,
+        "status": "PASS"
+      },
+      {
+        "case": "score_lead_state_after_scorched_earth_199_vs_80",
+        "or_ids": [
+          "OR-011"
+        ],
+        "actual": 68.35694909389267,
+        "expected": 68.35694909389267,
+        "status": "PASS"
+      },
+      {
+        "case": "score_behind_state_before_scorched_earth_90_vs_200",
+        "or_ids": [
+          "OR-011"
+        ],
+        "actual": 47.143807416111386,
+        "expected": 47.143807416111386,
+        "status": "PASS"
+      },
+      {
+        "case": "score_behind_state_after_scorched_earth_89_vs_100",
+        "or_ids": [
+          "OR-011"
+        ],
+        "actual": 46.84338833468044,
+        "expected": 46.84338833468044,
+        "status": "PASS"
+      },
+      {
+        "case": "score_negative_power",
+        "or_ids": [
+          "OR-011"
+        ],
+        "actual": 4.779558131553166,
+        "expected": 4.779558131553166,
+        "status": "PASS"
+      },
+      {
+        "case": "score_total_wipeout_zero_baseline",
+        "or_ids": [
+          "OR-011"
+        ],
+        "actual": 50.0,
+        "expected": 50.0,
+        "status": "PASS"
+      },
+      {
+        "case": "score_legitimate_blockade_gain",
+        "or_ids": [
+          "OR-011"
+        ],
+        "actual": 53.82749849858977,
+        "expected": 53.82749849858977,
+        "status": "PASS"
+      },
+      {
+        "case": "recipe_ID_P044",
+        "or_ids": [
+          "OR-017"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "recipe_ID_P006",
+        "or_ids": [
+          "OR-017"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "recipe_ID_P070",
+        "or_ids": [
+          "OR-017"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "recipe_ID_P095",
+        "or_ids": [
+          "OR-017"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "recipe_ID_P098",
+        "or_ids": [
+          "OR-017"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS"
+      },
+      {
+        "case": "strict_loss_not_truncated_at_large_V",
+        "or_ids": [
+          "OR-011"
+        ],
+        "actual": true,
+        "expected": true,
+        "status": "PASS",
+        "evidence": "exact rational 10^40 - (.001*.0875*.24/720) < 10^40; displayed rounded score not authoritative"
+      }
+    ]
+  }
+}

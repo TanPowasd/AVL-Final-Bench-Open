@@ -1,0 +1,370 @@
+{
+  "schema_version": 1,
+  "version": "rift_era_rules_r6",
+  "scope": "rift_era_rules_r6正式规则（已冻结）；不是已实现引擎",
+  "numeric": {
+    "ledger_unit": 1000,
+    "line_unit": 1000000,
+    "intermediate": "unbounded_integer_or_checked_int128",
+    "rounding": "floor_nonnegative_largest_remainder",
+    "whole_goods": [
+      "vehicle",
+      "locomotive",
+      "freighter",
+      "transport_aircraft",
+      "armored_unit",
+      "artillery_unit",
+      "escort_vessel",
+      "submarine",
+      "aerial_unit",
+      "ground_drone",
+      "air_drone",
+      "satellite",
+      "swarm_unit",
+      "energy_weapon",
+      "reusable_launcher",
+      "hypersonic_missile",
+      "orbital_platform"
+    ]
+  },
+  "extraction": {
+    "iron_ore": {
+      "output": 8,
+      "power": 1,
+      "labor": 3,
+      "g2_multiplier": 2,
+      "g2_power_multiplier": 1.6,
+      "g2_labor_multiplier": 1.25
+    },
+    "copper_ore": {
+      "output": 5,
+      "power": 1.5,
+      "labor": 3,
+      "g2_multiplier": 2,
+      "g2_power_multiplier": 1.6,
+      "g2_labor_multiplier": 1.25
+    },
+    "bauxite": {
+      "output": 5,
+      "power": 1.5,
+      "labor": 3,
+      "g2_multiplier": 2,
+      "g2_power_multiplier": 1.6,
+      "g2_labor_multiplier": 1.25
+    },
+    "coal": {
+      "output": 8,
+      "power": 1,
+      "labor": 3,
+      "g2_multiplier": 2,
+      "g2_power_multiplier": 1.6,
+      "g2_labor_multiplier": 1.25
+    },
+    "crude_oil": {
+      "output": 5,
+      "power": 2,
+      "labor": 3,
+      "g2_multiplier": 2,
+      "g2_power_multiplier": 1.6,
+      "g2_labor_multiplier": 1.25
+    },
+    "natural_gas": {
+      "output": 6,
+      "power": 1.5,
+      "labor": 3,
+      "g2_multiplier": 2,
+      "g2_power_multiplier": 1.6,
+      "g2_labor_multiplier": 1.25
+    },
+    "stone": {
+      "output": 8,
+      "power": 1,
+      "labor": 3,
+      "g2_multiplier": 2,
+      "g2_power_multiplier": 1.6,
+      "g2_labor_multiplier": 1.25
+    },
+    "quartz": {
+      "output": 5,
+      "power": 1.5,
+      "labor": 3,
+      "g2_multiplier": 2,
+      "g2_power_multiplier": 1.6,
+      "g2_labor_multiplier": 1.25
+    },
+    "rare_ore": {
+      "output": 2,
+      "power": 2,
+      "labor": 4,
+      "g2_multiplier": 2,
+      "g2_power_multiplier": 1.6,
+      "g2_labor_multiplier": 1.25
+    },
+    "uranium_ore": {
+      "output": 1,
+      "power": 2.5,
+      "labor": 4,
+      "g2_multiplier": 2,
+      "g2_power_multiplier": 1.6,
+      "g2_labor_multiplier": 1.25
+    },
+    "water": {
+      "output": 16,
+      "power": 0.5,
+      "labor": 1.5,
+      "g2_multiplier": 2,
+      "g2_power_multiplier": 1.6,
+      "g2_labor_multiplier": 1.25
+    },
+    "biomass": {
+      "output": 5,
+      "power": 0,
+      "labor": 3,
+      "g2_multiplier": 2,
+      "g2_power_multiplier": 1.6,
+      "g2_labor_multiplier": 1.25
+    }
+  },
+  "initial_world": {
+    "active_hub": 0,
+    "core_hubs": 5,
+    "civilian_skills": [
+      144,
+      40,
+      10
+    ],
+    "military_population": 6,
+    "productive_lines": {
+      "P070": 5,
+      "P028": 3,
+      "P031": 4,
+      "P032": 2,
+      "P001": 2,
+      "P002": 1,
+      "P005": 1,
+      "P004": 1,
+      "P007": 2,
+      "P062": 1,
+      "P011": 1,
+      "P075": 1
+    },
+    "housing": 3,
+    "load_overrides": {
+      "P062": 0.5
+    },
+    "farm_fertility": 1.1,
+    "mines": {
+      "coal": {
+        "count": 2,
+        "grade": 1.25
+      },
+      "iron_ore": {
+        "count": 1,
+        "grade": 1.125
+      },
+      "copper_ore": {
+        "count": 1,
+        "grade": 1
+      },
+      "stone": {
+        "count": 1,
+        "grade": 1
+      },
+      "quartz": {
+        "count": 1,
+        "grade": 1
+      },
+      "water": {
+        "count": 2,
+        "grade": 1
+      },
+      "biomass": {
+        "count": 1,
+        "grade": 1
+      }
+    },
+    "warehouse_capacity": 3300,
+    "inventory": {
+      "food": 180,
+      "grain": 90,
+      "coal": 300,
+      "iron_ore": 120,
+      "copper_ore": 60,
+      "stone": 90,
+      "quartz": 45,
+      "water": 480,
+      "biomass": 60,
+      "steel": 48,
+      "copper": 20,
+      "cement": 48,
+      "glass": 16,
+      "chemicals": 20,
+      "basic_parts": 18,
+      "consumer_goods": 90,
+      "lab_supplies": 24,
+      "medicine": 30,
+      "ammunition": 32,
+      "fuel": 20,
+      "vehicle": 3
+    },
+    "treasury": 100000,
+    "households": 50000,
+    "formations": [
+      {
+        "hub": 0,
+        "units": {
+          "infantry": 1,
+          "motorized": 1
+        },
+        "count": 2
+      }
+    ],
+    "mine_maintenance_per20": 0.1,
+    "legacy_vehicle_tech_exemption": {
+      "tech_id": "L02",
+      "recipe_id": "P036",
+      "applies_to": "T=0预置motorized编队及初始库存vehicle的初始化和使用",
+      "manufacturing_exempt": false,
+      "grants_knowledge": false
+    }
+  },
+  "limits": {
+    "facilities_per_nation": 512,
+    "mines_per_nation": 128,
+    "formations_per_nation": 64,
+    "units_per_formation": 12,
+    "corridors_global": 4096,
+    "shipments_per_nation": 512,
+    "active_orders_per_nation": 256,
+    "contracts_per_nation": 128,
+    "plans_per_nation": 64,
+    "models_per_nation": 16,
+    "visible_tracks_per_observer": 8192,
+    "snapshot_chunk_bytes": 262144,
+    "snapshot_total_bytes": 16777216
+  },
+  "environment": {
+    "natural_pollution_decay": 0.02,
+    "remediation_extra_decay": 0.02,
+    "remediation_need": 1,
+    "capture_fraction": 0.8,
+    "emissions": {
+      "P070": 1,
+      "P071": 0.6,
+      "P111": 0.3,
+      "P001": 0.5,
+      "P005": 0.4,
+      "P002": 0.3,
+      "P006": 0.3,
+      "P007": 0.3,
+      "P066": 0.2,
+      "P067": 0.2
+    },
+    "global_decay": 0.01,
+    "global_threshold": 50000,
+    "reservoir_capacity": 200,
+    "reservoir_gamma_per_unit": 0.35,
+    "reservoir_gamma_cap": 0.7
+  },
+  "city_states": {
+    "initial_cash_ru": 10000,
+    "initial_ema": {
+      "trade": 0,
+      "vital": 0,
+      "security": 0.5,
+      "coercion": 0
+    },
+    "trade_cap": 500,
+    "evaluation_period": 4,
+    "ema_alpha": 0.09523809523809523,
+    "entry_threshold": 0.35,
+    "hysteresis": 0.03,
+    "contract_duration": 40,
+    "jv_share": 0.2,
+    "port_fee_ru_per_load": 0.1
+  },
+  "grid": {
+    "dispatch": "rank_then_local_then_residual_paths_integer",
+    "settlement": "pay_as_bid_delivered_ru",
+    "line_toll_ru_per_sent": 0.01,
+    "max_bid_local": 50,
+    "storage_auto_direction": "lagged_price_select_one",
+    "storage_auto_policy": {
+      "selection_phase": "每周期首tick P1",
+      "price_unit": "RU_per_delivered_electricity",
+      "history_window_cycles": 10,
+      "history_scope": "本地Hub已结算实付均价",
+      "partial_history": "use_available_cycles",
+      "empty_history": "idle",
+      "charge_if_last_price_lt_median_times": 0.85,
+      "discharge_if_last_price_gt_median_times": 1.15,
+      "otherwise": "idle",
+      "lock_duration": "through_cycle_end",
+      "quote_side": "selected_direction_only"
+    }
+  },
+  "financial": {
+    "initial_money_supply_per_currency": 650000,
+    "world_ru": 10000000,
+    "world_native_each": 500000,
+    "fx_fee": 0.002,
+    "tax_window": 20,
+    "tax_floor": 25,
+    "debt_mean_multiple": 40,
+    "company_shares": 1000000,
+    "external_share_cap": 490000,
+    "margin_rate": 0.5,
+    "maintenance_margin": 0.3,
+    "city_state_household_ru": 1000,
+    "world_inventory_per_inventory_good": 10000,
+    "fx_noise_sigma": 0.002,
+    "capital_control_kappa": 0.3,
+    "score_fx_basis": "historical_RU_cash_average_cost_and_position_entry_rates",
+    "initial_cash_book_ru": 150000
+  },
+  "scoring_recognition": {
+    "trade": "origin_tag_on_terminal_use",
+    "transit": "origin_tag_shortest_path_on_terminal_use",
+    "cash_aid": "no_independent_score",
+    "credit_repair": "terminal_use_receipts_only",
+    "military_and_hostile": "action_loss_only_no_eta_no_receipt",
+    "repair": "capitalized_book_only_no_loss_no_eta_no_receipt"
+  },
+  "diplomacy": {
+    "states": [
+      "PEACE",
+      "WAR",
+      "TRUCE"
+    ],
+    "initial_state": "PEACE",
+    "alliance_is_orthogonal": true,
+    "kinetic_requires_war": true,
+    "declaration_phase": "P1_after_accepted_treaties_before_target_validation",
+    "simultaneous_declarations": "both_aggressors",
+    "truce_expiry": "PEACE",
+    "city_state_annex_cycles": 240,
+    "city_state_annex_support_mU": 650,
+    "annex_count_window_cycles": 200,
+    "war_interest_aggregation": "max_active_role_addon_not_sum"
+  },
+  "blockade": {
+    "firepower_full_block_defense_multiplier": 2,
+    "firepower_bias": 50,
+    "partial_formula": "A/(A+D+50)",
+    "effective_lag_ticks": 1,
+    "interdict_damage_cap": 0.25,
+    "interdict_defense_bias": 100,
+    "neutral_carrier_or_owner_protected": true
+  },
+  "asset_damage": {
+    "health_initial_mU": 1000,
+    "destroyed_threshold_mU": 0,
+    "capacity_formula": "base*health/1000*maintenance_availability",
+    "repair_material_multiplier": 1.0,
+    "repair_full_duration_cycles": 20,
+    "repair_full_labor_cycles": 2,
+    "repair_full_electricity": 2,
+    "repair_counting": "capitalized_book_only",
+    "hypersonic_nonbasic_damage_mU": 250
+  }
+}

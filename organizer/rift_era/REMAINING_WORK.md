@@ -1,0 +1,179 @@
+# 裂陆纪元待实现清单（2026-11-05 审查）
+
+本文件是接手实现时的工作清单，按优先级排列。背景和已接入内容见 [HANDOFF.md](HANDOFF.md)，完整对局验收见 [FULL_MATCH_TEST_TODO.md](FULL_MATCH_TEST_TODO.md)。
+
+审查基线：提交 `06afab4`，引擎指纹 `28011425…a016`，规则 `rift_era_rules_r6`。
+
+## 结论
+
+- **引擎：** 已完成的部分质量可靠，但还不能跑完整对局。现在只有开局经济入口，61/75 条规则命令已注册，五支柱采集和批次评分都没有装配。
+- **交接文档：** 主要说法经核对属实，可以作为入口。但遗漏了本文件 P0-4、P1 的部分条目，也有几处过期，见最后一节。
+
+## 已核对通过
+
+| 项目 | 结果 |
+|---|---|
+| 回归证据 | `validation/handoff_full_20261105.json` 记录 536 项 0 失败，其引擎指纹与当前源码一致 |
+| 确定性 | seed 1000 跑 150 Tick，`PYTHONHASHSEED=0` 和 `12345` 的最终状态哈希相同 |
+| 开局自举 | seed 1000 通过核心检查 |
+| 新候选地图 | `world_atlas` 的 seed 1000 无玩家命令跑 150 Tick，全局审计通过；这只是组件探测，不是地图验收 |
+| 命令字段 | 已注册命令与 06 表做了双向比对，字段冲突只有下面的 `corridor_policy` |
+| 主线接线 | 交接中已声明接入的系统都有阶段调用；`OperatingWorld` 的系统都进入快照或属于缓存 |
+| 活跃挂单上限 | 现货、债券、证券、AI 服务都执行了 256 单上限 |
+
+## P0：完整对局的前置条件
+
+### P0-1 完整对局入口
+
+`opening_economy` 限制最多 150 Tick，且没有正式运行命令。需要交付：
+
+- 28,800 Tick 的完整装配和命令行入口，继续保留发布门禁。
+- 真实的终局处理和正式 finalizer。`driver.py` 已要求 finalizer 认证 `full_rules_accepted`，目前没有实现。
+- 探测结果：临时脚本绕过限制后，旧地图 seed 1000 无玩家命令跑到 600 Tick，全局审计通过，每 50 Tick 耗时保持 49–65 秒。这只说明空局前 2% 没崩，不能只删除 150 Tick 限制就算完成。
+
+### P0-2 五支柱采集与评分
+
+`scoring.py` 的 `industrial_pillar`、`control_pillar`、`technology_pillar`、`international_pillar`、`relative_ratio`、`score_interval` 都没有生产调用。
+
+- 每周期统一采集国力，保留 2,880 周期轨迹。
+- 接入已有的只读接口：`asset_book`、`debt_book`、`long_book`、`external_equity_book`、`short_liability_book`、`creditor_book`、`scoring_inputs`、`population_scoring_rows`。保证金已在现金账内，不要重复计入。
+- 完成 `active_scale.py` 的待定指标后再接入主线。它目前未被任何模块导入。
+- 实现 NFA、可持续性、Loss_action 的唯一归属，以及 `fx_revaluation_invariance` 要求的汇率变化不重估。
+
+### P0-3 正式地图接线
+
+- 入口仍调用旧 `world.generate_candidate`。`world_atlas.generate_world` 没有被主线使用。
+- 572 条 `resource_atlas` 中只有 72 个起始 deposit 可开采，其余远端矿点要注册进 `resource_sites/resource_sources/deposits`。
+- 起始储量统一读 atlas，`Hydrology` 改读 `world.river_downstream`。
+- 地图接受必须来自真实 150 Tick 自举，失败后重抽。
+
+### P0-4 引擎性能（交接未提及）
+
+现状：无玩家命令时约 **1 秒/Tick**，新旧地图接近。按此线性估算，一局约 8 小时，64 seed 不含影子局也要约 21 CPU 天。实体规模增长后还会更慢，所以这是下限。
+
+20 Tick 剖面的主要耗时（含剖面器开销）：
+
+- `materials` 的 `intersection_update`（约 11 秒/20 Tick）
+- `determinism` 的键生成，约 32 万次调用（约 11 秒）
+- `Fraction` 运算（约 8 秒）
+
+目标：单局墙钟上限由接手 AI 决定，用户已授权，不用再询问。定下后写明数值和依据，要能跑完 64 seed 正式批次（含影子局）。优化不能改变任何状态哈希，必须用同 seed 新旧哈希对比验证。
+
+## P1：规则缺失
+
+### 缺失的 14 条命令
+
+06 中定义、引擎未注册。调用时返回 `ERR_SCHEMA`，不是空操作。
+
+| 命令 | 依赖或说明 | 交接是否列出 |
+|---|---|---|
+| `logistics/forward_contract` | F03，保证金 20%，违约扣押 | 是 |
+| `finance/secondary_offering` | C30，定向投向设施 | 是 |
+| `finance/fx_short`、`finance/fx_cover` | F03 | 是 |
+| `diplomacy/terminate_contract` | 通用终止和归责 | 是 |
+| `military/hypersonic_strike` | N10，仅 G11 可拦截 | 是 |
+| `military/blockade`、`military/interdict` | `combat.blockade_fraction` 已有公式，尚未调用 | 是 |
+| `intelligence/steal_model` | E84 | 是 |
+| `governance/climate_intervention` | V08 | 是 |
+| `diplomacy/grant_climate_consent` | V08 跨国授权 | **否** |
+| `intelligence/cyber_op` | S03，E82，E85，C33 | 仅写了 S03 |
+| `governance/conditional_plan` | 每窗口首个 P1 判定，有冷却 | **否** |
+| `research/set_backup_hub` | 研究备份枢纽 | **否** |
+
+### 与冻结规则不一致（交接未提及）
+
+1. **`finance/stock_order` 没有检查 F03。** 06 要求融资和融券先解锁 F03，但整个引擎里没有 `F03` 判断，开局即可融资融券。应返回 `ERR_TECH_LOCKED`。
+2. **`logistics/corridor_policy` 接口不符。**
+   - 规则：`access_tier: 0..3` 和 `toll_rate_bp: 0..2000`，费用按实际载货批次的基数计算。
+   - 引擎：`allowed: bool` 和固定的 `toll_ru_mU`，见 `transport_operations.py:696`。
+   - 费率还写在走廊上，改一国费率会影响所有国家。`blockade_food_substitution` 依赖 `access_tier`。
+3. **本国地区的支持度事件几乎没接。** `local_economy.py:44` 把 `occupied` 写死为 `False`，`events_mU` 只有经济学说切换一项。因此下列规则未生效：敌占 −12、C04 黑网 −20、E26 B1 欠供、E71 bombard −300。
+
+### 未找到实现的耦合
+
+以下是按公式特征检索代码的结果，接手时先核对一次。
+
+| 编号 | 内容 |
+|---|---|
+| C06、C07 | 进口平价：汇率传导到进口原料、芯片和加速器 |
+| C15 | 只有停运折减，线损部分待输电建设（实现口径文档已说明） |
+| C16 | AI 提高 NPC 市场效率 |
+| C18 | AI 情报融合 |
+| C19 | AI 增强无人作战 |
+| C24 | 储量寿命进入采掘公司估值，`StockMarket.fair` 没有该系数 |
+| C25 | 战区机组强迫停运，目前 `outage_multiplier` 只有 AI 项 |
+| C28 | 信用约束跨国电力容量和新合同 |
+| C33 | 网络攻击暂停证券竞价，依赖 `cyber_op` |
+
+C03、C05、C09、C13、C14、C22、C23、C29、C31、C32 已确认有实现。
+
+### 有定义但没有效果的科技
+
+代码和配方数据都没有引用：
+
+- `A07` 精确农业
+- `E12` 洲际能源互联
+- `F04` 主权基金
+- `G07` 协同作战
+- `G12` 全域联合指挥
+- `I12` 分子级制造
+- `L12` 巨构工程
+- `V07` 生态修复
+- `V08` 区域气候干预
+
+`F03` 同样未引用，见上文。其他 43 个科技没有代码引用，但有配方或军事数据门控，其效果未逐项核对。
+
+### 已写好函数但生产路径未调用
+
+| 函数 | 待接入的规则 |
+|---|---|
+| `Authority.military_operating_factor` | 敌占区军事运行系数 0.6 |
+| `FacilityOwnership.prepare_cost_payment` | JV 经营成本按份额分摊 |
+| `CityStateEconomy.record_coercion` | 胁迫城邦的关系后果 |
+| `Consumption.synthetic_share`、`eta` | 评分采集 |
+
+### 交接已列出的其余项
+
+- 破产重整和强制拍卖：引擎里没有相关代码。
+- 投降和俘虏：引擎里没有相关代码。
+- 完整野战补给和航空航程。
+- 占领后的居民、工资和税币归属。
+- 设备维修、残值和抵押的经济所有权。
+- 客运跨模态换乘，Cargo 与客运同档统一容量仲裁，水渠 40% 上限。
+- 电力合同的专用负荷和交付。
+- 城邦转口的封堵补偿。
+- 融资融券的强平连锁、费用并入本金和跨托管卖出，见 [HANDOFF_FINANCE_20261105.md](HANDOFF_FINANCE_20261105.md)。
+
+## P2：比赛交付
+
+- **参考策略：** 没有能走正式协议的参考池。`designs/rift_era/prototype/` 的 bot 基于原型模拟器，不能直接用。
+- **批次评分：** `evaluation.py` 的 `Batch.write_new`、`shadow_key`、`ResourceBudget.concurrency` 没有运行器调用。需要实现 64 seed、影子基准和 `INVALID_EVALUATION`。
+- **题库接入：** `contestant_readme.md`、starter、公开基线、`spar.py`、`score.py`，以及 `score_all.py`、`pack_contestant.py` 接入。
+- **计分校准：** 等用户定 V 梯度目标。
+- **快照缺口：** `EquityFinance.sequence` 影响强平单 ID，但不在 `snapshot()` 里，应补上。`Macroeconomy`、`Payments`、`ForeignExchange`、`DebtFunding`、`Relations`、`Battles` 等没有 `audit()`，建议补。
+- **宿主：** 512 MiB 管道容量和 cgroup 委派的问题仍未解决，见 `IMPLEMENTATION_CONTRACT.md` 的策略 IPC 一节。
+
+## 15 个动态场景的就绪情况
+
+这是静态判断，场景都没有执行过。引擎侧没有场景运行器，`round6_scenarios.json` 只被文档引用。
+
+| 状态 | 场景 |
+|---|---|
+| 机制已有，可以先写场景测试 | `patrol_loop`、`repair_single_count`、`healthy_relocation`、`cpu_budget`、`zero_material_hostility`、`damage_power_and_repair`、`relations_and_neutrality`、`barrage_no_gains`（缺 bombard −300） |
+| 需要评分采集（P0-2） | `fx_revaluation_invariance`、`transit_formula`、`world_pool_pressure` |
+| 需要缺失命令或修正接口 | `cyber_credit_floor`（`cyber_op`）、`blockade_food_substitution`（`corridor_policy`）、`energy_substitution`（`corridor_policy`） |
+| 需要批次运行器 | `batch_consistency` |
+
+## 文档待修
+
+- `README.md`：多处仍是 0.4.0 时的说法，例如“尚未接入”和“下一项实质性交付”。`ENGINE_VERSION` 也还是 0.4.0，冻结新版本时要一起升。
+- `validation/command_surface_20261104T180634Z.json`：记录 42 条已注册，当前是 67 条，需要重新生成或标为历史记录。
+- `HANDOFF.md`：第 3、4 项应补上表中标“否”的命令；第 8 项应补上性能。
+
+## 建议顺序
+
+1. 先修两处规则不一致（F03、`corridor_policy`）和支持度事件，改动小，能解除场景阻塞。
+2. 同时做 P0-3 和 P0-4。地图接线后实体规模才接近真实，这时做性能优化才有意义。
+3. 完成 P0-1 和 P0-2，让引擎能跑完一局并出分。
+4. 补缺失命令和耦合，每项都写场景测试。
+5. 做参考策略和批次运行器，再把 `FULL_MATCH_TEST_TODO.md` 交给测试方。

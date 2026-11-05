@@ -1,0 +1,100 @@
+{
+  "kind": "development_handoff",
+  "date_utc": "2026-11-05",
+  "full_rules_accepted": false,
+  "full_match_tests_executed": false,
+  "official_release_gates_opened": false,
+  "engine_hash_at_focused_checks": "f45156ba5711ee0fcf982890a354c7b7701c1e0a4701cb2990e5b99002e699de",
+  "focused_runs": [
+    {
+      "modules": [
+        "test_equity_finance",
+        "test_stock_market",
+        "test_stock_exchange",
+        "test_corporate_finance",
+        "test_debt_funding"
+      ],
+      "tests": 32,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 43.968
+    },
+    {
+      "modules": [
+        "test_driver",
+        "test_bond_basis",
+        "test_sovereign_finance",
+        "test_bond_market"
+      ],
+      "tests": 21,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 61.938
+    }
+  ],
+  "repository_checks": {
+    "organizer_unittest": {
+      "tests": 40,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 5.359
+    },
+    "kaggriculture_unittest": {
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 3.59
+    },
+    "ai_training_engine_script": "passed",
+    "backbone_engine_script": "passed",
+    "cache_duel_engine_script": "passed",
+    "temporary_contestant_export": "/tmp/avl-handoff-export-z9dufpr_/w",
+    "temporary_export_problems": 8,
+    "rift_exported": false,
+    "repository_contestant_repacked": false,
+    "contestant_ai_training_spar_list": "passed",
+    "compileall": "passed",
+    "git_diff_check": "passed",
+    "official_cli": {
+      "exit_code": 2,
+      "status": "OFFICIAL_ENGINE_NOT_READY_expected"
+    }
+  },
+  "full_component_regression": {
+    "status": "completed_development_run_not_frozen",
+    "tests": 523,
+    "failures": 2,
+    "errors": 1,
+    "seconds": 1247.558,
+    "frozen_evidence": false,
+    "failure_tests": [
+      "test_commerce_commands.CommerceIntegrationTests.test_commands_live_in_eight_stage_economy_and_do_not_teleport_goods",
+      "test_commerce_commands.CommerceIntegrationTests.test_same_p1_export_competition_is_proportional_and_cancel_wins"
+    ],
+    "error_tests": [
+      "test_equity_finance.EquityFinanceFundingTests.test_partial_short_fill_moves_only_filled_shares_to_return_claim"
+    ],
+    "note": "Run began during parallel development before later equity fixes and final test additions. Commerce assertions assumed no autonomous-city orders; corrected to validate the target market and absence of player orders while keeping city orders. Equity error was stock invoice exceeds cash custody in that moving version; final equity focused checks passed. See frozen follow-up result.",
+    "frozen_followup": "handoff_focused_20261105.json"
+  },
+  "handoff": "organizer/rift_era/HANDOFF.md",
+  "final_discovered_test_count": 536,
+  "final_frozen_component_regression": {
+    "tests": 536,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 1212.685,
+    "before": {
+      "engine_hash": "28011425679c7703571cca573b54715ccaaa5def74c806188a79a3725959a016",
+      "tests_hash": "2e6c63a8b2efa9b2a5a2059f3eb83777e32d3e9cfaa20c59be7b46ee37884dcf"
+    },
+    "after": {
+      "engine_hash": "28011425679c7703571cca573b54715ccaaa5def74c806188a79a3725959a016",
+      "tests_hash": "2e6c63a8b2efa9b2a5a2059f3eb83777e32d3e9cfaa20c59be7b46ee37884dcf"
+    },
+    "source_and_tests_unchanged": true,
+    "passed": true,
+    "report": "handoff_full_20261105.json"
+  }
+}

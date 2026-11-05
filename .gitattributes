@@ -1,0 +1,6 @@
+* text=auto eol=lf
+contestant/** -text
+*.gz binary
+*.xz binary
+*.zip binary
+*.png binary

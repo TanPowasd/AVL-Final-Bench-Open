@@ -1,0 +1,24 @@
+{
+  "format": "afb-contestant-kit/2",
+  "submission": "agents/submissions/my_agent.py",
+  "unified_submission": "../submissions/ai_training.py",
+  "files": {
+    "README.md": "083cbdc0750910d04d0d42b09ff18b04fbac12bbdf68647808d12abf8e002305",
+    "agents/baselines/blank.py": "4048fb883fa9e9603a366ff86ab7564e51ff0a4257802a347c63c0ccb431ff97",
+    "agents/baselines/merchant.py": "6e478f5978ac3dfa6022e19bffe7441ace50b5b4254e180de58e7ceaf0fed1d7",
+    "agents/baselines/scaling.py": "3dc79b9f15b08cad7e95b3c65dc67fa1d88b730ac18938aa2b509cae8cc304d7",
+    "agents/starter.py": "72e29e50e0c696495e15a7d55558d29a3614e663248490a3b7bcd0f551887e7d",
+    "agents/submissions/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "config/format.json": "5694fbcac463e81d6807f78253ca8f1f393a83291507ff71300e532a7fffa2a7",
+    "config/workspace.json": "9cf4ab89de1894470affdf88a76c64adc0bb0f95a07d131fe986f271c8b47963",
+    "engine/engine.py": "cba060bf1bd1a5a2b94fdaeab14a5f579d6d02aedfb0d3802781bf869743a7ae",
+    "engine/policy.py": "d17f81718492412be662b8ac8da1ddb9fa74e362d27a96117a88b3ce3329d7b8",
+    "engine/solo_npc.py": "8c151af24754910712fc0456a45406c750249a7a196e211bfcd98a7859cda3c5",
+    "engine/world.py": "41914a1cadacf11b0143b9155f4963f5c9944a1bdbdca694f9493dcfb73403e6",
+    "logs/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "replays/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "results/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scripts/run_match.py": "fc43e43c84797db0d523da01558354ff96a173d6aba0cf13b353ef02f3880c57",
+    "scripts/spar.py": "28cfa92f7c32cb852a655555cbdb52c80d416efcc7ca38c8c32753f5e7191872"
+  }
+}

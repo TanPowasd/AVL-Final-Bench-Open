@@ -1,0 +1,24 @@
+{
+  "seeds": [
+    1,
+    2,
+    3
+  ],
+  "ticks": 26280,
+  "value_scale": 4846.39,
+  "step_timeout_s": 2.0,
+  "total_timeout_s": 2400.0,
+  "scoring": {
+    "version": "scoring_v2",
+    "max_score": 100,
+    "margin_scale": 4846.39,
+    "opponent_count": 3,
+    "component_weights": {
+      "solo": 0.5,
+      "adv": 0.5
+    },
+    "default_seed_count": 64,
+    "scenario_sampling": "per_run_random",
+    "seed_source": "os_csprng"
+  }
+}

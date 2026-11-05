@@ -1,0 +1,11 @@
+{
+  "language": "C++20",
+  "compiler_flags": [
+    "-std=gnu++20",
+    "-O2",
+    "-pipe"
+  ],
+  "time_limit_ms": 700,
+  "memory_limit_mb": 2048,
+  "max_score": 100
+}

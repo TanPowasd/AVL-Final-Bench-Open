@@ -1,0 +1,21 @@
+{
+  "format": "afb-contestant-kit/2",
+  "submission": "agents/submissions/my_agent.py",
+  "unified_submission": "../submissions/cache_duel.py",
+  "files": {
+    "README.md": "246c94ab7d45e3b35c016a9e01ecf343e7ffcff420fdd96e2fa53072772494d8",
+    "agents/baselines/fifo.py": "ec8a20513bebe53394064657dfc5a0ce02f16efe3ad6849ffc78bae030adaf44",
+    "agents/baselines/lru.py": "e4a04c916e054dea76be9e2d95c45c48263bdab00626a0346b97a0f3402b6ffc",
+    "agents/baselines/marking.py": "f7c5e143ae502493b94a55794cb5f0b3777840120a22b7db38fc9c0e9b25379f",
+    "agents/baselines/rand.py": "59c30fce4b791efee63cd904841f434d19970b37a1051210121b969959b7f504",
+    "agents/starter.py": "d64cd10cc00e34fadcecbba794ce3d527260aa9c5f498e482d9d7dd38e33cbfe",
+    "agents/submissions/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "config/format.json": "61dbd921ab145fd013b05e82a3e94e135dcf6fafce8d8b5b8b1cd5d0c1039221",
+    "config/workspace.json": "9cf4ab89de1894470affdf88a76c64adc0bb0f95a07d131fe986f271c8b47963",
+    "engine/engine.py": "4e95bd6dec7da0124903beb21f753696673bad7669b7ca57188040565b87a6f7",
+    "engine/policy.py": "ea769d19b0889959388823c632dbfe099c8496659f4309ff3fda5b8815e39198",
+    "logs/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "results/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scripts/spar.py": "c07b0a6c212b4b37af1f83169f8041962d23b6ac67afebfb5d6f44966b139698"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "format": "afb-contestant-kit/2",
+  "submission": "agents/submissions/my_solution.cpp",
+  "unified_submission": "../submissions/fruehlingsbeginn.cpp",
+  "files": {
+    "README.md": "5fdc11b347fed6aee522bee5caf32e6b77e4fdc5428a7a2ad6b6438604a9f650",
+    "agents/starter.cpp": "d82c86b03df195a1d1c4c1e3e87bdc47adb225f6fa9a243be1f44c5e43e940f0",
+    "agents/submissions/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "config/format.json": "ccf11edea3c4d6b8852f08c6989ce7ab969bdf8fa003dfea42cfc693f705da58",
+    "config/workspace.json": "9cf4ab89de1894470affdf88a76c64adc0bb0f95a07d131fe986f271c8b47963",
+    "data/samples/01.in": "1f0efe9a36bfe6eba4d6f1506065c0fc9d49534e7f2a8401b682036a42623843",
+    "data/samples/01.out": "7219139db5d0eade64eca01345f930605cf6343eab9ab284ea0f67619c3762c7",
+    "data/samples/02.in": "8101ba7d85afebc513dc7e2270a0913292514d6fb9c27c4295ce1b4892df51e9",
+    "data/samples/02.out": "07cbfe99c357d9306dd2ae523330c7a8208f705efba32484e2cae61b639983d9",
+    "engine/calib.py": "4b706bf45425ef591ae4f0cc2125d02786ca8ae5ac1555b0eb83559faee1c487",
+    "engine/common.py": "363e56c5cbcd56f7a86862bfac166a0ed2d69f0a977349940394aed7d1da21dc",
+    "engine/policy.py": "3a77407bcf44f26e2f06f9c67ab287fe109e60034584402c293418d165ea45d8",
+    "engine/runner.py": "ffcd05f4bab1b4753b8d522783ce0073670b719307b5c199101603c7c5661206",
+    "logs/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "results/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scripts/spar.py": "1bdfcf1ba4896d42e2acbd4e90d25c837deaeb357dc686b94d7f327b31dc4271"
+  }
+}

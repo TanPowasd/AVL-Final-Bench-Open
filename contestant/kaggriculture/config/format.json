@@ -1,0 +1,40 @@
+{
+  "seeds": [
+    11,
+    23,
+    47,
+    83,
+    101,
+    127,
+    131,
+    157
+  ],
+  "match": {
+    "actTimeoutS": 1,
+    "overageBudgetS": 60,
+    "errorBudget": 30,
+    "drawMarginPct": 1
+  },
+  "elo": {
+    "init": 1500,
+    "K": 24,
+    "marginCap": 2
+  },
+  "submission": {
+    "maxLines": null,
+    "maxBytes": null
+  },
+  "cash_scale": 87403.52,
+  "scoring": {
+    "version": "scoring_v2",
+    "max_score": 100,
+    "margin_scale": 87403.52,
+    "opponent_count": 3,
+    "component_weights": {
+      "adv": 1.0
+    },
+    "default_seed_count": 64,
+    "scenario_sampling": "per_run_random",
+    "seed_source": "os_csprng"
+  }
+}

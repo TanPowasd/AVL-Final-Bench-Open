@@ -1,0 +1,477 @@
+{
+  "schema_version": 1,
+  "rules_version": "rift_era_rules_r6",
+  "status": "规范场景及独立算术预期；formal_engine_acceptance_pending未执行，不是通过报告",
+  "scenarios": [
+    {
+      "id": "barrage_no_gains",
+      "or_ids": [
+        "OR-001",
+        "OR-011"
+      ],
+      "scope": "formal_engine_acceptance_pending",
+      "setup": {
+        "at_war": [
+          "A",
+          "C"
+        ],
+        "artillery_units": 12,
+        "Credit_A": 0.1,
+        "duration_cycles": 20,
+        "extra_control_market_alliance_gains": 0,
+        "production_case": "P044/P001/P007/P006 at eta<=1; raw extraction excluded; electricity purchased externally, so its NFA cost cannot add score",
+        "targets": "visible repeatedly repairable enemy dummy facility; no captured loot; no A civilians in target"
+      },
+      "actions": [
+        "repeat bombard each tick"
+      ],
+      "expected": {
+        "ammo_per_cycle": 240,
+        "fuel_per_cycle": 72.0,
+        "action_loss_per_cycle": 1307.496,
+        "upper_chain_VA_per_cycle": 674.4960000000001,
+        "upper_delta_U_per_cycle": -55.387499999999996,
+        "eta_denominator_action_increment": 0,
+        "trade_and_transit_receipts": 0,
+        "required_full_horizon_delta_V": "<0 vs identical peaceful state with no extra gains"
+      }
+    },
+    {
+      "id": "cyber_credit_floor",
+      "or_ids": [
+        "OR-001",
+        "OR-002",
+        "OR-011"
+      ],
+      "scope": "formal_engine_acceptance_pending",
+      "setup": {
+        "Credit_A": 0.1,
+        "Cap_and_online_defense_facilities": "identical in both branches",
+        "extra_benefit": 0
+      },
+      "actions": [
+        "S03 action consumes cyber_suite1 and effective compute10"
+      ],
+      "expected": {
+        "Loss_action": 240.0308,
+        "delta_U_action": -21.002695,
+        "positive_active_scale_increment": 0,
+        "required_delta_V": "<0"
+      }
+    },
+    {
+      "id": "patrol_loop",
+      "or_ids": [
+        "OR-001",
+        "OR-011"
+      ],
+      "scope": "formal_engine_acceptance_pending",
+      "setup": {
+        "armored_units": 12,
+        "route": [
+          "A0",
+          "A1",
+          "A0"
+        ],
+        "duration_cycles": 1,
+        "territory_or_escort_service_gains": 0
+      },
+      "actions": [
+        "move/patrol each tick"
+      ],
+      "expected": {
+        "fuel": 144.0,
+        "loss": 630.0,
+        "upper_refinery_VA": 264.0,
+        "upper_delta_U": -32.025,
+        "transit": 0,
+        "required_delta_V": "<=0, <0 when fuel used"
+      }
+    },
+    {
+      "id": "zero_material_hostility",
+      "or_ids": [
+        "OR-011"
+      ],
+      "scope": "formal_engine_acceptance_pending",
+      "setup": {
+        "actual_materials": {},
+        "Credit_A": 0.1,
+        "extra_benefit": 0
+      },
+      "actions": [
+        "one executed hostile policy event"
+      ],
+      "expected": {
+        "Loss_action": 0.001,
+        "delta_U_action": -8.75e-05,
+        "required_delta_V": "<0; no integer score truncation"
+      }
+    },
+    {
+      "id": "repair_single_count",
+      "or_ids": [
+        "OR-001",
+        "OR-005"
+      ],
+      "scope": "formal_engine_acceptance_pending",
+      "setup": {
+        "S1_health": 0.5,
+        "book": 54.2836,
+        "full_B0": {
+          "steel": 6,
+          "cement": 6,
+          "basic_parts": 2
+        },
+        "target_health": 1
+      },
+      "actions": [
+        "repair with half B0 materials, full2*.5 labor and electricity"
+      ],
+      "expected": {
+        "capitalized_value": 54.2836,
+        "final_book": 108.5672,
+        "Loss_action_from_repair": 0,
+        "Loss_destroy_from_repair": 0,
+        "receipt": 0,
+        "eta_consumption": 0,
+        "duration_cycles": 10
+      }
+    },
+    {
+      "id": "relations_and_neutrality",
+      "or_ids": [
+        "OR-003"
+      ],
+      "scope": "formal_engine_acceptance_pending",
+      "setup": {
+        "initial_pairs": {
+          "A:B": "PEACE",
+          "A:C": "PEACE",
+          "B:C": "PEACE"
+        },
+        "A_B_defense_pact": true
+      },
+      "actions": [
+        "A and C simultaneous declare_war",
+        "C attempts strike on B without declaration",
+        "A and C accept armistice10cycles",
+        "armistice expires"
+      ],
+      "expected": {
+        "A_C_aggressors": [
+          "A",
+          "C"
+        ],
+        "C_strike_B": "ERR_NOT_AT_WAR",
+        "after_accept": "TRUCE/no mutual fire",
+        "after_expiry": "PEACE",
+        "B_not_automatically_at_war": true
+      }
+    },
+    {
+      "id": "blockade_food_substitution",
+      "or_ids": [
+        "OR-004"
+      ],
+      "scope": "formal_engine_acceptance_pending",
+      "setup": {
+        "start_cycle": 1440,
+        "duration_cycles": 40,
+        "relation_A_C": "WAR already in both branches",
+        "A_Credit": 1,
+        "A_owned_edge": "eC, carrier C allowed baseline, no transit contract/no toll",
+        "C_baseline_delivery": "12food/cycle to B via eC; rolling20 Phi_A=12*w_food",
+        "B_population_civilian": 200,
+        "B_RU_budget": 20000,
+        "buyer_standing_plan": "each cycle buys12food for immediate civilian consumption from cheapest deliverable source; C route eC is cheaper baseline, A route eA is next",
+        "A_inventory_food": 480,
+        "A_alternative_route": "eA disjoint from eC; B operates the carrier at its cost",
+        "other_A_production": "off; no other endogenous gains/losses credited in lower-bound arithmetic"
+      },
+      "actions": [
+        "A sets carrier C access_tier0 on eC; maintain40cycles",
+        "B switches paid purchases to A at10*w_food RU per unit",
+        "A extra self policy loss0.001 per tick; Phi remains actual delivered flow only"
+      ],
+      "expected": {
+        "C_deliveries_after_lag": 0,
+        "A_delivered_consumed_food_per_cycle": 12,
+        "A_receipt_value_per_cycle": 45.78,
+        "steady_weighted_export_U_gain": 0.5493600000000001,
+        "steady_weighted_Phi_U_loss": 0.18312,
+        "weighted_action_U_cost_per_cycle": 0.000875,
+        "steady_delta_U_lower_bound": 0.36536500000000005,
+        "era3_delta_V_lower_bound_ignoring_positive_NFA": 0.003711773333333334,
+        "no_enemy_V_in_formula": true,
+        "note": "first40 fully effective cycles; rolling20 ramp=sum ratios=30.5; after policy stops residual positive receipts ignored by lower bound"
+      }
+    },
+    {
+      "id": "damage_power_and_repair",
+      "or_ids": [
+        "OR-005"
+      ],
+      "scope": "formal_engine_acceptance_pending",
+      "setup": {
+        "plant_P070_nameplate": 10,
+        "line_nameplate": 60,
+        "line_health": 1,
+        "plant_shell_health": 1,
+        "plant_line_health": 1,
+        "alpha_maint": 1
+      },
+      "actions": [
+        "P4 destroys only P070 line",
+        "next tick P3 recomputes capacity",
+        "repair damaged line from0 to1",
+        "damage grid corridor tohealth.25 then0"
+      ],
+      "expected": {
+        "same_tick_P3_fuel_refund": 0,
+        "same_tick_P6_output": 0,
+        "next_tick_generator_capacity": 0,
+        "corridor_capacity_at_quarter": 15,
+        "corridor_capacity_at_zero": 0,
+        "repair_duration_full_cycles": 20,
+        "after_repair_generator_capacity": 10
+      }
+    },
+    {
+      "id": "energy_substitution",
+      "or_ids": [
+        "OR-004",
+        "OR-005"
+      ],
+      "scope": "formal_engine_acceptance_pending",
+      "setup": {
+        "relation_A_C": "WAR already",
+        "A_P070": "ON minimum .4=4generated eachcycle; same fuel/labor expense baseline and action; output previously curtailed",
+        "old_source_C": "zero-bid generator through A-owned1L1cell line, survival.9985",
+        "new_source_A": "zero-bid mandatory generation through A-owned10cell line, survival.985",
+        "B_demand": 3.94,
+        "both_lines_sent_toll_RU": 0.01,
+        "B_buy_limit_RU": 1,
+        "merit_order": "old deliveredprice .01/.9985 < new .01/.985; enough capacities; ties absent",
+        "A_Credit": 1,
+        "A_existing_powered_slots": "same across branches",
+        "prior20_Phi_A": 0.801002
+      },
+      "actions": [
+        "A restricts sourceC on old controlledline; 10policy events thiscycle",
+        "B demand routes to mandatory A source; A receives new line fees",
+        "separate paired damage injection oldline health0 also reroutes samequantity; this separate mechanical check does not claim missile-cost netprofit"
+      ],
+      "expected": {
+        "A_delivered_electricity": 3.94,
+        "A_generated_before_and_after": 4,
+        "A_delta_cash_RU": 0.0005408112168252405,
+        "A_confirmed_value": 0.801002,
+        "weighted_delta_VA_U": 0.07008767499999999,
+        "first_cycle_weighted_export_U": 0.0004806012,
+        "conservative_full_weighted_Phi_loss": 0.003204008,
+        "weighted_action_U_loss": 0.0008749999999999999,
+        "weighted_delta_NFA_U": 4.7320981472208534e-08,
+        "net_first_cycle_U_lower_bound": 0.06648931552098146,
+        "required": "positive channel from previously-curtailed power actually delivered; no enemy V; full engine still pending"
+      }
+    },
+    {
+      "id": "fx_revaluation_invariance",
+      "or_ids": [
+        "OR-006"
+      ],
+      "scope": "formal_engine_acceptance_pending",
+      "setup": {
+        "cash_book_native": 50000,
+        "cash_book_RU": 99800,
+        "initial_cash_book": 150000,
+        "issued_book": 0
+      },
+      "actions": [
+        "only set live FX1 -> .5 -> .05; no transaction"
+      ],
+      "expected": {
+        "NFA_each": [
+          -200,
+          -200,
+          -200
+        ]
+      }
+    },
+    {
+      "id": "transit_formula",
+      "or_ids": [
+        "OR-007"
+      ],
+      "scope": "formal_engine_acceptance_pending",
+      "setup": {
+        "good": "food",
+        "q_mU": 10000,
+        "carrier_lengths_L1": {
+          "A": 6,
+          "B": 4
+        },
+        "D0_L1": 8,
+        "one_receipt_only": true
+      },
+      "actions": [
+        "confirm actual civilian use once"
+      ],
+      "expected": {
+        "TransitReceipt_A": 183.11999999999998,
+        "TransitReceipt_B": 122.08,
+        "NetTransit_A": 9.155999999999999,
+        "NetTransit_B": 6.104
+      }
+    },
+    {
+      "id": "healthy_relocation",
+      "or_ids": [
+        "OR-009"
+      ],
+      "scope": "formal_engine_acceptance_pending",
+      "setup": {
+        "origin_population_skills": [
+          144,
+          40,
+          10
+        ],
+        "origin_Support": 720,
+        "destination_housing": 0,
+        "labor_elsewhere": 0
+      },
+      "actions": [
+        "relocate5general_workers allow_unhoused=true; reserve50native fee,food1.5,water1",
+        "send actualPassenger Shipment with transport time>=1"
+      ],
+      "expected": {
+        "before_arrival_destination_pop": 0,
+        "after_arrival_destination_general_pop": 5,
+        "origin_general_pop_after_departure": 139,
+        "destination_H": 0,
+        "destination_birth_rate": 0,
+        "destination_active_labor": 3.25,
+        "no_military_conversion": true
+      }
+    },
+    {
+      "id": "cpu_budget",
+      "or_ids": [
+        "OR-010"
+      ],
+      "scope": "formal_engine_acceptance_pending",
+      "setup": {
+        "effective_cpu": 16,
+        "cpu_reserve": 4,
+        "engine_cpu": 1,
+        "simultaneous_strategy_processes": 8,
+        "memory_sufficient_for": 20
+      },
+      "actions": [
+        "calculate Kmax"
+      ],
+      "expected": {
+        "C_match": 9,
+        "K_CPU": 1,
+        "Kmax": 1
+      }
+    },
+    {
+      "id": "S1_salvage",
+      "or_ids": [
+        "OR-012"
+      ],
+      "scope": "arithmetic",
+      "setup": {
+        "build": {
+          "steel": 6,
+          "cement": 6,
+          "basic_parts": 2
+        },
+        "scrap_steel_recovered": 3
+      },
+      "actions": [
+        "catalog valuation"
+      ],
+      "expected": {
+        "build_value": 108.5672,
+        "salvage": 8.325,
+        "loss": 100.2422
+      }
+    },
+    {
+      "id": "split_labs",
+      "or_ids": [
+        "OR-015"
+      ],
+      "scope": "arithmetic",
+      "setup": {
+        "regular_lab_lines": 8,
+        "equal_RP_per_line": 1,
+        "R05_C02": true
+      },
+      "actions": [
+        "compare8hubs1lineeach and1hub8lines"
+      ],
+      "expected": {
+        "eight_hubs_RP": 4.756828460010884,
+        "one_hub_RP": 6.773962498900218,
+        "no_independent_hub_sums": true
+      }
+    },
+    {
+      "id": "world_pool_pressure",
+      "or_ids": [
+        "OR-016"
+      ],
+      "scope": "formal_engine_acceptance_pending",
+      "setup": {
+        "world_cash_RU": 1000,
+        "orders": "8nations eachoffer40units of samehighest-weight inventory good; all eligible and delivered; no prioritybyseat"
+      },
+      "actions": [
+        "one simultaneous world purchase round",
+        "repeat while no incoming cash"
+      ],
+      "expected": {
+        "world_balance_min": 0,
+        "total_paid_max": 1000,
+        "equal_requested_value_equal_fill": "up to integer rounding/hash tails",
+        "no_sale_receipt_or_eta_consumption": true,
+        "engine_metrics": [
+          "pool_exhaustion_cycle",
+          "export_top_good_share",
+          "route_score_concentration",
+          "seat_permutation_invariance"
+        ]
+      }
+    },
+    {
+      "id": "batch_consistency",
+      "or_ids": [
+        "OR-014"
+      ],
+      "scope": "formal_engine_acceptance_pending",
+      "setup": {
+        "two_submissions": "same batch_id"
+      },
+      "actions": [
+        "read manifests before running"
+      ],
+      "expected": {
+        "equal_fields": [
+          "seed64_sequence",
+          "seat_mapping",
+          "rules_hash",
+          "engine_hash",
+          "reference_hash",
+          "runtime_image",
+          "resource_budgets",
+          "scheduler_plan"
+        ],
+        "changed_rule_requires_new_batch": true
+      }
+    }
+  ]
+}

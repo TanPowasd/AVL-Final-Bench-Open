@@ -1,0 +1,20 @@
+{
+  "version": "rift_opening_endowments_v1",
+  "status": "implementation candidate; requires full-world balance acceptance",
+  "local_natural_water_per_cycle": 128,
+  "crop_weather_mapping": "local_rain_factor",
+  "finite_reserve_units_per_starting_site": {
+    "iron_ore": 48000,
+    "coal": 48000,
+    "stone": 48000,
+    "copper_ore": 27000,
+    "quartz": 18000,
+    "bauxite": 15000,
+    "crude_oil": 15000,
+    "natural_gas": 15000,
+    "rare_ore": 7500,
+    "uranium_ore": 7500
+  },
+  "biomass_capacity_units_per_starting_site": 5000,
+  "opening_tax_rate_bp": 2000
+}

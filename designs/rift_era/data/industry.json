@@ -1,0 +1,3344 @@
+{
+  "schema_version": 1,
+  "status": "rift_era_rules_r6（已冻结）",
+  "units": "抽象游戏单位；配方不是现实工艺参数，所有平衡数值待验证",
+  "cycle_ticks": 10,
+  "quantity_precision": 0.001,
+  "goods": [
+    {
+      "id": "iron_ore",
+      "name": "铁矿",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "copper_ore",
+      "name": "铜矿",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "bauxite",
+      "name": "铝土矿",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "coal",
+      "name": "煤",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "crude_oil",
+      "name": "原油",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "natural_gas",
+      "name": "天然气",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "stone",
+      "name": "石料",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "quartz",
+      "name": "石英",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "rare_ore",
+      "name": "稀有矿",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "uranium_ore",
+      "name": "铀矿",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "biomass",
+      "name": "生物质",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "water",
+      "name": "水",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "scrap_steel",
+      "name": "废钢",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "scrap_copper",
+      "name": "废铜",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "grain",
+      "name": "粮食",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "steel",
+      "name": "钢材",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "copper",
+      "name": "铜材",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "aluminum",
+      "name": "铝材",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "glass",
+      "name": "玻璃",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "cement",
+      "name": "水泥",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "fuel",
+      "name": "燃油",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "chemicals",
+      "name": "基础化学品",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "pure_chemicals",
+      "name": "高纯化学品",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "alloy",
+      "name": "合金",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "composite",
+      "name": "复合材料",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "basic_parts",
+      "name": "基础机件",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "precision_parts",
+      "name": "精密部件",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "electronic_parts",
+      "name": "电子元件",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "chip",
+      "name": "成熟芯片",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "advanced_chip",
+      "name": "先进芯片",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "clean_substrate",
+      "name": "超净基材",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "battery",
+      "name": "电池",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "hydrogen",
+      "name": "氢载能体",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "nuclear_fuel",
+      "name": "核燃料组件",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "fertilizer",
+      "name": "肥料",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "medicine",
+      "name": "药品",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "medical_supplies",
+      "name": "精密医疗用品",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "structure_module",
+      "name": "预制结构模块",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "automation_module",
+      "name": "自动化模块",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "control_module",
+      "name": "控制模块",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "sensor",
+      "name": "传感器",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "communication_equipment",
+      "name": "通信设备",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "computing_equipment",
+      "name": "计算设备",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "food",
+      "name": "食品",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "consumer_goods",
+      "name": "民用品",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "renewable_equipment",
+      "name": "风光设备",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "reactor_module",
+      "name": "反应堆模块",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "lab_supplies",
+      "name": "实验耗材",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "engineering_pack",
+      "name": "标准试验包",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "precision_pack",
+      "name": "精密试验包",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "system_pack",
+      "name": "系统试验包",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "vehicle",
+      "name": "运输车辆",
+      "kind": "inventory",
+      "indivisible": true
+    },
+    {
+      "id": "locomotive",
+      "name": "机车",
+      "kind": "inventory",
+      "indivisible": true
+    },
+    {
+      "id": "hull",
+      "name": "船体",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "light_structure",
+      "name": "轻量结构件",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "airframe",
+      "name": "航空机体",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "ship_engine",
+      "name": "舰船动力组件",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "armored_chassis",
+      "name": "装甲底盘",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "firepower_module",
+      "name": "火力组件",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "ammunition",
+      "name": "通用弹药",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "guidance_module",
+      "name": "制导模块",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "precision_ammunition",
+      "name": "精确弹药",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "radar_module",
+      "name": "雷达模块",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "autonomy_module",
+      "name": "自主控制组件",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "orbital_module",
+      "name": "轨道组件",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "drone_airframe",
+      "name": "无人机机体",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "freighter",
+      "name": "货船整机",
+      "kind": "inventory",
+      "indivisible": true
+    },
+    {
+      "id": "transport_aircraft",
+      "name": "运输机整机",
+      "kind": "inventory",
+      "indivisible": true
+    },
+    {
+      "id": "armored_unit",
+      "name": "装甲平台整机",
+      "kind": "inventory",
+      "indivisible": true
+    },
+    {
+      "id": "artillery_unit",
+      "name": "支援火力整机",
+      "kind": "inventory",
+      "indivisible": true
+    },
+    {
+      "id": "escort_vessel",
+      "name": "护航舰整机",
+      "kind": "inventory",
+      "indivisible": true
+    },
+    {
+      "id": "submarine",
+      "name": "潜航平台整机",
+      "kind": "inventory",
+      "indivisible": true
+    },
+    {
+      "id": "aerial_unit",
+      "name": "有人航空整机",
+      "kind": "inventory",
+      "indivisible": true
+    },
+    {
+      "id": "ground_drone",
+      "name": "无人地面整机",
+      "kind": "inventory",
+      "indivisible": true
+    },
+    {
+      "id": "air_drone",
+      "name": "无人航空整机",
+      "kind": "inventory",
+      "indivisible": true
+    },
+    {
+      "id": "satellite",
+      "name": "轨道节点整机",
+      "kind": "inventory",
+      "indivisible": true
+    },
+    {
+      "id": "electricity",
+      "name": "电力",
+      "kind": "flow",
+      "indivisible": false
+    },
+    {
+      "id": "research_points",
+      "name": "定向研究点",
+      "kind": "flow",
+      "indivisible": false
+    },
+    {
+      "id": "advanced_computing_equipment",
+      "name": "高密度计算设备",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "frontier_pack",
+      "name": "前沿试验包",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "breakthrough_pack",
+      "name": "突破验证包",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "superalloy",
+      "name": "高温合金",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "metamaterial",
+      "name": "超构材料",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "superconductor",
+      "name": "超导线材",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "fusion_fuel",
+      "name": "聚变燃料",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "fusion_module",
+      "name": "聚变堆模块",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "photonic_chip",
+      "name": "光子芯片",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "ai_core",
+      "name": "智能核心",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "quantum_module",
+      "name": "量子计算模块",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "gene_therapy",
+      "name": "基因治疗包",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "maglev_module",
+      "name": "磁浮轨道模块",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "ew_module",
+      "name": "电子战模块",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "swarm_unit",
+      "name": "集群作战单元",
+      "kind": "inventory",
+      "indivisible": true
+    },
+    {
+      "id": "energy_weapon",
+      "name": "定向能武器",
+      "kind": "inventory",
+      "indivisible": true
+    },
+    {
+      "id": "reusable_launcher",
+      "name": "可复用运载器",
+      "kind": "inventory",
+      "indivisible": true
+    },
+    {
+      "id": "hypersonic_airframe",
+      "name": "高超声速机体",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "hypersonic_missile",
+      "name": "高超声速弹",
+      "kind": "inventory",
+      "indivisible": true
+    },
+    {
+      "id": "orbital_platform",
+      "name": "轨道工业平台",
+      "kind": "inventory",
+      "indivisible": true
+    },
+    {
+      "id": "crypto_module",
+      "name": "加密模块",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "cyber_suite",
+      "name": "网络作战套件",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "remediation_agent",
+      "name": "土壤修复剂",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "carbon_capture_unit",
+      "name": "碳捕集机组",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "accelerator",
+      "name": "AI 加速器",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "compute",
+      "name": "算力",
+      "kind": "flow",
+      "indivisible": false
+    },
+    {
+      "id": "housing_capacity",
+      "name": "住房容量",
+      "kind": "flow",
+      "indivisible": false
+    },
+    {
+      "id": "accelerator_g2",
+      "name": "先进 AI 加速器（G2）",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "accelerator_g3",
+      "name": "光子 AI 加速器（G3）",
+      "kind": "inventory",
+      "indivisible": false
+    },
+    {
+      "id": "curated_data",
+      "name": "精标数据",
+      "kind": "flow",
+      "indivisible": false
+    }
+  ],
+  "sources": [
+    {
+      "good": "iron_ore",
+      "kind": "finite_deposit",
+      "rule": "采掘定额见 data/runtime_rules.json:extraction；只取本地储量/本期来水，G2参数与耗尽边界见02。"
+    },
+    {
+      "good": "copper_ore",
+      "kind": "finite_deposit",
+      "rule": "采掘定额见 data/runtime_rules.json:extraction；只取本地储量/本期来水，G2参数与耗尽边界见02。"
+    },
+    {
+      "good": "bauxite",
+      "kind": "finite_deposit",
+      "rule": "采掘定额见 data/runtime_rules.json:extraction；只取本地储量/本期来水，G2参数与耗尽边界见02。"
+    },
+    {
+      "good": "coal",
+      "kind": "finite_deposit",
+      "rule": "采掘定额见 data/runtime_rules.json:extraction；只取本地储量/本期来水，G2参数与耗尽边界见02。"
+    },
+    {
+      "good": "crude_oil",
+      "kind": "finite_deposit",
+      "rule": "采掘定额见 data/runtime_rules.json:extraction；只取本地储量/本期来水，G2参数与耗尽边界见02。"
+    },
+    {
+      "good": "natural_gas",
+      "kind": "finite_deposit",
+      "rule": "采掘定额见 data/runtime_rules.json:extraction；只取本地储量/本期来水，G2参数与耗尽边界见02。"
+    },
+    {
+      "good": "stone",
+      "kind": "finite_deposit",
+      "rule": "采掘定额见 data/runtime_rules.json:extraction；只取本地储量/本期来水，G2参数与耗尽边界见02。"
+    },
+    {
+      "good": "quartz",
+      "kind": "finite_deposit",
+      "rule": "采掘定额见 data/runtime_rules.json:extraction；只取本地储量/本期来水，G2参数与耗尽边界见02。"
+    },
+    {
+      "good": "rare_ore",
+      "kind": "finite_deposit",
+      "rule": "采掘定额见 data/runtime_rules.json:extraction；只取本地储量/本期来水，G2参数与耗尽边界见02。"
+    },
+    {
+      "good": "uranium_ore",
+      "kind": "finite_deposit",
+      "rule": "采掘定额见 data/runtime_rules.json:extraction；只取本地储量/本期来水，G2参数与耗尽边界见02。"
+    },
+    {
+      "good": "biomass",
+      "kind": "renewable_limited",
+      "rule": "采掘定额见 data/runtime_rules.json:extraction；只取本地储量/本期来水，G2参数与耗尽边界见02。"
+    },
+    {
+      "good": "water",
+      "kind": "renewable_limited",
+      "rule": "采掘定额见 data/runtime_rules.json:extraction；只取本地储量/本期来水，G2参数与耗尽边界见02。"
+    },
+    {
+      "good": "scrap_steel",
+      "kind": "salvage",
+      "rule": "仅拆解资产产生；返还该资产建造配方直接消耗钢材的 50%，不递归返还中间品中的金属。"
+    },
+    {
+      "good": "scrap_copper",
+      "kind": "salvage",
+      "rule": "仅拆解资产产生；返还该资产建造配方直接消耗铜材的 50%，不递归返还中间品中的金属。"
+    }
+  ],
+  "facility_profiles": [
+    {
+      "id": "S1",
+      "name": "基础设施",
+      "recipe_grade": 1,
+      "lines": 1,
+      "build": {
+        "steel": 6,
+        "cement": 6,
+        "basic_parts": 2
+      },
+      "build_cycles": 8,
+      "maintenance": {
+        "basic_parts": 0.1
+      }
+    },
+    {
+      "id": "S2",
+      "name": "标准工厂",
+      "recipe_grade": 2,
+      "lines": 1,
+      "build": {
+        "steel": 16,
+        "cement": 16,
+        "basic_parts": 8
+      },
+      "build_cycles": 20,
+      "maintenance": {
+        "basic_parts": 0.25
+      }
+    },
+    {
+      "id": "S3",
+      "name": "先进工厂",
+      "recipe_grade": 3,
+      "lines": 1,
+      "build": {
+        "steel": 32,
+        "cement": 32,
+        "precision_parts": 8,
+        "automation_module": 4
+      },
+      "build_cycles": 40,
+      "maintenance": {
+        "precision_parts": 0.1
+      }
+    },
+    {
+      "id": "S4",
+      "name": "高密度综合设施",
+      "recipe_grade": 3,
+      "lines": 2,
+      "build": {
+        "steel": 48,
+        "cement": 48,
+        "precision_parts": 16,
+        "advanced_chip": 8,
+        "automation_module": 8
+      },
+      "build_cycles": 80,
+      "maintenance": {
+        "precision_parts": 0.2,
+        "automation_module": 0.05
+      }
+    },
+    {
+      "id": "S5",
+      "name": "前沿综合设施",
+      "recipe_grade": 4,
+      "lines": 2,
+      "build": {
+        "steel": 64,
+        "cement": 64,
+        "superalloy": 8,
+        "ai_core": 2,
+        "automation_module": 8
+      },
+      "build_cycles": 120,
+      "maintenance": {
+        "superalloy": 0.1,
+        "ai_core": 0.02
+      }
+    }
+  ],
+  "maintenance_period_cycles": 20,
+  "line_modes": [
+    {
+      "id": "general",
+      "name": "通用人工线",
+      "requires_all": [],
+      "capacity": 1,
+      "worker_factor": 1.4,
+      "power_factor": 0.8,
+      "switch_cycles": 2,
+      "installation": {}
+    },
+    {
+      "id": "specialized",
+      "name": "专用标准线",
+      "requires_all": [
+        "I03",
+        "R04"
+      ],
+      "capacity": 1.35,
+      "worker_factor": 0.8,
+      "power_factor": 1,
+      "switch_cycles": 8,
+      "installation": {
+        "precision_parts": 2
+      }
+    },
+    {
+      "id": "automated",
+      "name": "自动化线",
+      "requires_all": [
+        "I05",
+        "C06"
+      ],
+      "capacity": 1.8,
+      "worker_factor": 0.35,
+      "power_factor": 1.3,
+      "switch_cycles": 6,
+      "installation": {
+        "automation_module": 2,
+        "control_module": 1
+      }
+    },
+    {
+      "id": "flexible",
+      "name": "柔性线",
+      "requires_all": [
+        "I07"
+      ],
+      "capacity": 1.1,
+      "worker_factor": 0.9,
+      "power_factor": 1.1,
+      "switch_cycles": 1,
+      "installation": {
+        "automation_module": 1,
+        "control_module": 2,
+        "precision_parts": 1
+      }
+    },
+    {
+      "id": "additive",
+      "name": "增材线",
+      "requires_all": [
+        "I10"
+      ],
+      "capacity": 0.9,
+      "worker_factor": 0.5,
+      "power_factor": 1.6,
+      "switch_cycles": 0.5,
+      "installation": {
+        "automation_module": 1,
+        "computing_equipment": 1
+      }
+    }
+  ],
+  "recipes": [
+    {
+      "id": "P001",
+      "name": "基础冶钢",
+      "requires_all": [],
+      "facility": "冶金厂",
+      "grade": 1,
+      "inputs": {
+        "iron_ore": 4,
+        "coal": 2,
+        "water": 1
+      },
+      "outputs": {
+        "steel": 3
+      },
+      "power": 2,
+      "workers": 4,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P002",
+      "name": "铜材冶炼",
+      "requires_all": [],
+      "facility": "冶金厂",
+      "grade": 1,
+      "inputs": {
+        "copper_ore": 3,
+        "coal": 1
+      },
+      "outputs": {
+        "copper": 2
+      },
+      "power": 3,
+      "workers": 3,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P003",
+      "name": "铝材冶炼",
+      "requires_all": [
+        "I01"
+      ],
+      "facility": "冶金厂",
+      "grade": 2,
+      "inputs": {
+        "bauxite": 4,
+        "chemicals": 1
+      },
+      "outputs": {
+        "aluminum": 2
+      },
+      "power": 8,
+      "workers": 3,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P004",
+      "name": "玻璃制造",
+      "requires_all": [],
+      "facility": "材料厂",
+      "grade": 1,
+      "inputs": {
+        "quartz": 3,
+        "coal": 1
+      },
+      "outputs": {
+        "glass": 2
+      },
+      "power": 2,
+      "workers": 3,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P005",
+      "name": "水泥制造",
+      "requires_all": [],
+      "facility": "材料厂",
+      "grade": 1,
+      "inputs": {
+        "stone": 3,
+        "coal": 1
+      },
+      "outputs": {
+        "cement": 3
+      },
+      "power": 2,
+      "workers": 3,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P006",
+      "name": "原油炼制",
+      "requires_all": [],
+      "facility": "化工厂",
+      "grade": 1,
+      "inputs": {
+        "crude_oil": 4
+      },
+      "outputs": {
+        "fuel": 3,
+        "chemicals": 1
+      },
+      "power": 2,
+      "workers": 3,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P007",
+      "name": "基础煤化工",
+      "requires_all": [],
+      "facility": "化工厂",
+      "grade": 1,
+      "inputs": {
+        "coal": 2,
+        "water": 2
+      },
+      "outputs": {
+        "chemicals": 2
+      },
+      "power": 3,
+      "workers": 3,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P008",
+      "name": "高纯化工",
+      "requires_all": [
+        "I02"
+      ],
+      "facility": "化工厂",
+      "grade": 2,
+      "inputs": {
+        "chemicals": 2,
+        "water": 2
+      },
+      "outputs": {
+        "pure_chemicals": 2
+      },
+      "power": 4,
+      "workers": 4,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P009",
+      "name": "合金制造",
+      "requires_all": [
+        "I01"
+      ],
+      "facility": "冶金厂",
+      "grade": 2,
+      "inputs": {
+        "steel": 2,
+        "aluminum": 1,
+        "rare_ore": 1
+      },
+      "outputs": {
+        "alloy": 3
+      },
+      "power": 5,
+      "workers": 4,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P010",
+      "name": "复合材料",
+      "requires_all": [
+        "I04"
+      ],
+      "facility": "材料厂",
+      "grade": 2,
+      "inputs": {
+        "chemicals": 2,
+        "glass": 1,
+        "aluminum": 1
+      },
+      "outputs": {
+        "composite": 2
+      },
+      "power": 4,
+      "workers": 4,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P011",
+      "name": "基础机件",
+      "requires_all": [],
+      "facility": "机械厂",
+      "grade": 1,
+      "inputs": {
+        "steel": 2,
+        "copper": 1
+      },
+      "outputs": {
+        "basic_parts": 1
+      },
+      "power": 2,
+      "workers": 3,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P012",
+      "name": "电子元件",
+      "requires_all": [],
+      "facility": "电子厂",
+      "grade": 1,
+      "inputs": {
+        "copper": 1,
+        "glass": 1,
+        "chemicals": 1
+      },
+      "outputs": {
+        "electronic_parts": 2
+      },
+      "power": 3,
+      "workers": 3,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P013",
+      "name": "精密部件",
+      "requires_all": [
+        "I03"
+      ],
+      "facility": "机械厂",
+      "grade": 2,
+      "inputs": {
+        "basic_parts": 2,
+        "electronic_parts": 1,
+        "alloy": 1
+      },
+      "outputs": {
+        "precision_parts": 2
+      },
+      "power": 5,
+      "workers": 5,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P014",
+      "name": "超净基材",
+      "requires_all": [
+        "I06"
+      ],
+      "facility": "材料厂",
+      "grade": 3,
+      "inputs": {
+        "pure_chemicals": 2,
+        "quartz": 2
+      },
+      "outputs": {
+        "clean_substrate": 2
+      },
+      "power": 8,
+      "workers": 5,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P015",
+      "name": "成熟芯片",
+      "requires_all": [
+        "C03"
+      ],
+      "facility": "电子厂",
+      "grade": 2,
+      "inputs": {
+        "glass": 1,
+        "pure_chemicals": 1,
+        "electronic_parts": 1
+      },
+      "outputs": {
+        "chip": 2
+      },
+      "power": 6,
+      "workers": 5,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P016",
+      "name": "先进芯片",
+      "requires_all": [
+        "C04"
+      ],
+      "facility": "电子厂",
+      "grade": 3,
+      "inputs": {
+        "chip": 2,
+        "clean_substrate": 2,
+        "rare_ore": 1
+      },
+      "outputs": {
+        "advanced_chip": 2
+      },
+      "power": 12,
+      "workers": 6,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P017",
+      "name": "传感器",
+      "requires_all": [
+        "C01"
+      ],
+      "facility": "电子厂",
+      "grade": 1,
+      "inputs": {
+        "electronic_parts": 2,
+        "glass": 1
+      },
+      "outputs": {
+        "sensor": 1
+      },
+      "power": 2,
+      "workers": 3,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P018",
+      "name": "通信设备",
+      "requires_all": [
+        "C02"
+      ],
+      "facility": "电子厂",
+      "grade": 1,
+      "inputs": {
+        "electronic_parts": 2,
+        "copper": 1
+      },
+      "outputs": {
+        "communication_equipment": 1
+      },
+      "power": 2,
+      "workers": 3,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P019",
+      "name": "成熟计算设备",
+      "requires_all": [
+        "C05"
+      ],
+      "facility": "电子厂",
+      "grade": 2,
+      "inputs": {
+        "chip": 2,
+        "precision_parts": 1,
+        "communication_equipment": 1
+      },
+      "outputs": {
+        "computing_equipment": 1
+      },
+      "power": 4,
+      "workers": 5,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P020",
+      "name": "工业控制模块",
+      "requires_all": [
+        "C06"
+      ],
+      "facility": "电子厂",
+      "grade": 2,
+      "inputs": {
+        "electronic_parts": 2,
+        "chip": 1,
+        "communication_equipment": 1
+      },
+      "outputs": {
+        "control_module": 1
+      },
+      "power": 4,
+      "workers": 4,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P021",
+      "name": "自动化模块",
+      "requires_all": [
+        "I05",
+        "C06"
+      ],
+      "facility": "机械厂",
+      "grade": 2,
+      "inputs": {
+        "precision_parts": 2,
+        "control_module": 1
+      },
+      "outputs": {
+        "automation_module": 1
+      },
+      "power": 6,
+      "workers": 5,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P022",
+      "name": "风光设备",
+      "requires_all": [
+        "E03"
+      ],
+      "facility": "机械厂",
+      "grade": 2,
+      "inputs": {
+        "steel": 2,
+        "glass": 2,
+        "electronic_parts": 1
+      },
+      "outputs": {
+        "renewable_equipment": 1
+      },
+      "power": 4,
+      "workers": 4,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P023",
+      "name": "储能电池",
+      "requires_all": [
+        "E04"
+      ],
+      "facility": "化工厂",
+      "grade": 2,
+      "inputs": {
+        "copper": 1,
+        "pure_chemicals": 1,
+        "rare_ore": 1
+      },
+      "outputs": {
+        "battery": 2
+      },
+      "power": 4,
+      "workers": 4,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P024",
+      "name": "电解制氢",
+      "requires_all": [
+        "E06"
+      ],
+      "facility": "化工厂",
+      "grade": 2,
+      "inputs": {
+        "water": 4
+      },
+      "outputs": {
+        "hydrogen": 3
+      },
+      "power": 12,
+      "workers": 3,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P025",
+      "name": "核燃料组件",
+      "requires_all": [
+        "E05"
+      ],
+      "facility": "化工厂",
+      "grade": 2,
+      "inputs": {
+        "uranium_ore": 2,
+        "pure_chemicals": 2,
+        "alloy": 1
+      },
+      "outputs": {
+        "nuclear_fuel": 1
+      },
+      "power": 6,
+      "workers": 5,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P026",
+      "name": "反应堆模块",
+      "requires_all": [
+        "E05"
+      ],
+      "facility": "机械厂",
+      "grade": 3,
+      "inputs": {
+        "alloy": 6,
+        "precision_parts": 4,
+        "control_module": 2
+      },
+      "outputs": {
+        "reactor_module": 1
+      },
+      "power": 10,
+      "workers": 8,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P027",
+      "name": "合成肥料",
+      "requires_all": [
+        "A02"
+      ],
+      "facility": "化工厂",
+      "grade": 1,
+      "inputs": {
+        "chemicals": 2,
+        "natural_gas": 1
+      },
+      "outputs": {
+        "fertilizer": 3
+      },
+      "power": 2,
+      "workers": 3,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P028",
+      "name": "基础农业",
+      "requires_all": [],
+      "facility": "农场",
+      "grade": 1,
+      "inputs": {
+        "water": 2
+      },
+      "outputs": {
+        "grain": 4
+      },
+      "power": 0,
+      "workers": 6,
+      "installed": {},
+      "condition": "需要耕地；产出乘以地力与天气系数"
+    },
+    {
+      "id": "P029",
+      "name": "机械化农业",
+      "requires_all": [
+        "A02",
+        "A03"
+      ],
+      "facility": "农场",
+      "grade": 2,
+      "inputs": {
+        "water": 2,
+        "fertilizer": 1,
+        "fuel": 0.5
+      },
+      "outputs": {
+        "grain": 7
+      },
+      "power": 1,
+      "workers": 3,
+      "installed": {
+        "vehicle": 1
+      },
+      "condition": "需要耕地；机械化不消除天气影响"
+    },
+    {
+      "id": "P030",
+      "name": "受控环境农业",
+      "requires_all": [
+        "A05"
+      ],
+      "facility": "受控农场",
+      "grade": 2,
+      "inputs": {
+        "water": 2,
+        "fertilizer": 1
+      },
+      "outputs": {
+        "grain": 5
+      },
+      "power": 6,
+      "workers": 3,
+      "installed": {
+        "control_module": 1
+      },
+      "condition": "不要求耕地；仍占建设用地与取水能力"
+    },
+    {
+      "id": "P031",
+      "name": "食品加工",
+      "requires_all": [],
+      "facility": "食品厂",
+      "grade": 1,
+      "inputs": {
+        "grain": 3,
+        "water": 1
+      },
+      "outputs": {
+        "food": 3
+      },
+      "power": 1,
+      "workers": 3,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P032",
+      "name": "民用品制造",
+      "requires_all": [],
+      "facility": "轻工厂",
+      "grade": 1,
+      "inputs": {
+        "steel": 1,
+        "biomass": 1,
+        "chemicals": 1
+      },
+      "outputs": {
+        "consumer_goods": 3
+      },
+      "power": 2,
+      "workers": 3,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P033",
+      "name": "基础药品",
+      "requires_all": [
+        "A04"
+      ],
+      "facility": "制药厂",
+      "grade": 2,
+      "inputs": {
+        "chemicals": 2,
+        "biomass": 1,
+        "glass": 1
+      },
+      "outputs": {
+        "medicine": 2
+      },
+      "power": 4,
+      "workers": 5,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P034",
+      "name": "生物化工",
+      "requires_all": [
+        "A06"
+      ],
+      "facility": "化工厂",
+      "grade": 2,
+      "inputs": {
+        "grain": 3,
+        "water": 2
+      },
+      "outputs": {
+        "chemicals": 2
+      },
+      "power": 4,
+      "workers": 5,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P035",
+      "name": "精密医疗用品",
+      "requires_all": [
+        "A08"
+      ],
+      "facility": "制药厂",
+      "grade": 3,
+      "inputs": {
+        "medicine": 2,
+        "pure_chemicals": 1,
+        "advanced_chip": 1
+      },
+      "outputs": {
+        "medical_supplies": 2
+      },
+      "power": 6,
+      "workers": 6,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P036",
+      "name": "运输车辆",
+      "requires_all": [
+        "L02"
+      ],
+      "facility": "装备厂",
+      "grade": 2,
+      "inputs": {
+        "basic_parts": 2,
+        "steel": 3,
+        "fuel": 1
+      },
+      "outputs": {
+        "vehicle": 1
+      },
+      "power": 3,
+      "workers": 5,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P037",
+      "name": "机车",
+      "requires_all": [
+        "L03"
+      ],
+      "facility": "装备厂",
+      "grade": 2,
+      "inputs": {
+        "steel": 5,
+        "basic_parts": 3,
+        "fuel": 1
+      },
+      "outputs": {
+        "locomotive": 1
+      },
+      "power": 5,
+      "workers": 6,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P038",
+      "name": "船体",
+      "requires_all": [
+        "N01"
+      ],
+      "facility": "船厂",
+      "grade": 2,
+      "inputs": {
+        "steel": 5,
+        "basic_parts": 2
+      },
+      "outputs": {
+        "hull": 1
+      },
+      "power": 5,
+      "workers": 6,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P039",
+      "name": "轻量结构件",
+      "requires_all": [
+        "N02"
+      ],
+      "facility": "材料厂",
+      "grade": 2,
+      "inputs": {
+        "aluminum": 2,
+        "alloy": 1
+      },
+      "outputs": {
+        "light_structure": 2
+      },
+      "power": 4,
+      "workers": 4,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P040",
+      "name": "航空机体",
+      "requires_all": [
+        "N03"
+      ],
+      "facility": "航空厂",
+      "grade": 2,
+      "inputs": {
+        "light_structure": 3,
+        "precision_parts": 2,
+        "electronic_parts": 1
+      },
+      "outputs": {
+        "airframe": 1
+      },
+      "power": 6,
+      "workers": 6,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P041",
+      "name": "舰船动力",
+      "requires_all": [
+        "N04"
+      ],
+      "facility": "机械厂",
+      "grade": 2,
+      "inputs": {
+        "basic_parts": 2,
+        "alloy": 2,
+        "fuel": 1
+      },
+      "outputs": {
+        "ship_engine": 1
+      },
+      "power": 4,
+      "workers": 5,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P042",
+      "name": "装甲底盘",
+      "requires_all": [
+        "G03"
+      ],
+      "facility": "装备厂",
+      "grade": 2,
+      "inputs": {
+        "alloy": 3,
+        "basic_parts": 2
+      },
+      "outputs": {
+        "armored_chassis": 1
+      },
+      "power": 5,
+      "workers": 6,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P043",
+      "name": "火力组件",
+      "requires_all": [
+        "G04"
+      ],
+      "facility": "装备厂",
+      "grade": 2,
+      "inputs": {
+        "steel": 2,
+        "precision_parts": 1,
+        "electronic_parts": 1,
+        "chemicals": 1
+      },
+      "outputs": {
+        "firepower_module": 1
+      },
+      "power": 4,
+      "workers": 5,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P044",
+      "name": "通用弹药",
+      "requires_all": [],
+      "facility": "装备厂",
+      "grade": 1,
+      "inputs": {
+        "steel": 1,
+        "chemicals": 1
+      },
+      "outputs": {
+        "ammunition": 4
+      },
+      "power": 3,
+      "workers": 3,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P045",
+      "name": "制导模块",
+      "requires_all": [
+        "G06"
+      ],
+      "facility": "电子厂",
+      "grade": 2,
+      "inputs": {
+        "sensor": 1,
+        "chip": 1,
+        "precision_parts": 1
+      },
+      "outputs": {
+        "guidance_module": 2
+      },
+      "power": 4,
+      "workers": 5,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P046",
+      "name": "精确弹药",
+      "requires_all": [
+        "G06"
+      ],
+      "facility": "装备厂",
+      "grade": 2,
+      "inputs": {
+        "ammunition": 2,
+        "guidance_module": 1
+      },
+      "outputs": {
+        "precision_ammunition": 2
+      },
+      "power": 3,
+      "workers": 4,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P047",
+      "name": "雷达模块",
+      "requires_all": [
+        "G05"
+      ],
+      "facility": "电子厂",
+      "grade": 2,
+      "inputs": {
+        "communication_equipment": 1,
+        "sensor": 2,
+        "chip": 1
+      },
+      "outputs": {
+        "radar_module": 1
+      },
+      "power": 5,
+      "workers": 5,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P048",
+      "name": "自主控制组件",
+      "requires_all": [
+        "C07"
+      ],
+      "facility": "电子厂",
+      "grade": 3,
+      "inputs": {
+        "automation_module": 1,
+        "computing_equipment": 1,
+        "sensor": 1
+      },
+      "outputs": {
+        "autonomy_module": 1
+      },
+      "power": 6,
+      "workers": 6,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P049",
+      "name": "轨道组件",
+      "requires_all": [
+        "N06"
+      ],
+      "facility": "航空厂",
+      "grade": 3,
+      "inputs": {
+        "alloy": 2,
+        "light_structure": 2,
+        "communication_equipment": 1,
+        "chip": 1,
+        "precision_parts": 1
+      },
+      "outputs": {
+        "orbital_module": 1
+      },
+      "power": 10,
+      "workers": 7,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P050",
+      "name": "无人机机体",
+      "requires_all": [
+        "N07"
+      ],
+      "facility": "航空厂",
+      "grade": 3,
+      "inputs": {
+        "composite": 2,
+        "precision_parts": 1,
+        "automation_module": 1
+      },
+      "outputs": {
+        "drone_airframe": 1
+      },
+      "power": 6,
+      "workers": 6,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P051",
+      "name": "预制结构模块",
+      "requires_all": [
+        "L08"
+      ],
+      "facility": "材料厂",
+      "grade": 2,
+      "inputs": {
+        "steel": 2,
+        "cement": 3,
+        "basic_parts": 1
+      },
+      "outputs": {
+        "structure_module": 2
+      },
+      "power": 3,
+      "workers": 4,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P052",
+      "name": "货船装配",
+      "requires_all": [
+        "L04",
+        "N04"
+      ],
+      "facility": "船厂",
+      "grade": 2,
+      "inputs": {
+        "hull": 2,
+        "ship_engine": 1,
+        "communication_equipment": 1
+      },
+      "outputs": {
+        "freighter": 1
+      },
+      "power": 5,
+      "workers": 6,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P053",
+      "name": "运输机装配",
+      "requires_all": [
+        "L05"
+      ],
+      "facility": "航空厂",
+      "grade": 2,
+      "inputs": {
+        "airframe": 1,
+        "basic_parts": 2,
+        "communication_equipment": 1
+      },
+      "outputs": {
+        "transport_aircraft": 1
+      },
+      "power": 6,
+      "workers": 6,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P054",
+      "name": "装甲平台装配",
+      "requires_all": [
+        "G03"
+      ],
+      "facility": "装备厂",
+      "grade": 2,
+      "inputs": {
+        "armored_chassis": 1,
+        "firepower_module": 1,
+        "communication_equipment": 1
+      },
+      "outputs": {
+        "armored_unit": 1
+      },
+      "power": 4,
+      "workers": 6,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P055",
+      "name": "支援火力装配",
+      "requires_all": [
+        "G04"
+      ],
+      "facility": "装备厂",
+      "grade": 2,
+      "inputs": {
+        "vehicle": 1,
+        "firepower_module": 2,
+        "communication_equipment": 1
+      },
+      "outputs": {
+        "artillery_unit": 1
+      },
+      "power": 4,
+      "workers": 5,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P056",
+      "name": "护航舰装配",
+      "requires_all": [
+        "N04",
+        "G04"
+      ],
+      "facility": "船厂",
+      "grade": 2,
+      "inputs": {
+        "hull": 2,
+        "ship_engine": 1,
+        "firepower_module": 2,
+        "communication_equipment": 1
+      },
+      "outputs": {
+        "escort_vessel": 1
+      },
+      "power": 6,
+      "workers": 7,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P057",
+      "name": "潜航平台装配",
+      "requires_all": [
+        "N05"
+      ],
+      "facility": "船厂",
+      "grade": 3,
+      "inputs": {
+        "hull": 2,
+        "ship_engine": 1,
+        "battery": 4,
+        "sensor": 2
+      },
+      "outputs": {
+        "submarine": 1
+      },
+      "power": 8,
+      "workers": 8,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P058",
+      "name": "有人航空平台装配",
+      "requires_all": [
+        "N03",
+        "G04"
+      ],
+      "facility": "航空厂",
+      "grade": 2,
+      "inputs": {
+        "airframe": 1,
+        "firepower_module": 1,
+        "sensor": 1,
+        "communication_equipment": 1
+      },
+      "outputs": {
+        "aerial_unit": 1
+      },
+      "power": 6,
+      "workers": 6,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P059",
+      "name": "无人地面平台装配",
+      "requires_all": [
+        "G08"
+      ],
+      "facility": "装备厂",
+      "grade": 3,
+      "inputs": {
+        "armored_chassis": 1,
+        "autonomy_module": 1,
+        "battery": 2
+      },
+      "outputs": {
+        "ground_drone": 1
+      },
+      "power": 5,
+      "workers": 5,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P060",
+      "name": "无人航空平台装配",
+      "requires_all": [
+        "N07"
+      ],
+      "facility": "航空厂",
+      "grade": 3,
+      "inputs": {
+        "drone_airframe": 1,
+        "autonomy_module": 1,
+        "battery": 2
+      },
+      "outputs": {
+        "air_drone": 1
+      },
+      "power": 5,
+      "workers": 5,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P061",
+      "name": "轨道节点装配",
+      "requires_all": [
+        "N06"
+      ],
+      "facility": "航空厂",
+      "grade": 3,
+      "inputs": {
+        "orbital_module": 2,
+        "sensor": 1,
+        "communication_equipment": 1
+      },
+      "outputs": {
+        "satellite": 1
+      },
+      "power": 8,
+      "workers": 7,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P062",
+      "name": "实验耗材",
+      "requires_all": [],
+      "facility": "材料厂",
+      "grade": 1,
+      "inputs": {
+        "glass": 1,
+        "chemicals": 1
+      },
+      "outputs": {
+        "lab_supplies": 4
+      },
+      "power": 2,
+      "workers": 2,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P063",
+      "name": "标准试验包",
+      "requires_all": [],
+      "facility": "机械厂",
+      "grade": 1,
+      "inputs": {
+        "steel": 1,
+        "basic_parts": 1,
+        "glass": 1
+      },
+      "outputs": {
+        "engineering_pack": 2
+      },
+      "power": 2,
+      "workers": 3,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P064",
+      "name": "精密试验包",
+      "requires_all": [
+        "I03"
+      ],
+      "facility": "机械厂",
+      "grade": 2,
+      "inputs": {
+        "precision_parts": 1,
+        "sensor": 1,
+        "pure_chemicals": 1
+      },
+      "outputs": {
+        "precision_pack": 2
+      },
+      "power": 4,
+      "workers": 4,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P065",
+      "name": "系统试验包",
+      "requires_all": [
+        "C03"
+      ],
+      "facility": "电子厂",
+      "grade": 2,
+      "inputs": {
+        "precision_parts": 1,
+        "chip": 1,
+        "communication_equipment": 1,
+        "battery": 1
+      },
+      "outputs": {
+        "system_pack": 2
+      },
+      "power": 6,
+      "workers": 5,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P066",
+      "name": "基础废钢回收",
+      "requires_all": [],
+      "facility": "冶金厂",
+      "grade": 1,
+      "inputs": {
+        "scrap_steel": 4,
+        "coal": 1
+      },
+      "outputs": {
+        "steel": 2
+      },
+      "power": 3,
+      "workers": 3,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P067",
+      "name": "基础废铜回收",
+      "requires_all": [],
+      "facility": "冶金厂",
+      "grade": 1,
+      "inputs": {
+        "scrap_copper": 4,
+        "coal": 1
+      },
+      "outputs": {
+        "copper": 2
+      },
+      "power": 3,
+      "workers": 3,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P068",
+      "name": "高效废钢回收",
+      "requires_all": [
+        "I08"
+      ],
+      "facility": "冶金厂",
+      "grade": 2,
+      "inputs": {
+        "scrap_steel": 4
+      },
+      "outputs": {
+        "steel": 3
+      },
+      "power": 4,
+      "workers": 4,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P069",
+      "name": "高效废铜回收",
+      "requires_all": [
+        "I08"
+      ],
+      "facility": "冶金厂",
+      "grade": 2,
+      "inputs": {
+        "scrap_copper": 4
+      },
+      "outputs": {
+        "copper": 3
+      },
+      "power": 4,
+      "workers": 4,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P070",
+      "name": "基础燃煤发电",
+      "requires_all": [],
+      "facility": "电站",
+      "grade": 1,
+      "inputs": {
+        "coal": 2,
+        "water": 2
+      },
+      "outputs": {
+        "electricity": 10
+      },
+      "power": 0,
+      "workers": 3,
+      "installed": {
+        "basic_parts": 1
+      },
+      "condition": ""
+    },
+    {
+      "id": "P071",
+      "name": "燃油发电",
+      "requires_all": [
+        "E01"
+      ],
+      "facility": "电站",
+      "grade": 1,
+      "inputs": {
+        "fuel": 2,
+        "water": 1
+      },
+      "outputs": {
+        "electricity": 12
+      },
+      "power": 0,
+      "workers": 3,
+      "installed": {
+        "basic_parts": 1
+      },
+      "condition": ""
+    },
+    {
+      "id": "P072",
+      "name": "风光发电",
+      "requires_all": [
+        "E03"
+      ],
+      "facility": "电站",
+      "grade": 2,
+      "inputs": {},
+      "outputs": {
+        "electricity": 9
+      },
+      "power": 0,
+      "workers": 1,
+      "installed": {
+        "renewable_equipment": 2
+      },
+      "condition": "实际输出乘以风光条件系数；不保证稳定出力"
+    },
+    {
+      "id": "P073",
+      "name": "核能发电",
+      "requires_all": [
+        "E05"
+      ],
+      "facility": "电站",
+      "grade": 3,
+      "inputs": {
+        "nuclear_fuel": 0.05,
+        "water": 2
+      },
+      "outputs": {
+        "electricity": 20
+      },
+      "power": 0,
+      "workers": 5,
+      "installed": {
+        "reactor_module": 1
+      },
+      "condition": "爬坡 5%/tick、最低稳燃 70%；冷却不足按实得水率降载，热应力满阈值 SCRAM 停堆 10 周期（见 05 电力系统）；每 200 周期换料停 10 周期"
+    },
+    {
+      "id": "P074",
+      "name": "氢能发电",
+      "requires_all": [
+        "E06"
+      ],
+      "facility": "电站",
+      "grade": 2,
+      "inputs": {
+        "hydrogen": 1
+      },
+      "outputs": {
+        "electricity": 3
+      },
+      "power": 0,
+      "workers": 2,
+      "installed": {
+        "basic_parts": 2
+      },
+      "condition": "制氢再发电的总输出小于制氢耗电"
+    },
+    {
+      "id": "P075",
+      "name": "基础实验室",
+      "requires_all": [],
+      "facility": "实验室",
+      "grade": 1,
+      "inputs": {
+        "lab_supplies": 1
+      },
+      "outputs": {
+        "research_points": 1
+      },
+      "power": 1,
+      "workers": 3,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P076",
+      "name": "工程实验室",
+      "requires_all": [
+        "R03"
+      ],
+      "facility": "实验室",
+      "grade": 2,
+      "inputs": {
+        "lab_supplies": 1,
+        "precision_pack": 0.1
+      },
+      "outputs": {
+        "research_points": 3
+      },
+      "power": 3,
+      "workers": 5,
+      "installed": {
+        "precision_parts": 2
+      },
+      "condition": ""
+    },
+    {
+      "id": "P077",
+      "name": "计算实验室",
+      "requires_all": [
+        "R07"
+      ],
+      "facility": "实验室",
+      "grade": 3,
+      "inputs": {
+        "lab_supplies": 1,
+        "system_pack": 0.1
+      },
+      "outputs": {
+        "research_points": 12
+      },
+      "power": 8,
+      "workers": 6,
+      "installed": {
+        "computing_equipment": 2
+      },
+      "condition": ""
+    },
+    {
+      "id": "P078",
+      "name": "高密度计算设备",
+      "requires_all": [
+        "C04",
+        "C05"
+      ],
+      "facility": "电子厂",
+      "grade": 3,
+      "inputs": {
+        "advanced_chip": 2,
+        "precision_parts": 1,
+        "communication_equipment": 1
+      },
+      "outputs": {
+        "advanced_computing_equipment": 1
+      },
+      "power": 6,
+      "workers": 6,
+      "installed": {},
+      "condition": "与成熟计算设备为不同库存项；不能免除设备部署和维护。"
+    },
+    {
+      "id": "P079",
+      "name": "高密度计算实验室",
+      "requires_all": [
+        "R07",
+        "C04"
+      ],
+      "facility": "实验室",
+      "grade": 3,
+      "inputs": {
+        "lab_supplies": 1,
+        "system_pack": 0.1
+      },
+      "outputs": {
+        "research_points": 18
+      },
+      "power": 10,
+      "workers": 6,
+      "installed": {
+        "advanced_computing_equipment": 2
+      },
+      "condition": "先进设备路线的替代配方；不是所有四阶研究的强制前置。"
+    },
+    {
+      "id": "P080",
+      "name": "高温合金",
+      "requires_all": [
+        "I09"
+      ],
+      "facility": "冶金厂",
+      "grade": 3,
+      "inputs": {
+        "alloy": 3,
+        "rare_ore": 2,
+        "pure_chemicals": 1
+      },
+      "outputs": {
+        "superalloy": 2
+      },
+      "power": 10,
+      "workers": 6,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P081",
+      "name": "超构材料",
+      "requires_all": [
+        "I11"
+      ],
+      "facility": "材料厂",
+      "grade": 4,
+      "inputs": {
+        "composite": 2,
+        "clean_substrate": 1,
+        "superalloy": 1,
+        "rare_ore": 1
+      },
+      "outputs": {
+        "metamaterial": 1
+      },
+      "power": 14,
+      "workers": 6,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P082",
+      "name": "超导线材",
+      "requires_all": [
+        "E09"
+      ],
+      "facility": "冶金厂",
+      "grade": 3,
+      "inputs": {
+        "copper": 2,
+        "rare_ore": 1,
+        "pure_chemicals": 1
+      },
+      "outputs": {
+        "superconductor": 2
+      },
+      "power": 12,
+      "workers": 5,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P083",
+      "name": "快堆发电",
+      "requires_all": [
+        "E10"
+      ],
+      "facility": "电站",
+      "grade": 3,
+      "inputs": {
+        "nuclear_fuel": 0.02,
+        "water": 0.5
+      },
+      "outputs": {
+        "electricity": 30
+      },
+      "power": 0,
+      "workers": 5,
+      "installed": {
+        "reactor_module": 1,
+        "superalloy": 2
+      },
+      "condition": "冷却水降至热堆的 25%；乏燃料再处理计入国际核查透明度"
+    },
+    {
+      "id": "P084",
+      "name": "聚变燃料",
+      "requires_all": [
+        "E11"
+      ],
+      "facility": "化工厂",
+      "grade": 4,
+      "inputs": {
+        "hydrogen": 2,
+        "rare_ore": 1
+      },
+      "outputs": {
+        "fusion_fuel": 1
+      },
+      "power": 10,
+      "workers": 4,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P085",
+      "name": "聚变堆模块",
+      "requires_all": [
+        "E11"
+      ],
+      "facility": "机械厂",
+      "grade": 4,
+      "inputs": {
+        "superconductor": 6,
+        "superalloy": 4,
+        "control_module": 2,
+        "advanced_computing_equipment": 1
+      },
+      "outputs": {
+        "fusion_module": 1
+      },
+      "power": 16,
+      "workers": 10,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P086",
+      "name": "聚变发电",
+      "requires_all": [
+        "E11"
+      ],
+      "facility": "电站",
+      "grade": 4,
+      "inputs": {
+        "fusion_fuel": 0.1,
+        "water": 1
+      },
+      "outputs": {
+        "electricity": 80
+      },
+      "power": 0,
+      "workers": 6,
+      "installed": {
+        "fusion_module": 1
+      },
+      "condition": "冷启动需外部供电 400；等离子体失稳后停堆 10 周期"
+    },
+    {
+      "id": "P087",
+      "name": "光子芯片",
+      "requires_all": [
+        "C09"
+      ],
+      "facility": "电子厂",
+      "grade": 4,
+      "inputs": {
+        "clean_substrate": 2,
+        "rare_ore": 1,
+        "glass": 1
+      },
+      "outputs": {
+        "photonic_chip": 1
+      },
+      "power": 14,
+      "workers": 6,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P088",
+      "name": "智能核心",
+      "requires_all": [
+        "C10"
+      ],
+      "facility": "电子厂",
+      "grade": 3,
+      "inputs": {
+        "advanced_computing_equipment": 1,
+        "autonomy_module": 1
+      },
+      "outputs": {
+        "ai_core": 1
+      },
+      "power": 10,
+      "workers": 6,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P089",
+      "name": "量子计算模块",
+      "requires_all": [
+        "C11"
+      ],
+      "facility": "电子厂",
+      "grade": 4,
+      "inputs": {
+        "photonic_chip": 2,
+        "superconductor": 2,
+        "clean_substrate": 1
+      },
+      "outputs": {
+        "quantum_module": 1
+      },
+      "power": 18,
+      "workers": 7,
+      "installed": {},
+      "condition": "仅部署运行中的量子模块需供冷.2电/周期/模块；断冷一tick损当前健康10%，不损坏未部署仓库库存，损失book一次扣除。"
+    },
+    {
+      "id": "P090",
+      "name": "合成食品",
+      "requires_all": [
+        "A09"
+      ],
+      "facility": "食品厂",
+      "grade": 3,
+      "inputs": {
+        "chemicals": 1,
+        "water": 2,
+        "biomass": 1
+      },
+      "outputs": {
+        "food": 5
+      },
+      "power": 8,
+      "workers": 3,
+      "installed": {},
+      "condition": "不需耕地；food携带synthetic_food_share。theta<=0.30不折；theta>0.30时s_food_qual=min(s_food_raw,1-0.30*(theta-0.30)/0.70)，全合成份额封顶0.70；出生/饥荒使用物理满足率，见02/07。"
+    },
+    {
+      "id": "P091",
+      "name": "基因治疗包",
+      "requires_all": [
+        "A11"
+      ],
+      "facility": "制药厂",
+      "grade": 4,
+      "inputs": {
+        "medical_supplies": 2,
+        "pure_chemicals": 2
+      },
+      "outputs": {
+        "gene_therapy": 1
+      },
+      "power": 10,
+      "workers": 7,
+      "installed": {
+        "ai_core": 1
+      },
+      "condition": ""
+    },
+    {
+      "id": "P092",
+      "name": "磁浮轨道模块",
+      "requires_all": [
+        "L09"
+      ],
+      "facility": "材料厂",
+      "grade": 3,
+      "inputs": {
+        "superconductor": 2,
+        "structure_module": 2,
+        "control_module": 1
+      },
+      "outputs": {
+        "maglev_module": 1
+      },
+      "power": 8,
+      "workers": 5,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P093",
+      "name": "电子战模块",
+      "requires_all": [
+        "G09"
+      ],
+      "facility": "电子厂",
+      "grade": 3,
+      "inputs": {
+        "radar_module": 1,
+        "computing_equipment": 1,
+        "sensor": 1
+      },
+      "outputs": {
+        "ew_module": 1
+      },
+      "power": 8,
+      "workers": 5,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P094",
+      "name": "集群作战单元",
+      "requires_all": [
+        "G10"
+      ],
+      "facility": "装备厂",
+      "grade": 3,
+      "inputs": {
+        "ground_drone": 2,
+        "air_drone": 2,
+        "ai_core": 1
+      },
+      "outputs": {
+        "swarm_unit": 1
+      },
+      "power": 10,
+      "workers": 6,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P095",
+      "name": "定向能武器",
+      "requires_all": [
+        "G11"
+      ],
+      "facility": "装备厂",
+      "grade": 4,
+      "inputs": {
+        "superconductor": 2,
+        "battery": 4,
+        "precision_parts": 2,
+        "control_module": 1
+      },
+      "outputs": {
+        "energy_weapon": 1
+      },
+      "power": 12,
+      "workers": 6,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P096",
+      "name": "可复用运载器",
+      "requires_all": [
+        "N09"
+      ],
+      "facility": "航空厂",
+      "grade": 4,
+      "inputs": {
+        "superalloy": 3,
+        "light_structure": 4,
+        "control_module": 2,
+        "fuel": 4
+      },
+      "outputs": {
+        "reusable_launcher": 1
+      },
+      "power": 14,
+      "workers": 8,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P097",
+      "name": "高超声速机体",
+      "requires_all": [
+        "N10"
+      ],
+      "facility": "航空厂",
+      "grade": 4,
+      "inputs": {
+        "superalloy": 2,
+        "composite": 2,
+        "guidance_module": 1
+      },
+      "outputs": {
+        "hypersonic_airframe": 1
+      },
+      "power": 12,
+      "workers": 7,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P098",
+      "name": "高超声速弹",
+      "requires_all": [
+        "N10"
+      ],
+      "facility": "装备厂",
+      "grade": 3,
+      "inputs": {
+        "hypersonic_airframe": 1,
+        "guidance_module": 1,
+        "fuel": 2
+      },
+      "outputs": {
+        "hypersonic_missile": 2
+      },
+      "power": 8,
+      "workers": 5,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P099",
+      "name": "轨道工业平台",
+      "requires_all": [
+        "N11"
+      ],
+      "facility": "航空厂",
+      "grade": 4,
+      "inputs": {
+        "orbital_module": 4,
+        "reactor_module": 1,
+        "ai_core": 1
+      },
+      "outputs": {
+        "orbital_platform": 1
+      },
+      "power": 18,
+      "workers": 9,
+      "installed": {},
+      "condition": "成品在地面，须经 reusable_launcher 发射入轨方可运行"
+    },
+    {
+      "id": "P100",
+      "name": "前沿试验包",
+      "requires_all": [
+        "R07"
+      ],
+      "facility": "电子厂",
+      "grade": 3,
+      "inputs": {
+        "precision_pack": 1,
+        "system_pack": 1,
+        "advanced_computing_equipment": 0.2
+      },
+      "outputs": {
+        "frontier_pack": 1
+      },
+      "power": 10,
+      "workers": 6,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P101",
+      "name": "突破验证包",
+      "requires_all": [
+        "R09"
+      ],
+      "facility": "电子厂",
+      "grade": 3,
+      "inputs": {
+        "frontier_pack": 2,
+        "superalloy": 1,
+        "ai_core": 0.5
+      },
+      "outputs": {
+        "breakthrough_pack": 1
+      },
+      "power": 14,
+      "workers": 7,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P102",
+      "name": "自主实验室",
+      "requires_all": [
+        "R11"
+      ],
+      "facility": "实验室",
+      "grade": 4,
+      "inputs": {
+        "lab_supplies": 1,
+        "breakthrough_pack": 0.05
+      },
+      "outputs": {
+        "research_points": 45
+      },
+      "power": 20,
+      "workers": 4,
+      "installed": {
+        "ai_core": 2,
+        "quantum_module": 1
+      },
+      "condition": "研究点不受 N^α 递减；任一常驻模块缺失即停机"
+    },
+    {
+      "id": "P103",
+      "name": "加密模块",
+      "requires_all": [
+        "S01"
+      ],
+      "facility": "电子厂",
+      "grade": 1,
+      "inputs": {
+        "electronic_parts": 2,
+        "copper": 1
+      },
+      "outputs": {
+        "crypto_module": 1
+      },
+      "power": 2,
+      "workers": 3,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P104",
+      "name": "网络作战套件",
+      "requires_all": [
+        "S03"
+      ],
+      "facility": "电子厂",
+      "grade": 3,
+      "inputs": {
+        "computing_equipment": 1,
+        "crypto_module": 2
+      },
+      "outputs": {
+        "cyber_suite": 1
+      },
+      "power": 6,
+      "workers": 6,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P105",
+      "name": "土壤修复剂",
+      "requires_all": [
+        "V02"
+      ],
+      "facility": "化工厂",
+      "grade": 2,
+      "inputs": {
+        "chemicals": 2,
+        "biomass": 1
+      },
+      "outputs": {
+        "remediation_agent": 2
+      },
+      "power": 3,
+      "workers": 4,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P106",
+      "name": "海水淡化",
+      "requires_all": [
+        "V03"
+      ],
+      "facility": "水厂",
+      "grade": 2,
+      "inputs": {},
+      "outputs": {
+        "water": 6
+      },
+      "power": 6,
+      "workers": 2,
+      "installed": {
+        "basic_parts": 2
+      },
+      "condition": "必须临海；浓盐水排放使所在海域分区渔获与 biomass 再生 −10%"
+    },
+    {
+      "id": "P107",
+      "name": "碳捕集机组",
+      "requires_all": [
+        "V05"
+      ],
+      "facility": "机械厂",
+      "grade": 3,
+      "inputs": {
+        "steel": 2,
+        "pure_chemicals": 1,
+        "control_module": 1
+      },
+      "outputs": {
+        "carbon_capture_unit": 1
+      },
+      "power": 6,
+      "workers": 5,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P108",
+      "name": "AI 加速器（G1）",
+      "requires_all": [
+        "AI01"
+      ],
+      "facility": "电子厂",
+      "grade": 2,
+      "inputs": {
+        "chip": 4
+      },
+      "outputs": {
+        "accelerator": 1
+      },
+      "power": 4,
+      "workers": 3,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P109",
+      "name": "数据中心（G1）",
+      "requires_all": [
+        "AI01"
+      ],
+      "facility": "数据中心",
+      "grade": 3,
+      "inputs": {},
+      "outputs": {
+        "compute": 50
+      },
+      "power": 100,
+      "workers": 2,
+      "installed": {
+        "accelerator": 50
+      },
+      "condition": "每座只装一种代际，G1 最多 50 台：算力 = 每台 1.0 × 在线台数 × 供电满足率；每台耗电 2/周期（推理归 B4、训练归 B5 可中断负荷）；训练与推理共用本国算力池，算力不入库、不可交易；加速器寿命 400 周期"
+    },
+    {
+      "id": "P110",
+      "name": "住宅区",
+      "requires_all": [],
+      "facility": "住宅区",
+      "grade": 1,
+      "inputs": {},
+      "outputs": {
+        "housing_capacity": 100
+      },
+      "power": 0,
+      "workers": 0.5,
+      "installed": {
+        "cement": 20,
+        "steel": 5
+      },
+      "condition": "住房容量仅供所在枢纽常住平民使用；建造装机替代S1外壳；每20周期维护cement 0.2，常驻劳动0.5。"
+    },
+    {
+      "id": "P111",
+      "name": "燃气发电",
+      "requires_all": [
+        "E01"
+      ],
+      "facility": "电站",
+      "grade": 1,
+      "inputs": {
+        "natural_gas": 2,
+        "water": 1
+      },
+      "outputs": {
+        "electricity": 14
+      },
+      "power": 0,
+      "workers": 2,
+      "installed": {
+        "basic_parts": 1
+      },
+      "condition": "爬坡 50%/tick，最低稳燃 20%，冷启动 1 tick；燃料按实际出力比例消耗"
+    },
+    {
+      "id": "P112",
+      "name": "水电站",
+      "requires_all": [
+        "E02",
+        "L01"
+      ],
+      "facility": "电站",
+      "grade": 2,
+      "inputs": {},
+      "outputs": {
+        "electricity": 15
+      },
+      "power": 0,
+      "workers": 2,
+      "installed": {
+        "basic_parts": 4,
+        "steel": 10,
+        "cement": 20
+      },
+      "condition": "水电取流域实际出流/基准出流，干涸可为0；额定总量超过流域潜力时同比摊薄。A01只搬移显式水库蓄水，不造水。"
+    },
+    {
+      "id": "P113",
+      "name": "风电场",
+      "requires_all": [
+        "E03"
+      ],
+      "facility": "电站",
+      "grade": 2,
+      "inputs": {},
+      "outputs": {
+        "electricity": 8
+      },
+      "power": 0,
+      "workers": 1,
+      "installed": {
+        "renewable_equipment": 2
+      },
+      "condition": "出力 × 分区风况 W_r(t)（种子化 AR(1)，每 tick 更新）"
+    },
+    {
+      "id": "P114",
+      "name": "光伏电站",
+      "requires_all": [
+        "E03"
+      ],
+      "facility": "电站",
+      "grade": 2,
+      "inputs": {},
+      "outputs": {
+        "electricity": 7
+      },
+      "power": 0,
+      "workers": 1,
+      "installed": {
+        "renewable_equipment": 1
+      },
+      "condition": "出力 × 日照 S_r(t) = 昼夜曲线 × (1 − 0.7 云量) × 纬度系数；每周期 tick 0、8、9 无日照"
+    },
+    {
+      "id": "P115",
+      "name": "先进 AI 加速器（G2）",
+      "requires_all": [
+        "AI02",
+        "C04"
+      ],
+      "facility": "电子厂",
+      "grade": 3,
+      "inputs": {
+        "advanced_chip": 4,
+        "precision_parts": 1
+      },
+      "outputs": {
+        "accelerator_g2": 1
+      },
+      "power": 8,
+      "workers": 4,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P116",
+      "name": "光子 AI 加速器（G3）",
+      "requires_all": [
+        "AI02",
+        "C09"
+      ],
+      "facility": "电子厂",
+      "grade": 4,
+      "inputs": {
+        "photonic_chip": 2,
+        "advanced_chip": 2
+      },
+      "outputs": {
+        "accelerator_g3": 1
+      },
+      "power": 10,
+      "workers": 4,
+      "installed": {},
+      "condition": ""
+    },
+    {
+      "id": "P117",
+      "name": "数据工程",
+      "requires_all": [
+        "AI01"
+      ],
+      "facility": "实验室",
+      "grade": 2,
+      "inputs": {},
+      "outputs": {
+        "curated_data": 5
+      },
+      "power": 2,
+      "workers": 4,
+      "installed": {
+        "computing_equipment": 1
+      },
+      "condition": "每周期从本国原始数据存量 D_raw 扣 5 转为精标数据 D_cur；D_raw 不足按比例减产；D_raw 每周期增加 0.02×人口 + 0.1×装 sensor/control_module 的产线数"
+    },
+    {
+      "id": "P118",
+      "name": "数据中心（G2）",
+      "requires_all": [
+        "AI02",
+        "C04"
+      ],
+      "facility": "数据中心",
+      "grade": 3,
+      "inputs": {},
+      "outputs": {
+        "compute": 150
+      },
+      "power": 150,
+      "workers": 2,
+      "installed": {
+        "accelerator_g2": 50
+      },
+      "condition": "G2 每台算力 3.0、耗电 3/周期；其余同 P109"
+    },
+    {
+      "id": "P119",
+      "name": "数据中心（G3）",
+      "requires_all": [
+        "AI02",
+        "C09"
+      ],
+      "facility": "数据中心",
+      "grade": 4,
+      "inputs": {},
+      "outputs": {
+        "compute": 400
+      },
+      "power": 150,
+      "workers": 2,
+      "installed": {
+        "accelerator_g3": 50
+      },
+      "condition": "G3 每台算力 8.0、耗电 3/周期；须建于 S5 前沿综合设施；其余同 P109"
+    }
+  ],
+  "mode_eligible_facilities": [
+    "冶金厂",
+    "材料厂",
+    "化工厂",
+    "机械厂",
+    "电子厂",
+    "食品厂",
+    "轻工厂",
+    "制药厂",
+    "装备厂",
+    "船厂",
+    "航空厂"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "kind": "frozen_handoff_focused_regression",
+  "date_utc": "2026-11-05T06:06:31.560711+00:00",
+  "modules": [
+    "organizer.rift_era.tests.test_commerce_commands",
+    "organizer.rift_era.tests.test_equity_finance",
+    "organizer.rift_era.tests.test_driver"
+  ],
+  "tests": 25,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "seconds": 151.123,
+  "before": {
+    "engine_hash": "28011425679c7703571cca573b54715ccaaa5def74c806188a79a3725959a016",
+    "tests_hash": "2e6c63a8b2efa9b2a5a2059f3eb83777e32d3e9cfaa20c59be7b46ee37884dcf"
+  },
+  "after": {
+    "engine_hash": "28011425679c7703571cca573b54715ccaaa5def74c806188a79a3725959a016",
+    "tests_hash": "2e6c63a8b2efa9b2a5a2059f3eb83777e32d3e9cfaa20c59be7b46ee37884dcf"
+  },
+  "source_and_tests_unchanged": true,
+  "passed": true,
+  "details": [],
+  "full_match_tests_executed": false,
+  "full_rules_accepted": false,
+  "log": "organizer/rift_era/validation/handoff_focused_20261105.log"
+}

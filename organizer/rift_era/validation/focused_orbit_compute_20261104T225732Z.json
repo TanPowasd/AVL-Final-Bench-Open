@@ -1,0 +1,37 @@
+{
+  "scope": "targeted_component_and_local_integration_regression",
+  "official": false,
+  "full_rules_accepted": false,
+  "full_match_tests_executed": false,
+  "recorded_utc": "2026-11-04T22:57:32.668964+00:00",
+  "command": "python3 -m unittest organizer.rift_era.tests.test_orbital_observation organizer.rift_era.tests.test_asat_operations organizer.rift_era.tests.test_compute_operations organizer.rift_era.tests.test_ai_operations organizer.rift_era.tests.test_local_economy organizer.rift_era.tests.test_driver organizer.rift_era.tests.test_orbital_operations organizer.rift_era.tests.test_knowledge_boundary",
+  "tests_run": 33,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "elapsed_seconds": 78.249,
+  "passed": true,
+  "engine_hash_after": "7d556ab00a61bac6431ff022c24b12434f0c3c9017a58195e53a04819972a60b",
+  "selected_tests_hash_after": "e39eed6e7cdec8de0ed8e92f0307f67e20640d94e4c1c926c5392f52e854ec24",
+  "hash_note": "Fingerprints recorded after the completed targeted run; no before/after freeze claim.",
+  "rules_hash": "4527218afd4b2eddc4783d408c6162e156d8d1734cb52f55322f444f7c549716",
+  "runtime": {
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+    "implementation": "CPython",
+    "architecture": "x86_64",
+    "platform": "Linux-6.1.176-x86_64-with-glibc2.39",
+    "libc": "glibc:2.39"
+  },
+  "additional_checks": {
+    "compileall": "passed",
+    "rift_git_diff_check": "passed"
+  },
+  "implemented": [
+    "N06 ground-control orbital visibility and privacy",
+    "paid delayed ASAT and deduplicated debris",
+    "training compute price includes wages and delivered electricity"
+  ],
+  "recorded_not_implemented": [
+    "approved controlled-origin mU rounding and retained fractional stock"
+  ]
+}

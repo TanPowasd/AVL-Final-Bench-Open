@@ -1,0 +1,27 @@
+{
+  "scope": "component_and_local_integration_regression",
+  "full_rules_accepted": false,
+  "full_match_tests_executed": false,
+  "official": false,
+  "started_utc": "2026-11-05T00:19:57.105837+00:00",
+  "elapsed_seconds": 629.3665631719923,
+  "engine_hash_before": "4645c140aa24dd275ce2d3d6907617f0ab1dea29fa882dda15c929c76940141c",
+  "engine_hash_after": "4645c140aa24dd275ce2d3d6907617f0ab1dea29fa882dda15c929c76940141c",
+  "tests_hash_before": "f7fed41ec16654f5bd503a43e8ac4e4e3a817dc0926add2a2549090dd44789df",
+  "tests_hash_after": "f7fed41ec16654f5bd503a43e8ac4e4e3a817dc0926add2a2549090dd44789df",
+  "rules_hash": "4527218afd4b2eddc4783d408c6162e156d8d1734cb52f55322f444f7c549716",
+  "runtime": {
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+    "implementation": "CPython",
+    "architecture": "x86_64",
+    "platform": "Linux-6.1.176-x86_64-with-glibc2.39",
+    "libc": "glibc:2.39"
+  },
+  "tests_run": 365,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "source_unchanged": true,
+  "passed": true,
+  "output": ".............................................................................................................................................................................................................................................................................................................................................................................\n----------------------------------------------------------------------\nRan 365 tests in 629.233s\n\nOK\n"
+}
