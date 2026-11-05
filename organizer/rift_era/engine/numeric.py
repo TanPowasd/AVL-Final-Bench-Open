@@ -77,8 +77,15 @@ def split_payment(total: int, weights: Mapping[str, Fraction], *,
         return {k: 0 for k in weights}
     exact = {k: total * w / weight for k, w in weights.items()}
     result = {k: floor(v) for k, v in exact.items()}
-    rank = sorted(weights, key=lambda k: (-(exact[k] - result[k]), digest(*key, k), k))
-    for k in rank[:total - sum(result.values())]:
+    extra = total - sum(result.values())
+    if not extra:
+        return result
+    # Remainders sum to `extra` and are each < 1, so more than `extra` keys have
+    # a positive remainder and no zero-remainder key can be chosen; ranking only
+    # the positive ones selects the same set without hashing the rest.
+    positive = [k for k in weights if exact[k] != result[k]]
+    rank = sorted(positive, key=lambda k: (-(exact[k] - result[k]), digest(*key, k), k))
+    for k in rank[:extra]:
         result[k] += 1
     return result
 

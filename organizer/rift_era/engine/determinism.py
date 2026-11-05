@@ -17,6 +17,19 @@ from typing import Any
 
 def primitive(value: Any) -> Any:
     """Convert engine values to unambiguous JSON. No repr(), pickle or eval()."""
+    kind = type(value)
+    # Exact-type fast paths; subclasses (IntEnum, StrEnum, ...) take the general path.
+    if kind is str or kind is int or kind is bool or value is None:
+        return value
+    if kind is Fraction:
+        return {"$rational": [value.numerator, value.denominator]}
+    if kind is dict:
+        for k in value:
+            if type(k) is not str and not isinstance(k, str):
+                raise TypeError("canonical objects require string keys")
+        return {k: primitive(v) for k, v in value.items()}
+    if kind is list or kind is tuple:
+        return [primitive(v) for v in value]
     if isinstance(value, Fraction):
         return {"$rational": [value.numerator, value.denominator]}
     if isinstance(value, Enum):
@@ -38,9 +51,11 @@ def primitive(value: Any) -> Any:
     raise TypeError(f"not a canonical value: {type(value).__name__}")
 
 
+_ENCODER = json.JSONEncoder(sort_keys=True, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
+
+
 def canonical(value: Any) -> bytes:
-    return json.dumps(primitive(value), sort_keys=True, ensure_ascii=False,
-                      separators=(",", ":"), allow_nan=False).encode("utf-8")
+    return _ENCODER.encode(primitive(value)).encode("utf-8")
 
 
 def fingerprint(value: Any) -> str:
@@ -51,7 +66,8 @@ def digest(*key: str | int) -> bytes:
     # JSON preserves int vs string, and prevents ambiguous concatenated keys.
     if any(type(k) not in (str, int) for k in key):
         raise TypeError("random keys must contain only typed strings and integers")
-    return hashlib.sha256(canonical(key)).digest()
+    # primitive() is the identity on a list of exact str/int values.
+    return hashlib.sha256(_ENCODER.encode(list(key)).encode("utf-8")).digest()
 
 
 def uniform(seed: int, stream: str, tick: int, location: str, sub: int = 0) -> float:
