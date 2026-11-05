@@ -120,7 +120,8 @@ class NationalPower:
         longs = (s.bond_market.asset_book(p) + s.stock_market.long_book(p, cycle)
                  + s.contracts.loans.creditor_book(p))
         debts = (s.sovereign_finance.debt_book(p) + s.payables.debt_book(p) + s.contracts.loans.debt_book(p)
-                 + s.stock_market.finance.debt_book(p) + s.stock_market.finance.short_liability_book(p, cycle))
+                 + s.stock_market.finance.debt_book(p) + s.stock_market.finance.short_liability_book(p, cycle)
+                 + s.fx_shorts.debt_book(p))
         issue = s.initial.cash.issue_book.get(p, Q(0))
         equity = s.stock_market.external_equity_book(p, cycle)
         return cash + longs - debts - issue - equity

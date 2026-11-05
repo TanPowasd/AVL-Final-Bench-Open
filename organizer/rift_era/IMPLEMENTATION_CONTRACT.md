@@ -340,3 +340,11 @@ P8 发布缓存后读取不重新探测；测控失联时只报告失联，不�
 - 07 的 Blockade_r：受害国在某区的值 = 该区所有入边（端点在该区）按完好额定容量加权的 B 均值；已接入国力的 Qsec。
 - 未做：港口 ACL 拒入标志与 b 取最大（ACL 现由 `access_tier` 单独限制）。
 - 截击 `military/interdict {formation_id, shipment_track_id}`：可见轨迹 = 本国编队位于该运输当前枢纽或其所在边的端点（视为 q ≥ .2）；轨迹 ID 为 `track:` + 哈希，不暴露运输 ID，列在观测 `blockades.shipment_tracks`。下单时货主与承运人都须为 WAR。在本 tick P4（战斗之后、封锁判定之前）结算：编队本 tick 已射击则无剩余预算；须取得完整 `combat_tick` 补给（ACTION_LOSS）；用掉后该编队本 tick 不再计入封锁。d = min(.25, A/(100+E))，E 为货主、承运人或与截击方交战国在该处执行 escort 的火力。可分货物损失 floor(q·d)（DESTRUCTION，按目录值记入货主损毁损失）；不可分货物不减量；运具 health −floor(d·1000)，归零则运输 STRANDED。未做：残骸仓（运具归零时货物落到边端点）。结果在观测 `blockades.interdictions`。
+
+
+## fx_short_v1（2026-11-05）
+
+- `finance/fx_short {currency, amount_mU}`：需 F03；币种为任一国家货币（不能是 RU）。从世界池 `world/pool/<q>` 真实借出 q 币，并在本 tick 的 FX 批次卖成 RU（两腿真实交易，未成交部分退回借款人 `reserves/<q>`）。同时从 RU 储备锁 50% 抵押（amount×e_q/2）到 `fx_short_collateral:<q>`。全部未平 q 空头合计不超过本周期初该池 q 余额的 25%，超出返回 ERR_CAPACITY_EXCEEDED。
+- ShortDebt[p,q]：每周期初按 max(0, i_q+2)/10000 计息（i_q 为发行国政策利率，单位 %），以 q 资本化；RU 账面按计息当周期汇率增加。计入国力 NFA 的负债项。
+- `finance/fx_cover {currency, amount_mU}`：用 RU 储备在本 tick FX 批次买入至多 amount 的 q；批次之后把实际买到的 q 还给世界池，按比例注销债务与账面、释放同比例抵押；多买的 q 与未用 RU 退回储备。只注销负债不还币的做法不存在。
+- 未做：抵押率逐期盯市与强平（02 只写了初始 50%，作者如需维持保证金规则请补）。

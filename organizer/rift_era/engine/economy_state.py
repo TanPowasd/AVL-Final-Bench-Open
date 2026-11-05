@@ -292,6 +292,8 @@ class OperatingWorld:
         self.climate = Climate(self)
         from .blockade import Blockades
         self.blockades = Blockades(self)
+        from .fx_shorts import FXShorts
+        self.fx_shorts = FXShorts(self)
         self.storage = EnergyStorage(self)
         self.macro = Macroeconomy(self)
         self.cargo = CargoOperations(self)
@@ -556,12 +558,14 @@ class OperatingWorld:
                 **({'conditional_plans': self.conditional_plans} if any(self.conditional_plans.values()) else {}),
                 **({'cyber_frozen_until': self.cyber_frozen_until} if self.cyber_frozen_until else {}),
                 **({'climate': self.climate.snapshot()} if not self.climate.empty() else {}),
-                **({'blockades': self.blockades.snapshot()} if not self.blockades.empty() else {})}
+                **({'blockades': self.blockades.snapshot()} if not self.blockades.empty() else {}),
+                **({'fx_shorts': self.fx_shorts.snapshot()} if not self.fx_shorts.empty() else {})}
 
     def audit(self) -> None:
         self.initial.audit()
         if self.national_power is not None:
             self.national_power.audit()
+        self.fx_shorts.audit()
         self.spot.audit()
         self.consumption.audit()
         self.maintenance.audit()
