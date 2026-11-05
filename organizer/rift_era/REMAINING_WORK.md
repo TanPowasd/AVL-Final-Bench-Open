@@ -95,7 +95,7 @@
 | `logistics/forward_contract` | F03，保证金 20%，违约扣押 | 是 |
 | `finance/secondary_offering` | C30，定向投向设施 | 是 |
 | `finance/fx_short`、`finance/fx_cover` | F03 | 是 |
-| `diplomacy/terminate_contract` | 通用终止和归责 | 是 |
+| ~~`diplomacy/terminate_contract`~~ | 已做（2026-11-05）：类型 1/3/5/7/8/9 可终止，防务 −.25、其余 −.15，免责见 `contract_termination_v1`；类型 2/4/6 按各自规则结束，返回 `ERR_NO_PERMISSION` | 是 |
 | `military/hypersonic_strike` | N10，仅 G11 可拦截 | 是 |
 | `military/blockade`、`military/interdict` | `combat.blockade_fraction` 已有公式，尚未调用 | 是 |
 | `intelligence/steal_model` | E84 | 是 |
