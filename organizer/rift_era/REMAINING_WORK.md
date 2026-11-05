@@ -102,7 +102,7 @@
 | `governance/climate_intervention` | V08 | 是 |
 | `diplomacy/grant_climate_consent` | V08 跨国授权 | **否** |
 | `intelligence/cyber_op` | S03，E82，E85，C33 | 仅写了 S03 |
-| `governance/conditional_plan` | 每窗口首个 P1 判定，有冷却 | **否** |
+| ~~`governance/conditional_plan`~~ | 已做（2026-11-05）：C10 + 枢纽 ai_core，最多 32 条，每窗口首 P1、玩家命令之前判定，冷却 ≥5 tick，可 cancel_by_id；口径见 `conditional_plan_v1` | **否** |
 | ~~`research/set_backup_hub`~~ | 已做（2026-11-05）：新公共系统 `research_backup`（R08，计算+通信设备各 1）；实验室损毁/失控时按 04 结算（无备份留 30% 理论、验证清零；有备份留 90%/75%），见 `research_continuity.py`、`tests/test_research_backup.py` | **否** |
 
 ### 与冻结规则不一致（交接未提及）

@@ -169,6 +169,8 @@ class OperatingWorld:
         # Adopted decision 0007 -> proposal D §2: initial international credit.
         self.credit = {p: Q(85, 100) for p in initial.known}
         self.national_power = None  # full_match only (P0-2)
+        self.conditional_plans: dict[str, dict] = {}  # C10, owner -> command id -> plan
+        self.cyber_frozen_until: dict[str, int] = {}  # S03/S08 freeze, hub -> last frozen tick
         initial.inventory.enable_provenance(seed=initial.map.seed, credits=self.credit)
         self.asset_lifecycle = AssetLifecycle(initial.inventory, initial.assets, catalog.weights, initial=True,economic_owner=self.asset_title)
         self.consumption = Consumption()
@@ -546,7 +548,9 @@ class OperatingWorld:
                 'wage_indices': self.wage_indices, 'cpi': self.cpi, 'inflation': self.inflation,
                 'completed_cycles': self.completed_cycles, 'observations': self.observations,
                 'bootstrap_failures': self.bootstrap_failures,
-                **({'national_power': self.national_power.snapshot()} if self.national_power is not None else {})}
+                **({'national_power': self.national_power.snapshot()} if self.national_power is not None else {}),
+                **({'conditional_plans': self.conditional_plans} if any(self.conditional_plans.values()) else {}),
+                **({'cyber_frozen_until': self.cyber_frozen_until} if self.cyber_frozen_until else {})}
 
     def audit(self) -> None:
         self.initial.audit()

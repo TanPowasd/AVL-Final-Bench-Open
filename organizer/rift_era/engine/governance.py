@@ -214,7 +214,9 @@ class Governance:
     def visible(self, owner):
         return {'policy': self.policies[owner], 'effective_tax': self.state.tax[owner],
                 'autonomy': {r: a for r, a in self.autonomy.items() if self.state.initial.map.regions[r].sovereign == owner},
-                'training': [j for j in self.training.values() if j.owner == owner]}
+                'training': [j for j in self.training.values() if j.owner == owner],
+                **({'conditional_plans': list(self.state.conditional_plans[owner].values())}
+                   if self.state.conditional_plans.get(owner) else {})}
 
 
 class GovernanceCommands:

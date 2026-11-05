@@ -33,6 +33,7 @@ from .compute_refill import ComputeRefillCommands
 from .ai_services import AIServiceCommands
 from .corporate_finance import DividendCommands
 from .stock_market import StockCommands
+from .conditional_plans import ConditionalPlanCommands, cancel as cancel_plan, run_plans
 
 
 class EngineCommands:
@@ -42,7 +43,7 @@ class EngineCommands:
         industry = IndustryCommands(state)
         self.handlers = (self.commerce, CityStateCommands(state), CorridorPolicyCommands(state), RelocationCommands(state), StockCommands(state), DividendCommands(state), AIServiceCommands(state), ComputeRefillCommands(state), AILicenseCommands(state), DeploymentCommands(state), ExportControlCommands(state), ResearchCommands(state), industry, SystemCommands(state, industry),
                          EnergyCommands(state), GovernanceCommands(state), StorageCommands(state, industry),
-                         MonetaryCommands(state), TransportCommands(state), CorridorCommands(state, industry), FormationCommands(state), ReinforcementCommands(state), DiplomacyCommands(state), MarchCommands(state), RefitCommands(state), RadarCommands(state), IntelligenceCommands(state), OrbitalCommands(state), BondCommands(state), BondOrderCommands(state), ContractCommands(state), AICommands(state), ASATCommands(state))
+                         MonetaryCommands(state), TransportCommands(state), CorridorCommands(state, industry), FormationCommands(state), ReinforcementCommands(state), DiplomacyCommands(state), MarchCommands(state), RefitCommands(state), RadarCommands(state), IntelligenceCommands(state), OrbitalCommands(state), BondCommands(state), BondOrderCommands(state), ContractCommands(state), AICommands(state), ASATCommands(state), ConditionalPlanCommands(state))
         self.dispatch = {operation: handler for handler in self.handlers for operation in handler.OPERATIONS}
         if len(self.dispatch) != sum(len(h.OPERATIONS) for h in self.handlers):
             raise ValueError('duplicate command handler')
@@ -77,6 +78,9 @@ class EngineCommands:
                 if deployment is not None:
                     from .protocol import PreparedCommand
                     return PreparedCommand(lambda:self.state.compute.deployments.pop((owner,deployment.hub)))
+                plan = cancel_plan(self.state, owner, target)
+                if plan is not None:
+                    return plan
                 bond_order = self.state.bond_market.cancel(owner, target)
                 if bond_order is not None:
                     return bond_order
@@ -121,7 +125,7 @@ class EngineCommands:
         return handler.prepare(owner, order, ctx)
 
     def commands(self, state, ctx):
-        self.commerce.commands(state,ctx,prepare=self.prepare,pool_payments=state.stock_market.pool_claims,
+        self.commerce.commands(state,ctx,prepare=self.prepare,before_orders=lambda:run_plans(state,ctx,self.prepare),pool_payments=state.stock_market.pool_claims,
             on_pool_cleared=lambda:state.stock_market.after_commands(ctx))
 
     def clear(self, state, ctx):

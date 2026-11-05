@@ -310,3 +310,12 @@ P8 发布缓存后读取不重新探测；测控失联时只报告失联，不�
 - 不可终止（返回 ERR_NO_PERMISSION）：2 主权贷款（按 02 还款或违约结束）、4 合资（用 `leave_joint_venture`）、6 停战/DMZ（结束停战即 `declare_war`，已有 −.35）。
 - 归责：防务 −.25（同"拒防务"），其余 −.15（同"普通断供"），每份合同只扣一次，信用夹在 [.1, 1]。
 - 免责谓词（引擎原本没有合同自带的免责条款，本口径据 03 §5 设定，需作者确认）：条约已到期；互换处于 SUSPENDED 且对方在 `blocked_by`（对方先违约）；与对方处于 WAR 且终止方不是该战争的侵略方。
+
+
+## conditional_plan_v1（2026-11-05）
+
+- 注册：需 C10；`hub_id` 由本国控制，且有本国未损毁的产线装了 `ai_core` 附件；每国最多 32 条；`cooldown_ticks` ≥ 决策窗口长度（5）；`action` 是不带 `id` 的普通命令体，不能是 `conditional_plan` 或 `cancel_by_id`。注册是持久命令，可用 `cancel/cancel_by_id` 撤销。
+- 判定：每个决策窗口第一个 tick 的 P1、在所有席位命令之前，读上一窗口结束时的状态；按（国家，命令 ID）顺序。主机枢纽失控、ai_core 线损毁或被 S03/S08 冻结时跳过，不补追。
+- 指标：`market_price` = 该枢纽 `spot:<hub>:<ref_id>` 场所价格（mU，尚无场所则不触发）；`grid_price` = 该枢纽最近电价 ×1000（RU mU）；`hub_stock` = 本国在该枢纽 `available` 的 `ref_id` 库存（mU）。
+- 执行：走普通命令校验与提交；被拒绝也算本窗口一次执行（记录 `last_result`），冷却从这次算起。生成命令的 ID 为 `10^30 × 执行序号 + 计划 ID`，不与席位 ID 冲突。
+- 观测：计划列表在 `governance.conditional_plans`。
