@@ -294,6 +294,8 @@ class OperatingWorld:
         self.blockades = Blockades(self)
         from .fx_shorts import FXShorts
         self.fx_shorts = FXShorts(self)
+        from .forwards import Forwards
+        self.forwards = Forwards(self)
         self.storage = EnergyStorage(self)
         self.macro = Macroeconomy(self)
         self.cargo = CargoOperations(self)
@@ -559,7 +561,8 @@ class OperatingWorld:
                 **({'cyber_frozen_until': self.cyber_frozen_until} if self.cyber_frozen_until else {}),
                 **({'climate': self.climate.snapshot()} if not self.climate.empty() else {}),
                 **({'blockades': self.blockades.snapshot()} if not self.blockades.empty() else {}),
-                **({'fx_shorts': self.fx_shorts.snapshot()} if not self.fx_shorts.empty() else {})}
+                **({'fx_shorts': self.fx_shorts.snapshot()} if not self.fx_shorts.empty() else {}),
+                **({'forwards': self.forwards.snapshot()} if not self.forwards.empty() else {})}
 
     def audit(self) -> None:
         self.initial.audit()
