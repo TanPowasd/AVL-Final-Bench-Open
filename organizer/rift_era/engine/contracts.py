@@ -597,7 +597,6 @@ class ContractCommands:
             if edge is None:raise RuleViolation('ERR_NO_VISIBLE_TARGET')
             if not all(state.authority.controls_hub(p.proposer,h) for h in (edge.a,edge.b)):
                 raise RuleViolation('ERR_NO_PERMISSION','cannot grant transit on foreign endpoints')
-            if edge.toll_mU>p.toll_cap_ru_mU:raise RuleViolation('ERR_NO_PERMISSION','current toll exceeds cap')
 
     def transit_offer(self,owner,order,ctx):
         state=self.state;book=state.contracts;other=order['counterparty'];params=order['params']

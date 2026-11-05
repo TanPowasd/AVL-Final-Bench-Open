@@ -39,7 +39,6 @@ class Authority:
         self.regions = {rid: RegionAuthority(r.sovereign, r.sovereign) for rid, r in world.regions.items()}
         self.assets = {aid: AssetRights(a.owner, {a.owner: 1000}) for aid, a in assets.items()}
         self.asset_hubs = {aid: a.hub for aid, a in assets.items()}
-        self.access_acl: dict[str, dict[str, int]] = {}
         self.last_control_tick = -1
 
     def controls_hub(self, owner, hub):
@@ -164,4 +163,4 @@ class Authority:
 
     def snapshot(self):
         return {'regions': self.regions, 'assets': self.assets, 'asset_hubs': self.asset_hubs,
-                'access_acl': self.access_acl, 'last_control_tick': self.last_control_tick}
+                'last_control_tick': self.last_control_tick}

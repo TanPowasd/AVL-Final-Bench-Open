@@ -275,7 +275,8 @@ class PassengerOperations:
                 capacity = self.s.cargo.capacity(edge.id)
                 if vehicle.id in self.manual:
                     capacity = min(capacity, used + max(0, 800 - self.s.cargo.manual_admitted_mU.get(edge.id, 0)))
-                if payload <= min(capacity - used, self.s.cargo.owner_capacity(record.owner, edge.id), self.s.cargo.terminal_remaining(edge.id)) and self.s.cargo.pay_entry(record.owner, edge.id, payload):
+                if payload <= min(capacity - used, self.s.cargo.owner_capacity(record.owner, edge.id), self.s.cargo.terminal_remaining(edge.id)) and self.s.cargo.pay_entry(record.owner, edge.id, payload,
+                        {'people': people, **{good: inv.balance(Account(record.owner, sid, 'passenger_provisions', good)) for good in ('food', 'water')}}):
                     self.s.cargo.admission_capacity_mU.setdefault(edge.id, capacity)
                     self.s.cargo.admitted_mU[edge.id] = used + payload
                     self.s.cargo.record_terminal_entry(edge.id, payload)

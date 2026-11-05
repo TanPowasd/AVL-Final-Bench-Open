@@ -82,8 +82,8 @@
 
 ### 与冻结规则不一致（交接未提及）
 
-1. **`finance/stock_order` 没有检查 F03。** 06 要求融资和融券先解锁 F03，但整个引擎里没有 `F03` 判断，开局即可融资融券。应返回 `ERR_TECH_LOCKED`。
-2. **`logistics/corridor_policy` 接口不符。**
+1. ~~**`finance/stock_order` 没有检查 F03。**~~ 已修（2026-11-05）：融资买入和融券卖空未解锁 F03 时返回 `ERR_TECH_LOCKED`。 06 要求融资和融券先解锁 F03，但整个引擎里没有 `F03` 判断，开局即可融资融券。应返回 `ERR_TECH_LOCKED`。
+2. ~~**`logistics/corridor_policy` 接口不符。**~~ 已改（2026-11-05），口径见 `IMPLEMENTATION_CONTRACT.md` 的 `corridor_policy_tiers_v1`；预锁费用和在途掉头仍未做。
    - 规则：`access_tier: 0..3` 和 `toll_rate_bp: 0..2000`，费用按实际载货批次的基数计算。
    - 引擎：`allowed: bool` 和固定的 `toll_ru_mU`，见 `transport_operations.py:696`。
    - 费率还写在走廊上，改一国费率会影响所有国家。`blockade_food_substitution` 依赖 `access_tier`。

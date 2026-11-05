@@ -1280,6 +1280,7 @@ def opening_economy(catalog, initial, *, total_ticks: int = 150, debug: bool = T
                System('water_canals', Phase.POWER, lambda state, ctx: state.utilities.advance(ctx), after=('power',)),
                System('asat', Phase.COMBAT, lambda state, ctx: state.asat.advance(ctx)),
                System('export_policy_events', Phase.COMBAT, lambda state, ctx: state.export_controls.record_policy_events(ctx)),
+               System('corridor_policy_events', Phase.COMBAT, lambda state, ctx: state.cargo.record_policy_events(ctx)),
                System('battle', Phase.COMBAT, lambda state, ctx: state.battles.advance(ctx)),
                System('military_control', Phase.COMBAT, lambda state, ctx: state.military_governance.advance(ctx), after=('battle',)),
                System('bond_primary', Phase.MARKETS, lambda state, ctx: state.sovereign_finance.clear_primary(ctx)),
