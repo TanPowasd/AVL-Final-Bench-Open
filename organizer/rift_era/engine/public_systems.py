@@ -36,6 +36,8 @@ SYSTEMS = {
     'listening': SystemSpec('S02', (('communication_equipment', 2000),)),
     'automated_terminal': SystemSpec('L07', (('automation_module', 2000), ('communication_equipment', 1000))),
     'launch_site': SystemSpec('N06', (('communication_equipment', 1000), ('computing_equipment', 1000)), profiles=('S3', 'S5')),
+    # 04 R08: off-site research backup centre (computing + communication).
+    'research_backup': SystemSpec('R08', (('computing_equipment', 1000), ('communication_equipment', 1000))),
     'big_science': SystemSpec('R09', (('computing_equipment', 2000),), 40000, 2, profiles=('S5',)),
     'closed_ecology': SystemSpec('A12', (('control_module', 2000),), 4000, 1),
     'cryptanalysis_defense': SystemSpec('C12', (('quantum_module', 1000),), 2000, 4),

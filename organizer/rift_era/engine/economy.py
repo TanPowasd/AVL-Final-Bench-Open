@@ -1262,6 +1262,7 @@ def full_match(catalog, initial, *, total_ticks: int = 28_800, debug: bool = Fal
 
 
 def _assemble(catalog, initial, *, total_ticks: int, debug: bool, commerce: bool, scoring: bool) -> Kernel:
+    from .research_continuity import settle_research_continuity
     state = OperatingWorld(catalog, initial)
     economy = Economy(state)
     economy.initialize_yields()
@@ -1344,6 +1345,7 @@ def _assemble(catalog, initial, *, total_ticks: int, debug: bool, commerce: bool
                System('military_refits', Phase.PRODUCTION, lambda state, ctx: state.refits.advance(ctx), after=('unit_repairs',)),
                System('academy_training', Phase.PRODUCTION, lambda state, ctx: state.governance.advance_training(ctx), after=('maintenance',)),
                System('settlement', Phase.SETTLEMENT, economy.settle),
+               System('research_continuity', Phase.SETTLEMENT, settle_research_continuity, after=('settlement',)),
                System('city_settlement', Phase.SETTLEMENT, lambda state, ctx: state.city_economy.settle(ctx), after=('settlement',)),
                System('defense_obligations', Phase.SETTLEMENT, lambda state, ctx: state.contracts.defense_advance(ctx), after=('city_settlement',)),
                System('corporate_tax', Phase.SETTLEMENT, lambda state, ctx: state.corporate_finance.taxes(ctx), after=('settlement',)),
