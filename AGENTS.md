@@ -26,6 +26,7 @@
 
 ## 边界
 
-- 这是公开版，隐藏测试集、参考对手、正式评分工具不在仓库里，不要假设它们存在。`REMAINING_WORK.md` 中提到的 `score_all.py`、`pack_contestant.py` 属于私有组委会环境，题库接入在这里无法完成。
+- 这是公开版，隐藏测试集、官方参考对手、champion 和各题评分脚本不在仓库里，也不会提供。校准强对手走 `organizer/CALIBRATION.md`。
+- `organizer/score_all.py`、`organizer/pack_contestant.py` 仅作接口参考，在这里不能运行，请不要修改。裂陆纪元接入题库按 `organizer/rift_era/INTEGRATION.md` 交付。
 - `contestant/` 是从私有仓库导出的生成物，3 道 C++ 题（`ball_machine`、`fruehlingsbeginn`、`partition`）的规则是洛谷原题题面，不要改。
 - 不要把裂陆纪元的改动和 `contestant/` 的改动混在一起提交。

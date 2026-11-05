@@ -1,0 +1,82 @@
+# -*- coding: utf-8 -*-
+"""导出完整干净的参赛选手工作区（含顶层统一交卷目录 submissions/，默认输出至 ../contestant）。
+
+用法：
+  python organizer/pack_contestant.py --out ../players/model_a
+  python organizer/pack_contestant.py --force
+"""
+from __future__ import annotations
+
+import argparse
+import shutil
+import subprocess
+import sys
+import zipfile
+from pathlib import Path
+
+ORGANIZER_ROOT = Path(__file__).resolve().parent
+DEFAULT_DEST = ORGANIZER_ROOT.parent / "contestant"
+
+PROBLEMS = ['ai_training', 'backbone', 'ball_machine', 'cache_duel', 'fruehlingsbeginn', 'kaggriculture', 'mem_recall', 'partition']
+
+SUITE_DOCS_DIR = ORGANIZER_ROOT / "contestant_suite"
+SUITE_DOCS = ("README.md", "AGENTS.md")
+
+
+def prepare_suite_root(dest: Path, reset_submissions: bool = False) -> None:
+    dest.mkdir(parents=True, exist_ok=True)
+    for name in SUITE_DOCS:
+        shutil.copyfile(SUITE_DOCS_DIR / name, dest / name)
+    sub_dir = dest / "submissions"
+    if reset_submissions and sub_dir.exists():
+        shutil.rmtree(sub_dir)
+    sub_dir.mkdir(parents=True, exist_ok=True)
+    (sub_dir / ".gitkeep").write_text("", encoding="utf-8", newline="\n")
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description="导出干净的 AVL Final Bench 参赛选手工作区")
+    ap.add_argument("--out", type=Path, default=DEFAULT_DEST, help="输出目标目录（默认 ../contestant）")
+    ap.add_argument("--problems", nargs="*", choices=PROBLEMS, default=PROBLEMS)
+    ap.add_argument("--force", action="store_true")
+    ap.add_argument("--root-only", action="store_true")
+    ap.add_argument("--zip", action="store_true")
+    ns = ap.parse_args()
+
+    dest = ns.out.resolve()
+    if dest.is_relative_to(ORGANIZER_ROOT):
+        raise SystemExit(f"选手目录不能位于 organizer/ 内部：{dest}")
+    if dest.exists() and not ns.force and not ns.root_only:
+        raise SystemExit(f"目标目录已存在：{dest}（如需覆盖刷新请加 --force，或用 --out 指定新目录）")
+
+    prepare_suite_root(dest, reset_submissions=(ns.force and not ns.root_only))
+    if ns.root_only:
+        print(f"已刷新顶层 README.md、AGENTS.md 与 submissions/：{dest}")
+        return
+
+    for prob in ns.problems:
+        pack_script = ORGANIZER_ROOT / prob / "scripts" / "pack_contestant.py"
+        prob_dest = dest / prob
+        cmd = [sys.executable, "-X", "utf8", str(pack_script), "--out", str(prob_dest)]
+        if ns.force:
+            cmd.append("--force")
+        subprocess.run(cmd, cwd=ORGANIZER_ROOT / prob, check=True)
+        print(f"  [OK] {prob:<18s} -> {prob_dest}")
+
+    if ns.zip:
+        archive = dest.with_name(dest.name + ".zip")
+        if archive.exists():
+            if not ns.force:
+                raise SystemExit(f"压缩包已存在：{archive}")
+            archive.unlink()
+        with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as zf:
+            for p in sorted(dest.rglob("*")):
+                if p.is_file():
+                    zf.write(p, p.relative_to(dest).as_posix())
+        print(f"已生成压缩包：{archive}")
+
+    print(f"\n选手工作区已就绪：{dest}（统一交卷目录：{dest / 'submissions'}）")
+
+
+if __name__ == "__main__":
+    main()

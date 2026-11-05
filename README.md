@@ -7,6 +7,8 @@
 | [`contestant/`](contestant/) | 8 道正式题的选手工作区：规则、公开引擎、基线、本地自测工具 |
 | [`designs/rift_era/`](designs/rift_era/) | 概念题“裂陆纪元”的规则和设计资料（规则 `rift_era_rules_r6`，已冻结） |
 | [`organizer/rift_era/`](organizer/rift_era/) | 裂陆纪元引擎（开发中，还不能跑完整对局） |
+| `organizer/score_all.py`、`organizer/pack_contestant.py` | 题库接口参考，在公开版不能运行 |
+| [`organizer/CALIBRATION.md`](organizer/CALIBRATION.md) | 强对手校准流程 |
 
 AI 接手时先读 [`AGENTS.md`](AGENTS.md)。
 

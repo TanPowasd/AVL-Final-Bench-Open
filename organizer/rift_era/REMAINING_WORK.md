@@ -148,8 +148,13 @@ C03、C05、C09、C13、C14、C22、C23、C29、C31、C32 已确认有实现。
 
 - **参考策略：** 没有能走正式协议的参考池。`designs/rift_era/prototype/` 的 bot 基于原型模拟器，不能直接用。
 - **批次评分：** `evaluation.py` 的 `Batch.write_new`、`shadow_key`、`ResourceBudget.concurrency` 没有运行器调用。需要实现 64 seed、影子基准和 `INVALID_EVALUATION`。
-- **题库接入：** `contestant_readme.md`、starter、公开基线、`spar.py`、`score.py`，以及 `score_all.py`、`pack_contestant.py` 接入。
-- **计分校准：** 等用户定 V 梯度目标。
+- **题库接入：** 按 [INTEGRATION.md](INTEGRATION.md) 交付目录、`score.py` 和导出脚本，最后的注册由仓库作者在私有环境完成。
+- **计分校准：** V 梯度目标已定：
+  - 混坐 64 seed 的平均 V 满足 `Super > Advanced > Medium`，相邻两档的 95% 置信区间不重叠。
+  - 具体差距暂不定，等正式参考策略跑出数据后再定。
+  - 现状：原型混坐 seed 1000 时 V 倒挂（Super 78.8 < Advanced 139.2），这只是单个 seed 的原型数据。
+  - 先处理现金在 NFA 中不封顶、库存不计值这两个主因。两项都要等 P0-2 的真实 NFA 采集接上后才能验证。
+  - 如需改评分规则，发新规则版本，不要改 `rift_era_rules_r6` 的文件。
 - **快照缺口：** `EquityFinance.sequence` 影响强平单 ID，但不在 `snapshot()` 里，应补上。`Macroeconomy`、`Payments`、`ForeignExchange`、`DebtFunding`、`Relations`、`Battles` 等没有 `audit()`，建议补。
 - **宿主：** 512 MiB 管道容量和 cgroup 委派的问题仍未解决，见 `IMPLEMENTATION_CONTRACT.md` 的策略 IPC 一节。
 
