@@ -338,4 +338,5 @@ P8 发布缓存后读取不重新探测；测控失联时只报告失联，不�
 - A = 有效封锁编队的火力（陆路取 `ground`、水路取 `sea` 通道，乘 HP 比例与乘员比例），同阵营先合火力；D = 目标国及与封锁方交战国、执行 `escort` 任务且位于该边端点的编队火力。b = `blockade_fraction(A, D)`。
 - 结果在 P4 末写入 `corridor.blocked[target]`，作用于下一 tick 的 P2/P3 入边容量；没有有效封锁的边 B=0。中立国不受影响。
 - 07 的 Blockade_r：受害国在某区的值 = 该区所有入边（端点在该区）按完好额定容量加权的 B 均值；已接入国力的 Qsec。
-- 未做：截击 `military/interdict`、港口 ACL 拒入标志与 b 取最大（ACL 现由 `access_tier` 单独限制）。
+- 未做：港口 ACL 拒入标志与 b 取最大（ACL 现由 `access_tier` 单独限制）。
+- 截击 `military/interdict {formation_id, shipment_track_id}`：可见轨迹 = 本国编队位于该运输当前枢纽或其所在边的端点（视为 q ≥ .2）；轨迹 ID 为 `track:` + 哈希，不暴露运输 ID，列在观测 `blockades.shipment_tracks`。下单时货主与承运人都须为 WAR。在本 tick P4（战斗之后、封锁判定之前）结算：编队本 tick 已射击则无剩余预算；须取得完整 `combat_tick` 补给（ACTION_LOSS）；用掉后该编队本 tick 不再计入封锁。d = min(.25, A/(100+E))，E 为货主、承运人或与截击方交战国在该处执行 escort 的火力。可分货物损失 floor(q·d)（DESTRUCTION，按目录值记入货主损毁损失）；不可分货物不减量；运具 health −floor(d·1000)，归零则运输 STRANDED。未做：残骸仓（运具归零时货物落到边端点）。结果在观测 `blockades.interdictions`。

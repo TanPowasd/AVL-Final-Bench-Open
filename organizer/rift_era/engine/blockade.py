@@ -36,7 +36,12 @@ from .protocol import PreparedCommand
 from .provenance import Use
 from .scoring import action_loss
 
+from .determinism import fingerprint
+from .logistics import TransitMode
+from .numeric import floor
+
 LAND_MODES = ('road', 'rail')
+MOVING = (TransitMode.WAIT_ENTRY, TransitMode.IN_TRANSIT, TransitMode.RETURNING, TransitMode.WAIT_UNLOAD)
 WATER_MODES = ('sea', 'river')
 
 
@@ -75,9 +80,23 @@ def _position_ok(edge, formation):
     return False
 
 
+@dataclass
+class Interdiction:
+    owner: str
+    command_id: str
+    formation_id: str
+    shipment_id: str
+
+
+def track_id(owner, shipment_id):
+    return 'track:' + fingerprint(['shipment_track', owner, shipment_id])[:20]
+
+
 class Blockades:
     def __init__(self, state):
         self.s = state
+        self.interdictions = []  # one-shot, resolved in this tick's P4
+        self.recent = {}         # owner -> last interdiction results
         self.plans = {}          # formation id -> plan
         self.effective = {}      # (edge, target) -> B applied for the next tick
         self.action_cycles = {}  # cycle -> owner -> action loss
@@ -88,6 +107,9 @@ class Blockades:
         diplomacy = state.initial.diplomacy
         result = state.battles.last_result
         fired = {shot.source for shot in result.shots} if result is not None else set()
+        for row in self.interdictions:
+            self._interdict(row, fired, ctx)
+        self.interdictions = []
         attack = defaultdict(lambda: Q(0))
         blockers = defaultdict(set)
         for fid in sorted(self.plans):
@@ -133,6 +155,68 @@ class Blockades:
         for (eid, target), b in effective.items():
             state.cargo.corridors[eid].blocked[target] = b
         self.effective = effective
+
+    # -- in-transit interdiction (03 section 7 item 5) ---------------------------
+    def shipment_edge(self, shipment):
+        path = shipment.path
+        if shipment.mode in (TransitMode.IN_TRANSIT, TransitMode.RETURNING) and shipment.index < len(path):
+            return self.s.cargo.corridors.get(path[shipment.index])
+        return None
+
+    def observable(self, owner, shipment):
+        """Own formation at the shipment's Hub or at an endpoint of its current edge (q >= .2)."""
+        if shipment.owner == owner or shipment.mode not in MOVING:
+            return False
+        edge = self.shipment_edge(shipment)
+        places = {shipment.current_hub} | ({edge.a, edge.b} if edge is not None else set())
+        return any(f.owner == owner and f.hub in places for f in self.s.formations.rows.values())
+
+    def tracks(self, owner):
+        transport = self.s.cargo.transport
+        return {track_id(owner, sid): s for sid, s in sorted(transport.shipments.items()) if self.observable(owner, s)}
+
+    def _interdict(self, row, fired, ctx):
+        state = self.s
+        report = {'command_id': row.command_id, 'tick': ctx.tick, 'status': 'NO_EFFECT'}
+        self.recent.setdefault(row.owner, []).append(report)
+        self.recent[row.owner] = self.recent[row.owner][-32:]
+        formation = state.formations.rows.get(row.formation_id)
+        shipment = state.cargo.transport.shipments.get(row.shipment_id)
+        if formation is None or shipment is None or formation.refitting or not self.observable(row.owner, shipment):
+            return
+        if any(uid in fired for uid in formation.unit_ids):
+            report['status'] = 'NO_FIRE_BUDGET'
+            return
+        diplomacy = state.initial.diplomacy
+        carrier = state.cargo.vehicles[shipment.vehicle_id].owner
+        if any(p not in diplomacy.actors or diplomacy.relation(row.owner, p) != Relation.WAR for p in (shipment.owner, carrier)):
+            report['status'] = 'NOT_AT_WAR'
+            return
+        edge = self.shipment_edge(shipment)
+        channel = 'sea' if edge is not None and edge.mode in WATER_MODES else 'ground'
+        attack = _fire(state, formation, channel)
+        if attack <= 0 or self._draw(formation, ctx) is None:
+            report['status'] = 'NO_SUPPLY'
+            return
+        fired.update(formation.unit_ids)  # shares the formation's one action budget this tick
+        places = {shipment.current_hub} | ({edge.a, edge.b} if edge is not None else set())
+        escort = sum((_fire(state, f, channel) for f in state.formations.rows.values()
+                      if f.task == 'escort' and f.hub in places and f.owner in diplomacy.actors
+                      and (f.owner in (shipment.owner, carrier) or diplomacy.relation(f.owner, row.owner) == Relation.WAR)),
+                     Q(0))
+        d = min(Q(1, 4), attack / (100 + escort))
+        lost = floor(shipment.quantity_mU * d) if shipment.cargo_quantum_mU == 1 else 0
+        if lost:
+            cargo = Account(shipment.owner, shipment.id, 'in_transit', shipment.good)
+            state.initial.inventory.transform({cargo: lost}, {}, reason='interdiction', use=Use.DESTRUCTION)
+            shipment.quantity_mU -= lost
+            if shipment.owner in state.cycles:
+                state.cycles[shipment.owner].destroyed_value += Q(lost, 1000) * state.catalog.weights[shipment.good]
+        vehicle = state.cargo.vehicles[shipment.vehicle_id]
+        vehicle.health_mU = max(0, vehicle.health_mU - floor(d * 1000))
+        if vehicle.health_mU == 0:
+            shipment.mode = TransitMode.STRANDED
+        report.update(status='HIT', hit_mU=int(floor(d * 1000)), cargo_lost_mU=lost, vehicle_health_mU=vehicle.health_mU)
 
     def _draw(self, formation, ctx):
         """Take every unit's full combat_tick supply, or nothing (one event)."""
@@ -180,26 +264,53 @@ class Blockades:
 
     def visible(self, owner):
         return {'plans': [p for p in self.plans.values() if p.owner == owner],
+                'shipment_tracks': [{'track_id': tid, 'good': s.good, 'quantity_mU': s.quantity_mU,
+                                     'hub': s.current_hub, 'owner': s.owner,
+                                     'carrier': self.s.cargo.vehicles[s.vehicle_id].owner}
+                                    for tid, s in self.tracks(owner).items()],
+                'interdictions': list(self.recent.get(owner, ())),
                 'effective': [{'edge_id': e, 'target_nation': t, 'blocked_mU': int(b * 1000)}
                               for (e, t), b in sorted(self.effective.items()) if t == owner
                               or any(p.owner == owner and p.edge_id == e for p in self.plans.values())]}
 
+    def observation(self, owner):
+        view = self.visible(owner)
+        return {'blockades': view} if any(view.values()) else {}
+
     def snapshot(self):
-        return {'plans': self.plans, 'effective': [[e, t, b] for (e, t), b in sorted(self.effective.items())],
+        return {'plans': self.plans, 'interdictions': self.interdictions, 'recent': self.recent,
+                'effective': [[e, t, b] for (e, t), b in sorted(self.effective.items())],
                 'action_cycles': {str(c): v for c, v in self.action_cycles.items()}}
 
     def empty(self):
-        return not (self.plans or self.effective or self.action_cycles)
+        return not (self.plans or self.effective or self.action_cycles or self.interdictions or self.recent)
 
 
 class BlockadeCommands:
-    OPERATIONS = frozenset({('military', 'blockade')})
+    OPERATIONS = frozenset({('military', 'blockade'), ('military', 'interdict')})
 
     def __init__(self, state):
         self.state = state
 
+    def interdict(self, owner, order, ctx):
+        state = self.state
+        fields(order, {'formation_id': str, 'shipment_track_id': str})
+        formation = state.formations.rows.get(order['formation_id'])
+        if formation is None or formation.owner != owner:
+            raise RuleViolation('ERR_NO_VISIBLE_TARGET')
+        shipment = state.blockades.tracks(owner).get(order['shipment_track_id'])
+        if shipment is None:
+            raise RuleViolation('ERR_NO_VISIBLE_TARGET')
+        carrier = state.cargo.vehicles[shipment.vehicle_id].owner
+        if not (state.relations.will_be_at_war(owner, shipment.owner) and state.relations.will_be_at_war(owner, carrier)):
+            raise RuleViolation('ERR_NOT_AT_WAR', 'carrier and cargo owner must both be at war')
+        row = Interdiction(owner, str(int(order['id'])), formation.id, shipment.id)
+        return PreparedCommand(lambda: state.blockades.interdictions.append(row))
+
     def prepare(self, owner, order, ctx):
         state = self.state
+        if order['op'] == 'interdict':
+            return self.interdict(owner, order, ctx)
         fields(order, {'formation_id': str, 'edge_id': str, 'target_nations': list})
         targets = order['target_nations']
         if (not 1 <= len(targets) <= 8 or any(type(t) is not str for t in targets) or len(set(targets)) != len(targets)

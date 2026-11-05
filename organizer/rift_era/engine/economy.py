@@ -1202,7 +1202,7 @@ class Economy:
                 'military_control': state.military_governance.visible(owner),
                 'shared_intelligence': state.intelligence_sharing.visible(owner,tick),
                 'formations': state.formations.visible(owner),
-                **({'blockades': state.blockades.visible(owner)} if not state.blockades.empty() else {}),
+                **state.blockades.observation(owner),
                 'diplomacy': state.relations.visible(owner),
                 'export_controls': state.export_controls.visible(),
                 'contracts': state.contracts.visible(owner),
