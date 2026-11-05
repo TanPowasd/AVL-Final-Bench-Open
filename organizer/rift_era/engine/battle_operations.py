@@ -10,6 +10,7 @@ from .ledger import Account, Transfer
 from .numeric import Q, proportional, units
 from .provenance import Use
 from .nonland_navigation import base_online
+from .support_events import shock_region_support
 
 
 class Battles:
@@ -20,6 +21,11 @@ class Battles:
         self.loss_cycles = {}
         self.destroyed_cycles = {}
         self.combat_regions = set()
+        # 03 bombard: one support shock per target region and one credit
+        # penalty per attacker, each at most once per cycle.
+        self.bombard_cycle = -1
+        self.bombarded_regions = set()
+        self.bombard_attackers = set()
         self.power_demands = {}
         self.power_context = {}
         self.unit_formations = {}
@@ -123,8 +129,10 @@ class Battles:
             terrain=min(terrains,key=lambda t:LAND_ATTACK.get(t,Q(1)))
             for fid in (a,b):
                 for uid in state.formations.rows[fid].unit_ids:terrain_override[uid]=terrain
-        result = resolve(state.catalog,state.initial.diplomacy,self.combatants(),contacts,supplies,
+        combatants = self.combatants()
+        result = resolve(state.catalog,state.initial.diplomacy,combatants,contacts,supplies,
                          {rid:r.terrain for rid,r in state.initial.map.regions.items()},moving=moving,terrain_by_unit=terrain_override,inactive=state.refits.inactive_units(),target_only=frozenset(state.deception.rows))
+        self.apply_bombard(ctx, result, combatants)
         consumed = {}
         for uid, goods in result.consumed_mU.items():
             for good, quantity in goods.items():
@@ -203,8 +211,31 @@ class Battles:
         self.combat_regions = set(result.combat_regions)
         self.last_result = result
 
+    def apply_bombard(self, ctx, result, combatants):
+        """03: an actual bombard shot hits its target region's support -300 mU and the attacker's credit -0.05."""
+        if ctx.cycle != self.bombard_cycle:
+            self.bombard_cycle, self.bombarded_regions, self.bombard_attackers = ctx.cycle, set(), set()
+        state = self.s
+        regions, attackers = set(), set()
+        for shot in result.shots:
+            source = combatants.get(shot.source)
+            target = combatants.get(shot.target)
+            if source is None or target is None or source.posture != 'bombard':
+                continue
+            regions.add(target.region)
+            attackers.add(source.owner)
+        for region in sorted(regions - self.bombarded_regions):
+            shock_region_support(state, region, -300)
+        for owner in sorted(attackers - self.bombard_attackers):
+            if owner in state.credit:
+                state.credit[owner] = max(Q(1, 10), state.credit[owner] - Q(5, 100))
+        self.bombarded_regions |= regions
+        self.bombard_attackers |= attackers
+
     def snapshot(self):
-        return {'unit_formations':self.unit_formations,'load_hubs':self.load_hubs,'power_demands':self.power_demands,'power_context':self.power_context,'locks':[[uid,good,lock,source] for (uid,good),(lock,source) in sorted(self.locks.items())],
+        return {'bombard_cycle': self.bombard_cycle, 'bombarded_regions': self.bombarded_regions,
+                'bombard_attackers': self.bombard_attackers,
+                'unit_formations':self.unit_formations,'load_hubs':self.load_hubs,'power_demands':self.power_demands,'power_context':self.power_context,'locks':[[uid,good,lock,source] for (uid,good),(lock,source) in sorted(self.locks.items())],
                 'last_result':self.last_result,'loss_cycles':{str(c):v for c,v in self.loss_cycles.items()},
                 'destroyed_cycles':{str(c):v for c,v in self.destroyed_cycles.items()},
                 'combat_regions':self.combat_regions}

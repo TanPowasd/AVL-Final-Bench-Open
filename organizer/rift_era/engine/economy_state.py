@@ -113,6 +113,10 @@ class CycleEconomy:
     wages_due_mU: int = 0
     taxes_mU: int = 0
     destroyed_value: Fraction = Q(0)
+    # 05 C04/E26: hub-level grid outcomes feeding P7 support events.
+    b1_needed_mU: int = 0
+    b1_received_mU: int = 0
+    blackout_ticks: int = 0
 
 
 @dataclass

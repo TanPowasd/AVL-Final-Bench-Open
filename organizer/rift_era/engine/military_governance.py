@@ -5,6 +5,7 @@ claim, and control never conveys sovereignty, inventory, or economic shares.
 """
 from collections import defaultdict
 from .diplomacy import Relation
+from .support_events import reset_captured_support
 
 
 class MilitaryGovernance:
@@ -33,6 +34,7 @@ class MilitaryGovernance:
             sole[region]=owner
             hostile[region]=any(p!=owner and state.initial.diplomacy.relation(owner,p)==Relation.WAR for p in present[region])
         self.events=list(state.authority.advance_control(ctx.tick,sole_garrisons=sole,hostile_defenders=hostile))
+        reset_captured_support(state,self.events)
         return tuple(self.events)
 
     def snapshot(self):return {'events':self.events}
