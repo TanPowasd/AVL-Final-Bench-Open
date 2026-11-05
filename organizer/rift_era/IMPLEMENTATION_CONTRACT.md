@@ -319,3 +319,13 @@ P8 发布缓存后读取不重新探测；测控失联时只报告失联，不�
 - 指标：`market_price` = 该枢纽 `spot:<hub>:<ref_id>` 场所价格（mU，尚无场所则不触发）；`grid_price` = 该枢纽最近电价 ×1000（RU mU）；`hub_stock` = 本国在该枢纽 `available` 的 `ref_id` 库存（mU）。
 - 执行：走普通命令校验与提交；被拒绝也算本窗口一次执行（记录 `last_result`），冷却从这次算起。生成命令的 ID 为 `10^30 × 执行序号 + 计划 ID`，不与席位 ID 冲突。
 - 观测：计划列表在 `governance.conditional_plans`。
+
+
+## climate_v1（2026-11-05）
+
+- `governance/climate_intervention {target_region, mode}`：需 V08；从下一周期起持续 60 周期；同一国家上一轮结束后 120 周期才能再发（运行中或冷却中返回 ERR_CAPACITY_EXCEEDED）。
+- 投入：每周期初从首都 `available` 扣 `remediation_agent` 2 单位；电力为首都 B3 负荷 `climate:<国家>`，上一周期实收 ≥10 单位才算供足。任一项不足，该周期不生效、不补时间。
+- 效果：目标区降水与风/光系数 ±15%，下风向 3 区反向 ∓15%；多国叠加每区截断在 [−25%, +25%]。降水乘到自然来水和作物降水因子；风/光乘到实际天气，天气 AR(1) 状态保留原值。
+- 地图没有 `wind_dir`，本口径按自西向东（同行、列 +1..+3）取下风向，需作者确认。
+- `diplomacy/grant_climate_consent {target_nation, region_ids, duration_cycles}`：只能授权本国控制的区域；持久命令，`cancel_by_id` 撤销后从下一周期起失效。
+- 受影响区域（目标 + 下风向）中有他国控制且无有效授权的区域即为敌对干预：首个生效周期扣发起国信用 .10（每轮一次），投入记 ACTION_LOSS 并计入 07 行动损耗；否则投入记为环保实投（REMEDIATION）。

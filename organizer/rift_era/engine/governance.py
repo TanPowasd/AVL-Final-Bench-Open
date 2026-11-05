@@ -216,7 +216,8 @@ class Governance:
                 'autonomy': {r: a for r, a in self.autonomy.items() if self.state.initial.map.regions[r].sovereign == owner},
                 'training': [j for j in self.training.values() if j.owner == owner],
                 **({'conditional_plans': list(self.state.conditional_plans[owner].values())}
-                   if self.state.conditional_plans.get(owner) else {})}
+                   if self.state.conditional_plans.get(owner) else {}),
+                **({'climate': self.state.climate.visible(owner)} if not self.state.climate.empty() else {})}
 
 
 class GovernanceCommands:

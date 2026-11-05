@@ -288,6 +288,8 @@ class OperatingWorld:
                 target = next(t for t in catalog.technologies if catalog.researchable(t, research.known))
                 research.set_focus(lid, target)
         self.hydrology = Hydrology(self)
+        from .climate import Climate
+        self.climate = Climate(self)
         self.storage = EnergyStorage(self)
         self.macro = Macroeconomy(self)
         self.cargo = CargoOperations(self)
@@ -550,7 +552,8 @@ class OperatingWorld:
                 'bootstrap_failures': self.bootstrap_failures,
                 **({'national_power': self.national_power.snapshot()} if self.national_power is not None else {}),
                 **({'conditional_plans': self.conditional_plans} if any(self.conditional_plans.values()) else {}),
-                **({'cyber_frozen_until': self.cyber_frozen_until} if self.cyber_frozen_until else {})}
+                **({'cyber_frozen_until': self.cyber_frozen_until} if self.cyber_frozen_until else {}),
+                **({'climate': self.climate.snapshot()} if not self.climate.empty() else {})}
 
     def audit(self) -> None:
         self.initial.audit()

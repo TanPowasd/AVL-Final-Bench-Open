@@ -67,6 +67,8 @@ class Economy:
             return self.s.cargo.hauls[self.s.cargo.vehicle_jobs[entity.split(':', 1)[1]]].origin
         if entity.startswith('storage:'):
             return self.s.storage.stores[entity.split(':', 1)[1]].hub
+        if entity.startswith('climate:'):
+            return entity.split(':', 1)[1] + '-h0'
         if entity in self.s.work.jobs:
             return self.s.work.jobs[entity].hub
         if entity in self.s.frame.work_context:
@@ -544,10 +546,21 @@ class Economy:
 
     def environment(self, state: OperatingWorld, ctx: TickContext) -> None:
         from .weather import weather_step
+        climate = state.climate
+        climate.begin_cycle(ctx)
         for region in state.initial.map.regions.values():
+            previous_wind = climate.raw_wind.get(region.id, state.wind_mU.get(region.id, region.wind_mean_mU))
             wind, cloud, sun = weather_step(ctx.seed, state.initial.map.attempt, ctx.tick, region,
-                state.wind_mU.get(region.id, region.wind_mean_mU),
-                state.cloud_mU.get(region.id, region.cloud_mean_mU), state.global_emissions_mU)
+                previous_wind, state.cloud_mU.get(region.id, region.cloud_mean_mU), state.global_emissions_mU)
+            if climate.interventions:
+                factor = climate.multiplier(region.id)
+                if factor != 1:
+                    climate.raw_wind[region.id] = wind  # V08 shifts realized wind/solar, not the AR state
+                    wind, sun = round(wind * factor), round(sun * factor)
+                else:
+                    climate.raw_wind.pop(region.id, None)
+            elif climate.raw_wind:
+                climate.raw_wind.pop(region.id, None)
             state.wind_mU[region.id], state.cloud_mU[region.id], state.sun_mU[region.id] = wind, cloud, sun
         if ctx.tick % 10 == 0:
             for mid, deposit in state.deposits.items():
@@ -667,6 +680,7 @@ class Economy:
             demands.update(state.utilities.power_demands())
             demands.update(state.storage.charge_demands())
             demands.update(state.battles.power_demands)
+            demands.update(state.climate.power_demands())
             for jid, job in state.work.jobs.items():
                 _, _, labor, power = job.due(state.work.whole)
                 demands[jid] = (job.hub, 3, power if sum(f.labor.get(jid, {}).values()) >= labor else 0)
@@ -1319,6 +1333,7 @@ def _assemble(catalog, initial, *, total_ticks: int, debug: bool, commerce: bool
                System('passengers', Phase.ENVIRONMENT_LOGISTICS, lambda state, ctx: state.passengers.advance(ctx), after=('cargo',)),
                System('life_replenishment', Phase.ENVIRONMENT_LOGISTICS, economy.replenish_life, after=('intermodal','passengers')),
                System('power', Phase.POWER, economy.power),
+               System('climate_power', Phase.POWER, lambda state, ctx: state.climate.meter_power(ctx), after=('power',)),
                System('electric_cargo', Phase.POWER, lambda state, ctx: state.cargo.advance_electric(ctx), after=('power',)),
                System('water_canals', Phase.POWER, lambda state, ctx: state.utilities.advance(ctx), after=('power',)),
                System('asat', Phase.COMBAT, lambda state, ctx: state.asat.advance(ctx)),

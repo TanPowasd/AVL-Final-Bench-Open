@@ -107,9 +107,11 @@ class Hydrology:
             season = Q(round((.8 + .2 * math.sin(2 * math.pi * ctx.cycle / 240)) * 1000), 1000)
             for rid in self.order:
                 self.rain[rid] = rain_step(ctx.seed, world.attempt, ctx.cycle, rid, self.rain[rid], state.global_emissions_mU)
-                self.natural_cycle_mU[rid] = floor(units(state.endowments['local_natural_water_per_cycle']) * season * self.rain[rid])
+                self.natural_cycle_mU[rid] = floor(units(state.endowments['local_natural_water_per_cycle']) * season
+                                                   * self.rain[rid] * state.climate.multiplier(rid))
             for hub in state.rain:
-                state.rain[hub] = self.rain.get(world.hubs[hub].region, Q(0))
+                region = world.hubs[hub].region
+                state.rain[hub] = self.rain.get(region, Q(0)) * state.climate.multiplier(region)
                 state.water_used_mU[hub] = 0
         returns = defaultdict(int)
         for hub, allocated in self.last_allocated.items():
