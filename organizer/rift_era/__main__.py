@@ -15,7 +15,29 @@ from .engine.scenarios import supply_chain, replay_supply_chain
 from .engine.world import generate_candidate, MAP_VERSION
 from .engine.initialization import initialize
 from .engine.determinism import fingerprint
-from .engine.bootstrap import run_opening
+from .engine.bootstrap import run_opening, accepted_atlas_world
+from .engine import world_atlas
+
+MAPS = ('atlas', 'legacy')
+
+
+def candidate_world(seed: int, kind: str, attempt: int = 0):
+    """An unaccepted candidate: world_atlas_v1 (main line) or the legacy map."""
+    return world_atlas.generate_candidate(seed, attempt) if kind == 'atlas' else generate_candidate(seed, attempt)
+
+
+def match_world(seed: int, kind: str):
+    """The world a match runs on: atlas candidates pass the real 150-tick gate."""
+    return accepted_atlas_world(seed) if kind == 'atlas' else generate_candidate(seed)
+
+
+def replay_world(manifest: dict):
+    version = manifest.get('map_version', MAP_VERSION)
+    if version == world_atlas.VERSION:
+        return world_atlas.generate_candidate(manifest['seed'], manifest.get('map_attempt', 0))
+    if version != MAP_VERSION:
+        raise InfrastructureFault('replay map version mismatch')
+    return generate_candidate(manifest['seed'])
 
 
 def main() -> int:
@@ -25,9 +47,13 @@ def main() -> int:
     commands.add_parser('check')
     world = commands.add_parser('world', help='construct an unaccepted spatial candidate and the major-nation starting template')
     world.add_argument('--seed', type=int, default=1000)
+    world.add_argument('--map', choices=MAPS, default='atlas')
+    world.add_argument('--attempt', type=int, default=0)
     bootstrap = commands.add_parser('bootstrap', help='execute the 150-tick opening economy and report its actual invariants')
     bootstrap.add_argument('--seed', type=int, default=1000)
     bootstrap.add_argument('--audit-every-phase', action='store_true')
+    bootstrap.add_argument('--map', choices=MAPS, default='atlas')
+    bootstrap.add_argument('--attempt', type=int, default=0)
     sandbox = commands.add_parser('sandbox-check', help='inspect the target cgroup delegation without running a submission')
     sandbox.add_argument('--cgroup', type=Path, required=True)
     strategy = commands.add_parser('strategy-opening', help='drive eight sandboxed submissions in the bounded development economy; no formal score')
@@ -37,6 +63,7 @@ def main() -> int:
     strategy.add_argument('--seed', type=int, default=1000)
     strategy.add_argument('--ticks', type=int, default=150)
     strategy.add_argument('--audit-every-phase', action='store_true')
+    strategy.add_argument('--map', choices=MAPS, default='atlas')
     match_replay = commands.add_parser('replay-strategy-opening', help='re-execute a development strategy replay and compare all tick hashes')
     match_replay.add_argument('path', type=Path)
     demo = commands.add_parser('scenario', help='run the integrated supply-chain development fixture')
@@ -58,7 +85,7 @@ def main() -> int:
             print(json.dumps({'delegation_preflight': True, 'full_sandbox_acceptance': False}))
             return 0
         if args.command == 'bootstrap':
-            report = run_opening(args.seed, debug=args.audit_every_phase)
+            report = run_opening(args.seed, debug=args.audit_every_phase, world=candidate_world(args.seed, args.map, args.attempt))
             print(canonical(report).decode('utf-8'))
             return 0 if report.passed_core_checks else 2
         if args.command == 'strategy-opening':
@@ -71,7 +98,8 @@ def main() -> int:
             launcher.preflight()
             launcher.mounts = runtime_mounts()
             catalog = Catalog()
-            game = opening_economy(catalog, initialize(catalog, generate_candidate(args.seed)),
+            map_world = match_world(args.seed, args.map)
+            game = opening_economy(catalog, initialize(catalog, map_world),
                 total_ticks=args.ticks, debug=args.audit_every_phase, commerce=True)
             economy = Economy(game.state)
             with ExitStack() as stack:
@@ -83,7 +111,8 @@ def main() -> int:
                     init_messages={p: economic_development_init(economy, p, game.clock) for p in sessions},
                     observe=lambda p, t: economic_development_messages(economy, p, t, game.clock),
                     finalize=lambda: {'scope': 'opening_economy_development', 'full_rules_accepted': False},
-                    replay=args.replay, manifest={'profile': 'opening_economy_development', 'rules_hash': catalog.fingerprint})
+                    replay=args.replay, manifest={'profile': 'opening_economy_development', 'rules_hash': catalog.fingerprint,
+                        'map_version': map_world.generator_version, 'map_attempt': map_world.attempt})
                 print(canonical(driver.run()).decode('utf-8'))
             return 0
         if args.command == 'replay-strategy-opening':
@@ -95,7 +124,7 @@ def main() -> int:
             catalog = Catalog()
             if manifest.get('profile') != 'opening_economy_development' or manifest.get('rules_hash') != catalog.fingerprint:
                 raise InfrastructureFault('replay profile or rules hash mismatch')
-            game = opening_economy(catalog, initialize(catalog, generate_candidate(manifest['seed'])),
+            game = opening_economy(catalog, initialize(catalog, replay_world(manifest)),
                 total_ticks=manifest['clock']['total_ticks'], debug=True, commerce=True)
             print(canonical({'official': False, 'state_hash': replay_decisions(args.path, game),
                              'verification': 'reexecuted_strategy_windows_and_ticks'}).decode('utf-8'))
@@ -118,9 +147,10 @@ def main() -> int:
                 'pending_release_gates': PENDING_RELEASE_GATES}, ensure_ascii=False, indent=2))
             return 0
         if args.command == 'world':
-            world = generate_candidate(args.seed)
+            world = candidate_world(args.seed, args.map, args.attempt)
             state = initialize(catalog, world)
-            print(json.dumps({'map_version': MAP_VERSION, 'official': False, 'bootstrap_accepted': world.accepted,
+            print(json.dumps({'map_version': world.generator_version, 'map_attempt': world.attempt,
+                  'resource_sites': len(world.hidden_resources), 'official': False, 'bootstrap_accepted': world.accepted,
                   'regions': len(world.regions), 'hubs': len(world.hubs), 'routes': len(world.routes),
                   'city_states': len(world.city_states), 'initial_lines': len(state.lines),
                   'initial_plants': len(state.plants), 'initial_mines': len(state.mines),

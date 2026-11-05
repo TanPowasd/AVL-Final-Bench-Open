@@ -40,12 +40,16 @@
 - 完成 `active_scale.py` 的待定指标后再接入主线。它目前未被任何模块导入。
 - 实现 NFA、可持续性、Loss_action 的唯一归属，以及 `fx_revaluation_invariance` 要求的汇率变化不重估。
 
-### P0-3 正式地图接线
+### ~~P0-3 正式地图接线~~（已做，2026-11-05）
 
-- 入口仍调用旧 `world.generate_candidate`。`world_atlas.generate_world` 没有被主线使用。
-- 572 条 `resource_atlas` 中只有 72 个起始 deposit 可开采，其余远端矿点要注册进 `resource_sites/resource_sources/deposits`。
-- 起始储量统一读 atlas，`Hydrology` 改读 `world.river_downstream`。
-- 地图接受必须来自真实 150 Tick 自举，失败后重抽。
+- 主线入口改用 `world_atlas`：`world`、`bootstrap`、`strategy-opening` 默认 `--map atlas`，旧地图保留为 `--map legacy`。
+- 对局用的地图经 `bootstrap.accepted_atlas_world(seed)` 产生：每个候选都真实跑 150 Tick 开局（`atlas_bootstrap`），失败就换下一个 attempt，不补资源；256 次都失败报 `INFRA_FAULT_WORLDGEN`。seed 1000 的 attempt 0 通过（约 116 秒）。
+- 回放清单记录 `map_version`、`map_attempt`，`replay-strategy-opening` 按它们重建同一张图。
+- 572 条 atlas 资源全部注册：72 个起始矿照旧，另外 500 个远端矿点进入 `resource_sites`/`deposits`/`resource_sources`，并在 `nature` 账上存入真实储量（水共用 `basin:<hub>`）。它们没有采掘线，要用 `build_mine` 建矿后才开采。
+- 起始矿储量读 atlas 的 `reserve_mU`（数值与旧开局表相同）；旧地图没有 atlas，仍读开局表。
+- `Hydrology` 在有 `world.river_downstream` 时直接用 atlas 的河流 DAG，按高程从高到低处理；旧地图仍用原来的推导。
+- 测试 `tests/test_atlas_wiring.py`（4 项）：资源注册与储量、河流 DAG、远端矿建成并实际消耗储量、重抽门禁。旧地图逐 Tick 哈希不变。
+- 已知限制：远端矿只有己方控制的枢纽能建；建材要在该枢纽有库存，所以首都以外的矿需要先运料。
 
 ### P0-4 引擎性能（第一轮已做，2026-11-05）
 
