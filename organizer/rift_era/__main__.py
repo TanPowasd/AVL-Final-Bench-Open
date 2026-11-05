@@ -64,6 +64,19 @@ def main() -> int:
     strategy.add_argument('--ticks', type=int, default=150)
     strategy.add_argument('--audit-every-phase', action='store_true')
     strategy.add_argument('--map', choices=MAPS, default='atlas')
+    full = commands.add_parser('match', help='run a full_match with empty commands and print the finalizer report (development; no formal score)')
+    full.add_argument('--seed', type=int, default=1000)
+    full.add_argument('--ticks', type=int, default=28_800)
+    full.add_argument('--map', choices=MAPS, default='atlas')
+    full.add_argument('--audit-every-phase', action='store_true')
+    full.add_argument('--progress', type=int, default=0, help='print elapsed time every N ticks to stderr')
+    strategy_match = commands.add_parser('strategy-match', help='drive eight sandboxed submissions through a full_match; no formal score')
+    strategy_match.add_argument('--submissions', nargs=8, type=Path, required=True)
+    strategy_match.add_argument('--cgroup', type=Path, required=True)
+    strategy_match.add_argument('--replay', type=Path, required=True)
+    strategy_match.add_argument('--seed', type=int, default=1000)
+    strategy_match.add_argument('--ticks', type=int, default=28_800)
+    strategy_match.add_argument('--map', choices=MAPS, default='atlas')
     match_replay = commands.add_parser('replay-strategy-opening', help='re-execute a development strategy replay and compare all tick hashes')
     match_replay.add_argument('path', type=Path)
     demo = commands.add_parser('scenario', help='run the integrated supply-chain development fixture')
@@ -112,6 +125,52 @@ def main() -> int:
                     observe=lambda p, t: economic_development_messages(economy, p, t, game.clock),
                     finalize=lambda: {'scope': 'opening_economy_development', 'full_rules_accepted': False},
                     replay=args.replay, manifest={'profile': 'opening_economy_development', 'rules_hash': catalog.fingerprint,
+                        'map_version': map_world.generator_version, 'map_attempt': map_world.attempt})
+                print(canonical(driver.run()).decode('utf-8'))
+            return 0
+        if args.command == 'match':
+            import sys, time
+            from .engine.economy import full_match
+            from .engine.match import finalize_match
+            catalog = Catalog()
+            map_world = match_world(args.seed, args.map)
+            game = full_match(catalog, initialize(catalog, map_world), total_ticks=args.ticks,
+                              debug=args.audit_every_phase, commerce=True)
+            start = time.monotonic()
+            while game.tick < game.clock.total_ticks:
+                game.step()
+                if args.progress and game.tick % args.progress == 0:
+                    print(json.dumps({'tick': game.tick, 'elapsed_s': round(time.monotonic() - start, 1)}),
+                          file=sys.stderr, flush=True)
+            report = finalize_match(game) | {'seed': args.seed, 'map_version': map_world.generator_version,
+                'map_attempt': map_world.attempt, 'ticks': game.tick, 'official': False,
+                'state_hash': fingerprint(game.state.snapshot()), 'wall_seconds': round(time.monotonic() - start, 1)}
+            print(canonical(report).decode('utf-8'))
+            return 0
+        if args.command == 'strategy-match':
+            from .engine.archive import extracted_submission
+            from .engine.driver import MatchDriver, economic_development_init, economic_development_messages
+            from .engine.economy import Economy, full_match
+            from .engine.ipc import StrategySession
+            from .engine.match import finalize_match
+            from .engine.sandbox import Sandbox, runtime_mounts
+            launcher = Sandbox(args.cgroup)
+            launcher.preflight()
+            launcher.mounts = runtime_mounts()
+            catalog = Catalog()
+            map_world = match_world(args.seed, args.map)
+            game = full_match(catalog, initialize(catalog, map_world), total_ticks=args.ticks, commerce=True)
+            economy = Economy(game.state)
+            with ExitStack() as stack:
+                sessions = {}
+                for owner, archive in zip(sorted(game.state.initial.known), args.submissions):
+                    submission = stack.enter_context(extracted_submission(archive))
+                    sessions[owner] = stack.enter_context(StrategySession.launch(launcher, submission))
+                driver = MatchDriver(game, sessions,
+                    init_messages={p: economic_development_init(economy, p, game.clock) for p in sessions},
+                    observe=lambda p, t: economic_development_messages(economy, p, t, game.clock),
+                    finalize=lambda: finalize_match(game),
+                    replay=args.replay, manifest={'profile': 'full_match_development', 'rules_hash': catalog.fingerprint,
                         'map_version': map_world.generator_version, 'map_attempt': map_world.attempt})
                 print(canonical(driver.run()).decode('utf-8'))
             return 0

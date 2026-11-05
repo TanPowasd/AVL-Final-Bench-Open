@@ -1009,6 +1009,8 @@ class Economy:
                     state.water_used_mU[mine.hub] += amount
                 metric = state.cycles[mine.owner]
                 metric.extracted[mine.good] = metric.extracted.get(mine.good, 0) + amount
+                if state.national_power is not None:
+                    state.national_power.record_extraction(mine.hub, mine.good, amount)
                 state.macro.output(mine.owner, mine.hub, result.released_mU)
                 table = state.catalog.runtime['extraction'][mine.good]
                 labor_needed = ceil(units(table['labor']) * (Q(5, 4) if mine.level == 'G2' else 1) *
@@ -1245,7 +1247,21 @@ class Economy:
 def opening_economy(catalog, initial, *, total_ticks: int = 150, debug: bool = True,
                     commerce: bool = False) -> Kernel:
     if total_ticks > 150:
-        raise InfrastructureFault('opening_economy_v1 covers at most 150 ticks; full-match assembly is not implemented')
+        raise InfrastructureFault('opening_economy_v1 covers at most 150 ticks; use full_match for a complete game')
+    return _assemble(catalog, initial, total_ticks=total_ticks, debug=debug, commerce=commerce, scoring=False)
+
+
+def full_match(catalog, initial, *, total_ticks: int = 28_800, debug: bool = False,
+               commerce: bool = True) -> Kernel:
+    """P0-1: the complete game (28,800 ticks by default) with P0-2 national power.
+
+    Same systems as the opening; adds the per-cycle five-pillar collector as the
+    final SETTLEMENT system. `finalize_match` turns the finished kernel into V.
+    """
+    return _assemble(catalog, initial, total_ticks=total_ticks, debug=debug, commerce=commerce, scoring=True)
+
+
+def _assemble(catalog, initial, *, total_ticks: int, debug: bool, commerce: bool, scoring: bool) -> Kernel:
     state = OperatingWorld(catalog, initial)
     economy = Economy(state)
     economy.initialize_yields()
@@ -1358,5 +1374,11 @@ def opening_economy(catalog, initial, *, total_ticks: int = 150, debug: bool = T
                System('shared_intelligence', Phase.OBSERVATION, lambda state, ctx: state.intelligence_sharing.advance(ctx), after=('military_vision',)),
                System('city_views', Phase.OBSERVATION, lambda state, ctx: state.city_economy.publish(), after=('knowledge_boundary',)),
                System('observation', Phase.OBSERVATION, economy.observe, after=('shared_intelligence','city_views', 'weather_forecasts', 'contract_views','orbital_observation','ai_license_views')))
+    if scoring:
+        from .national_power import NationalPower
+        state.national_power = NationalPower(state)
+        settlement = tuple(s.id for s in systems if s.phase == Phase.SETTLEMENT)
+        systems += (System('national_power', Phase.SETTLEMENT, lambda state, ctx: state.national_power.advance(ctx),
+                           after=settlement),)
     return Kernel(initial.map.seed, state, systems, clock=ClockConfig(total_ticks=total_ticks),
                   debug=debug, fingerprint_each_tick=debug)

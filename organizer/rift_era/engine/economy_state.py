@@ -168,6 +168,7 @@ class OperatingWorld:
         self.cargo_weights = cargo_weights(catalog)
         # Adopted decision 0007 -> proposal D §2: initial international credit.
         self.credit = {p: Q(85, 100) for p in initial.known}
+        self.national_power = None  # full_match only (P0-2)
         initial.inventory.enable_provenance(seed=initial.map.seed, credits=self.credit)
         self.asset_lifecycle = AssetLifecycle(initial.inventory, initial.assets, catalog.weights, initial=True,economic_owner=self.asset_title)
         self.consumption = Consumption()
@@ -543,10 +544,13 @@ class OperatingWorld:
                 'grids': self.grids, 'last_satisfaction': self.last_satisfaction, 'last_unpaid': self.last_unpaid,
                 'wage_indices': self.wage_indices, 'cpi': self.cpi, 'inflation': self.inflation,
                 'completed_cycles': self.completed_cycles, 'observations': self.observations,
-                'bootstrap_failures': self.bootstrap_failures}
+                'bootstrap_failures': self.bootstrap_failures,
+                **({'national_power': self.national_power.snapshot()} if self.national_power is not None else {})}
 
     def audit(self) -> None:
         self.initial.audit()
+        if self.national_power is not None:
+            self.national_power.audit()
         self.spot.audit()
         self.consumption.audit()
         self.maintenance.audit()
