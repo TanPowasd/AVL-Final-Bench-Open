@@ -23,7 +23,6 @@ VERSION = 'national_power_v1'
 # Inputs that are approximations of the r6 text, by pillar. Kept in the
 # snapshot and in every finalizer report so no score hides a gap.
 COVERAGE = {
-    'population.blockade': 'zero: corridor blockade capacity ratio not metered per region',
     'population.remediation': 'governance remediation_mU >= 1000 counts as 1, else 0',
     'population.advanced_medicine': 'medical_supplies satisfaction',
     'industry.va': 'industry_activity.last_company_va (signed catalog VA x direct share), by issuer',
@@ -108,7 +107,7 @@ class NationalPower:
                 consumer_goods=sat.get('consumer_goods', Q(0)), medicine=sat.get('medicine', Q(0)),
                 advanced_medicine=sat.get('medical_supplies', Q(0)), water=sat.get('water', Q(0)),
                 electricity=sat.get('electricity', Q(0)), combat=Q(min(10, self.combat_ticks.get(region, 0)), 10),
-                blockade=Q(0), pollution=pollution, remediation=remedied)
+                blockade=s.blockades.region_share(region, p), pollution=pollution, remediation=remedied)
             shortage_num += population.total_mU * (1 - min(Q(1), sat.get('food', Q(0)), sat.get('electricity', Q(0))))
             shortage_den += population.total_mU
         total += sum((row['value'] for row in s.city_economy.population_scoring_rows(p, cycle)), Q(0))
@@ -136,7 +135,8 @@ class NationalPower:
         metric = s.history[p][-1] if s.history[p] else None
         destroyed = metric.destroyed_value if metric else Q(0)
         actions = (self._cycle_table(s.battles.loss_cycles, cycle, p) + self._cycle_table(s.asat.action_cycles, cycle, p)
-                   + self._cycle_table(s.deception.action_cycles, cycle, p) + self._cycle_table(s.climate.action_cycles, cycle, p))
+                   + self._cycle_table(s.deception.action_cycles, cycle, p) + self._cycle_table(s.climate.action_cycles, cycle, p)
+                   + self._cycle_table(s.blockades.action_cycles, cycle, p))
         transit = s.consumption.receipt_mean20(p, 'transit')
         return industrial_pillar(va, destroyed, actions, transit, self.nfa_mU(p, cycle) / 1000)
 

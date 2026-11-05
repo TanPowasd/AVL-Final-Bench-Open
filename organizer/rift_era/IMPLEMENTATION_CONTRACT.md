@@ -329,3 +329,13 @@ P8 发布缓存后读取不重新探测；测控失联时只报告失联，不�
 - 地图没有 `wind_dir`，本口径按自西向东（同行、列 +1..+3）取下风向，需作者确认。
 - `diplomacy/grant_climate_consent {target_nation, region_ids, duration_cycles}`：只能授权本国控制的区域；持久命令，`cancel_by_id` 撤销后从下一周期起失效。
 - 受影响区域（目标 + 下风向）中有他国控制且无有效授权的区域即为敌对干预：首个生效周期扣发起国信用 .10（每轮一次），投入记 ACTION_LOSS 并计入 07 行动损耗；否则投入记为环保实投（REMEDIATION）。
+
+
+## blockade_v1（2026-11-05）
+
+- `military/blockade {formation_id, edge_id, target_nations[1..8]}`：持久计划，每编队一条边（同编队新单替换旧单，`cancel_by_id` 结束）。陆军须在 road/rail 边端点枢纽；Sea-Surface/Sea-Sub 须在 sea/river 边端点枢纽；Air 不能封锁。下单时所有目标须为 WAR，之后不再交战的目标自动跳过。
+- P4（战斗之后）判定：编队在端点、本 tick 未射击未移动（共享行动预算）、未改装，且每个单位本 tick 实际取得完整 `combat_tick` 补给（先编队随行库存，后所在枢纽库存）才有效。补给按 ACTION_LOSS 消耗，每编队每 tick 一次行动损耗事件。身处端点即视为对该边有观测（q_edge ≥ .2）。
+- A = 有效封锁编队的火力（陆路取 `ground`、水路取 `sea` 通道，乘 HP 比例与乘员比例），同阵营先合火力；D = 目标国及与封锁方交战国、执行 `escort` 任务且位于该边端点的编队火力。b = `blockade_fraction(A, D)`。
+- 结果在 P4 末写入 `corridor.blocked[target]`，作用于下一 tick 的 P2/P3 入边容量；没有有效封锁的边 B=0。中立国不受影响。
+- 07 的 Blockade_r：受害国在某区的值 = 该区所有入边（端点在该区）按完好额定容量加权的 B 均值；已接入国力的 Qsec。
+- 未做：截击 `military/interdict`、港口 ACL 拒入标志与 b 取最大（ACL 现由 `access_tier` 单独限制）。

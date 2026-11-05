@@ -290,6 +290,8 @@ class OperatingWorld:
         self.hydrology = Hydrology(self)
         from .climate import Climate
         self.climate = Climate(self)
+        from .blockade import Blockades
+        self.blockades = Blockades(self)
         self.storage = EnergyStorage(self)
         self.macro = Macroeconomy(self)
         self.cargo = CargoOperations(self)
@@ -553,7 +555,8 @@ class OperatingWorld:
                 **({'national_power': self.national_power.snapshot()} if self.national_power is not None else {}),
                 **({'conditional_plans': self.conditional_plans} if any(self.conditional_plans.values()) else {}),
                 **({'cyber_frozen_until': self.cyber_frozen_until} if self.cyber_frozen_until else {}),
-                **({'climate': self.climate.snapshot()} if not self.climate.empty() else {})}
+                **({'climate': self.climate.snapshot()} if not self.climate.empty() else {}),
+                **({'blockades': self.blockades.snapshot()} if not self.blockades.empty() else {})}
 
     def audit(self) -> None:
         self.initial.audit()
