@@ -11,7 +11,7 @@ class MilitaryGovernanceTests(unittest.TestCase):
         world=NS(regions={'r':NS(sovereign='n1')},hubs={})
         dip=Diplomacy(frozenset(('n0','n1','n2')))
         formations={'f':NS(id='f',owner='n0',region='r',domain='Land',unit_ids=('u',),refitting=False,task='garrison')}
-        state=NS(initial=NS(diplomacy=dip,units={'u':NS(hp_mU=100,crew_mU=100)}),
+        state=NS(initial=NS(diplomacy=dip,units={'u':NS(hp_mU=100,crew_mU=100)},populations={},map=world),
                  authority=Authority(world,{},dip.actors), formations=NS(rows=formations),
                  movement=NS(position=lambda f:Position('hub'),planned=lambda fid:False,retreating={}))
         return state

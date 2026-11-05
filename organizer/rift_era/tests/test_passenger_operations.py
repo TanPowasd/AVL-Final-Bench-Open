@@ -60,7 +60,7 @@ class PassengerTests(unittest.TestCase):
         destination = state.initial.populations['n0-h1'].total_mU
         ops.prepare('n0', self.order(), self.context()).commit()
         ops.reserve(self.context())
-        state.cargo.corridors['road:n0-h0:n0-h1'].passage_rights['n0'] = False
+        state.cargo.corridors['road:n0-h0:n0-h1'].access_tier['n0'] = 0
         ops.advance(self.context(1))
         trip, = ops.transport.shipments.values()
         self.assertEqual(trip.mode, TransitMode.WAIT_ENTRY)

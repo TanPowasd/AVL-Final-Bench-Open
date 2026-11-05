@@ -107,3 +107,33 @@ class StockMarketTests(unittest.TestCase):
         receipts=state.command_streams['n0'].process([self.ipo()|{'id':'2'}],lambda o:EngineCommands(state).prepare('n0',o,ctx))
         self.assertEqual(receipts[0].code,'ERR_NO_PERMISSION')
         self.assertEqual([self.npc_cash(state,'n0-tech',k) for k in ('Fund','Mom','Noise')],before)
+
+
+class StockOrderF03GateTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):cls.catalog,cls.world=Catalog(),generate_candidate(1000)
+    game=StockMarketTests.game;ipo=StockMarketTests.ipo;trade=StockMarketTests.trade
+    """06 finance/stock_order：融资买入（margin=true）和融券卖空（short）需本国已解锁 F03。"""
+    def _listed(self):
+        game=self.game();state=game.state;state.research['n0'].known.add('F01')
+        game.step({'n0':[self.ipo()]})
+        state.initial.cash.transfer(CashAccount('world','pool','n0'),CashAccount('n1','treasury','n0'),1000000)
+        for _ in range(4):game.step()
+        return game,state
+
+    def test_margin_buy_and_short_are_tech_locked_without_f03(self):
+        game,state=self._listed()
+        self.assertNotIn('F03',state.research['n1'].known)
+        margin=dict(self.trade(seq=2),margin=True)
+        short=dict(self.trade(seq=3,side='short'))
+        game.step({'n1':[margin,short]})
+        codes=[r.code for r in state.command_streams['n1'].recent[-2:]]
+        self.assertEqual(codes,['ERR_TECH_LOCKED','ERR_TECH_LOCKED'])
+        self.assertFalse(any(k[0]=='n1' for k in state.stock_market.finance.positions))
+        state.audit()
+
+    def test_margin_buy_passes_gate_with_f03(self):
+        game,state=self._listed();state.research['n1'].known.add('F03')
+        game.step({'n1':[dict(self.trade(seq=2),margin=True)]})
+        self.assertNotEqual(state.command_streams['n1'].recent[-1].code,'ERR_TECH_LOCKED')
+        state.audit()

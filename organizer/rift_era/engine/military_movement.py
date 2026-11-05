@@ -94,7 +94,7 @@ class MilitaryMovement:
             regions=tuple(self._palette[self.s.initial.map.region_cells[c]] for c in self.cells(edge,position.node if origin is None else origin))
             if not self.s.contracts.dmz_path_allows(owner,regions):return False
         if not row.health_mU:return False
-        if self.s.authority.access_acl.get(edge,{}).get(owner,0)>=3:return True
+        if row.tier(owner)>=3:return True
         if self.s.contracts.transit_right(owner,edge) is not None:return True
         war=self.s.relations.will_be_at_war if preview else lambda a,b:self.s.initial.diplomacy.relation(a,b)==Relation.WAR
         for cell in self.s.cargo.paths[edge]:

@@ -4,13 +4,20 @@ from .economy_state import BASKET
 from .environment import pollution_next
 from .numeric import Q, floor
 from .population import Demography, grow, support_delta, update_support
+from .support_events import support_events_mU
 
 
 def settle_residents(state, ctx):
     initial = state.initial
+    regional = {}
     for hub, metric in state.local_cycles.items():
-        owner = initial.map.hubs[hub].owner
         region = initial.map.hubs[hub].region
+        row = state.authority.regions[region]
+        # Support is held towards the current controller p; the -12 term applies
+        # whenever p is not the region's sovereign (02 P7).
+        owner = initial.map.hubs[hub].owner
+        controller = row.controller if row.controller in state.governance.policies else owner
+        occupied = row.sovereign is not None and controller != row.sovereign
         remedied = state.governance.remediation_mU.get(region, 0) >= 1000
         state.pollution[hub] = pollution_next(state.pollution[hub], metric.emitted_mU, Q(int(remedied)))
         population = initial.populations[hub]
@@ -40,13 +47,21 @@ def settle_residents(state, ctx):
         employment = min(Q(1), Q(sum(metric.labor.values()), max(1, participants)))
         grow(ctx.seed, ctx.cycle, population, Demography(satisfaction['food'], initial.housing_mU[hub],
             development, medical, gene, pollution, state.inflation[owner] * 10000))
-        policy = state.governance.policies[owner]
+        policy = state.governance.policies[controller]
         delta = support_delta(food=satisfaction['food'], consumer_goods=satisfaction['consumer_goods'],
             medicine=satisfaction['medicine'], employment=employment,
             tax=policy.nominal_tax, fatigue=policy.fatigue, pollution=pollution,
-            autonomy=state.governance.autonomy.get(region, Q(0)), social_security=state.governance.social_ratio(owner),
-            occupied=False, events_mU=-5 * int('economic_doctrine' in policy.transitions))
+            autonomy=state.governance.autonomy.get(region, Q(0)), social_security=state.governance.social_ratio(controller),
+            occupied=occupied,
+            events_mU=-5 * int('economic_doctrine' in policy.transitions) + support_events_mU(metric))
         update_support(population, delta)
-        if state.governance.active(owner, 'F07'):
+        regional.setdefault(region, []).append(population)
+        if state.governance.active(controller, 'F07'):
             population.support_mU = min(850, population.support_mU)
         state.local_history[hub].append(metric)
+    # Keep the authority row (the value controllers observe and annexation reads)
+    # equal to the population-weighted support of the region's national hubs.
+    for region, rows in regional.items():
+        total = sum(p.total_mU for p in rows)
+        if total:
+            state.authority.regions[region].support_mU = sum(p.support_mU * p.total_mU for p in rows) // total

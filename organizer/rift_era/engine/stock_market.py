@@ -331,6 +331,9 @@ class StockCommands:
         if not company.listed:raise RuleViolation('ERR_NO_VISIBLE_TARGET')
         if order['margin'] or order['side'] in ('short','cover'):
             if order['margin'] and order['side']!='buy':raise RuleViolation('ERR_SCHEMA')
+            # 06 finance/stock_order: margin buys and short sales require the nation's own F03.
+            if (order['margin'] or order['side']=='short') and 'F03' not in state.research[owner].known:
+                raise RuleViolation('ERR_TECH_LOCKED')
             return market.finance.prepare(owner,order,ctx)
         if order['side']=='sell' and market.shares.balance(market.account(owner,cid))<order['qty']*1000 and market.finance.positions.get((owner,cid,'margin')):
             return market.finance.prepare(owner,order,ctx)

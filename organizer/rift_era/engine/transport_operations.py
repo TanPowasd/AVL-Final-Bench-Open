@@ -14,6 +14,7 @@ from .determinism import digest
 from .errors import InvariantViolation, RuleViolation
 from .ledger import Account, CashAccount, Transfer
 from .logistics import Corridor, Transport, TransitMode, Vehicle
+from .export_controls import CONTROLLED_GOODS
 from .numeric import Q, ceil, floor, proportional
 from .protocol import PreparedCommand
 from .provenance import Use
@@ -68,6 +69,8 @@ class CargoOperations:
         self.electric_grants = set()
         self.electric_power = {}
         self.terminal_admitted_mU = {}
+        self.action_cycles = {}
+        self.policy_tick = -1
 
     def terminal_remaining(self, eid):
         edge = self.corridors[eid]
@@ -159,23 +162,37 @@ class CargoOperations:
         hub = self.s.initial.map.hubs[self.corridors[eid].a]
         return asset.owner if asset else self.s.authority.regions[hub.region].controller if hasattr(self.s, 'authority') else hub.owner
 
-    def entry_fee(self, owner, eid, weight):
+    def toll_base_ru_mU(self, cargo_mU):
+        """06 corridor_policy fee base for one batch entering an edge.
+
+        Sum_g (q_mU[g]/1000) * w_cat[g] * 10 RU, in RU milli-units:
+        q_mU[g] * w_cat[g] * 10.  People use the food catalog value per head.
+        """
+        w = self.s.catalog.weights
+        return sum((Q(q) * w['food' if g == 'people' else g] * 10 for g, q in cargo_mU.items()), Q(0))
+
+    def entry_fee(self, owner, eid, weight, cargo_mU=None):
         right = self.city_transit_right(owner, eid)
         if right is not None:
             fee = self.s.city_economy.relations.entry_fee(owner, eid, weight, getattr(self.s, 'completed_cycles', 0))
             return fee[1] if fee is not None else 0
         edge = self.corridors[eid]
         recipient = self.operator(eid)
-        if recipient is None or recipient == owner:
+        if recipient is None or recipient == owner or not cargo_mU:
             return 0
-        return ceil(Q(edge.toll_mU * weight, 1000) / self.s.rates.get(owner, Q(1)))
+        fee = ceil(self.toll_base_ru_mU(cargo_mU) * edge.toll_bp.get(owner, 0) / 10000)
+        contract = self.transit_contract(owner, eid)
+        if contract is not None:
+            # 03 clause 3: the grantee never pays more than the agreed cap.
+            fee = min(fee, contract.toll_cap_ru_mU)
+        return ceil(Q(fee) / self.s.rates.get(owner, Q(1)))
 
-    def pay_entry(self, owner, eid, weight):
+    def pay_entry(self, owner, eid, weight, cargo_mU=None):
         right = self.city_transit_right(owner, eid)
         if right is not None:
             result = self.s.city_economy.relations.pay_entry(owner, eid, weight, getattr(self.s, 'completed_cycles', 0))
             return bool(result)
-        amount = self.entry_fee(owner, eid, weight)
+        amount = self.entry_fee(owner, eid, weight, cargo_mU)
         payer = self.s.native(owner, 'treasury')
         if self.s.initial.cash.balance(payer).native_mU < amount:
             return False
@@ -183,17 +200,22 @@ class CargoOperations:
             self.s.initial.cash.transfer(payer, CashAccount(self.operator(eid), 'treasury', payer.currency), amount)
         return True
 
-    def permitted(self, owner, eid):
+    def military_cargo(self, good):
+        """Goods that need access tier 2 (military supplies) on a foreign edge."""
+        controls = getattr(self.s, 'export_controls', None)
+        return bool(controls and good in controls.war_goods and good not in CONTROLLED_GOODS)
+
+    def permitted(self, owner, eid, good=None):
         edge = self.corridors[eid]
         if not edge.allowed(owner):
             return False
         city_right = self.city_transit_right(owner, eid)
-        # An explicit right is required on every foreign-controlled endpoint.
+        # An explicit right is required on every foreign-controlled endpoint:
+        # tier 1 for commerce, tier 2 for military supplies (06 corridor_policy).
         if any((self.s.authority.regions[self.s.initial.map.hubs[h].region].controller if hasattr(self.s, 'authority') else self.s.initial.map.hubs[h].owner) not in (None, owner) for h in (edge.a, edge.b)):
             contract = self.transit_contract(owner, eid)
-            if not edge.passage_rights.get(owner, False) and not contract and not city_right:
-                return False
-            if contract and edge.toll_mU > contract.toll_cap_ru_mU:
+            need = 2 if good is not None and self.military_cargo(good) else 1
+            if edge.tier(owner) < need and not contract and not city_right:
                 return False
         return edge.mode not in ('sea', 'air') or all(self.terminal_online(h, edge.mode) for h in (edge.a, edge.b))
 
@@ -329,9 +351,9 @@ class CargoOperations:
                 weight = ceil(shipment.quantity_mU * self.s.cargo_weights[shipment.good])
                 cap = min(remaining[eid], manual_remaining[eid]) if vehicle.id in self.manual else remaining[eid]
                 cap = min(cap, self.owner_capacity(shipment.owner, eid), self.terminal_remaining(eid))
-                if weight > cap or not self.permitted(shipment.owner, eid) or not self.motion(vehicle):
+                if weight > cap or not self.permitted(shipment.owner, eid, shipment.good) or not self.motion(vehicle):
                     continue
-                if not self.pay_entry(shipment.owner, eid, weight):
+                if not self.pay_entry(shipment.owner, eid, weight, {shipment.good: shipment.quantity_mU}):
                     continue
                 grants.add(shipment.id)
                 remaining[eid] -= weight
@@ -353,7 +375,7 @@ class CargoOperations:
                 continue
             vehicles = [self.vehicles[v] for v in job.vehicle_ids if self.available(self.vehicles[v])]
             if not vehicles or not all(self.corridors[e].health_mU and
-                    self.permitted(job.owner, e) for e in job.path):
+                    self.permitted(job.owner, e, job.good) for e in job.path):
                 continue
             candidates[job.path[0]][job.id] = ceil(min(job.remaining_mU * self.s.cargo_weights[job.good],
                                                      sum(v.capacity_mU for v in vehicles)))
@@ -385,7 +407,7 @@ class CargoOperations:
                     if self.active_count(job.owner) >= self.s.catalog.runtime['limits']['shipments_per_nation']:
                         job.status = 'WAIT_CAPACITY'
                         break
-                    if not self.pay_entry(job.owner, eid, ceil(quantity * weight)):
+                    if not self.pay_entry(job.owner, eid, ceil(quantity * weight), {job.good: quantity}):
                         job.status = 'WAIT_FEE'
                         continue
                     sid = f'{job.id}/trip{job.serial}'
@@ -541,8 +563,28 @@ class CargoOperations:
                 self.finish(job)
         return PreparedCommand(commit)
 
+    def record_policy_events(self, ctx):
+        """07: one minimum action-loss event per (operator, restricted target) per tick."""
+        if ctx.tick <= self.policy_tick:
+            raise InvariantViolation('corridor policy tick repeated')
+        self.policy_tick = ctx.tick
+        targets = defaultdict(set)
+        for eid, edge in sorted(self.corridors.items()):
+            if not edge.restricted:
+                continue
+            operator = self.operator(eid)
+            for target, tier in edge.restricted.items():
+                if operator not in (None, target) and edge.tier(target) < tier:
+                    targets[operator].add(target)
+        row = self.action_cycles.setdefault(ctx.cycle, {})
+        for owner, others in targets.items():
+            row[owner] = row.get(owner, Q(0)) + Q(len(others), 1000)
+        self.action_cycles = {c: v for c, v in self.action_cycles.items() if c >= ctx.cycle - 19}
+
     def snapshot(self):
-        return {'corridors': self.corridors, 'levels': self.levels, 'paths': self.paths,
+        return {'policy_tick': self.policy_tick,
+                'action_cycles': {str(c): v for c, v in sorted(self.action_cycles.items())},
+                'corridors': self.corridors, 'levels': self.levels, 'paths': self.paths,
                 'road_assets': self.road_assets, 'vehicles': self.vehicles, 'hauls': self.hauls,
                 'shipments': self.transport.shipments, 'shipment_jobs': self.shipment_jobs,
                 'vehicle_jobs': self.vehicle_jobs, 'manual': self.manual, 'next_vehicle': self.next_vehicle,
@@ -557,7 +599,11 @@ class CargoOperations:
     def visible(self, owner):
         # Ratios are explicitly represented as pairs for the wire schema.
         return {'roads': [{'id': e.id, 'origin_hub': e.a, 'dest_hub': e.b, 'level': self.levels[e.id], 'mode': e.mode,
-                           'health_mU': e.health_mU, 'capacity_mU_cycle': e.capacity_mU_cycle}
+                           'health_mU': e.health_mU, 'capacity_mU_cycle': e.capacity_mU_cycle,
+                           **({'my_access_tier': e.access_tier[owner], 'my_toll_rate_bp': e.toll_bp.get(owner, 0)}
+                              if owner in e.access_tier else {}),
+                           **({'policies': [{'target_nation': t, 'access_tier': a, 'toll_rate_bp': e.toll_bp.get(t, 0)}
+                                            for t, a in sorted(e.access_tier.items())]} if self.operator(e.id) == owner else {})}
                           for e in self.corridors.values()
                           if self.s.initial.map.hubs[e.a].owner == owner or self.s.initial.map.hubs[e.b].owner == owner],
                 'hauls': [asdict(j) for j in self.hauls.values() if j.owner == owner],
@@ -630,7 +676,7 @@ class TransportCommands:
         node = origin
         for eid in path:
             edge = ops.corridors.get(eid)
-            if edge is None or not edge.health_mU or not ops.permitted(owner, eid):
+            if edge is None or not edge.health_mU or not ops.permitted(owner, eid, good):
                 raise RuleViolation('ERR_CORRIDOR_BLOCKED')
             if edge.mode != mode:
                 raise RuleViolation('ERR_SITE_INCOMPATIBLE', 'vehicle incompatible with corridor mode')
@@ -693,17 +739,27 @@ class CorridorPolicyCommands:
         self.s = state
 
     def prepare(self, owner, order, ctx):
-        fields(order, {'corridor_id': str, 'target_nation': str, 'allowed': bool}, {'toll_ru_mU': int})
+        fields(order, {'corridor_id': str, 'target_nation': str, 'access_tier': int, 'toll_rate_bp': int})
         eid, target = order['corridor_id'], order['target_nation']
+        tier, bp = order['access_tier'], order['toll_rate_bp']
+        if not 0 <= tier <= 3 or not 0 <= bp <= 2000:
+            raise RuleViolation('ERR_SCHEMA')
         if eid not in self.s.cargo.corridors:
             raise RuleViolation('ERR_NO_VISIBLE_TARGET')
         if self.s.cargo.operator(eid) != owner:
             raise RuleViolation('ERR_NO_PERMISSION')
-        if target not in self.s.initial.diplomacy.actors or not 0 <= order.get('toll_ru_mU', 0) <= 100000:
+        if target not in self.s.initial.diplomacy.actors:
             raise RuleViolation('ERR_SCHEMA')
         edge = self.s.cargo.corridors[eid]
         def commit():
-            edge.passage_rights[target] = order['allowed']
-            if 'toll_ru_mU' in order:
-                edge.toll_mU = order['toll_ru_mU']
+            before = edge.tier(target)
+            # 03 section 7 item 1: tightening a foreign nation's existing access is
+            # a hostile policy; remember the highest tier it held so the
+            # restriction keeps accruing 07 events until it is restored.
+            if target != owner and tier < before:
+                edge.restricted[target] = max(before, edge.restricted.get(target, 0))
+            if tier >= edge.restricted.get(target, 0):
+                edge.restricted.pop(target, None)
+            edge.access_tier[target] = tier
+            edge.toll_bp[target] = bp
         return PreparedCommand(commit)

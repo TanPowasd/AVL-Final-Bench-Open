@@ -819,7 +819,10 @@ class Economy:
         for hub, grid in state.grids.items():
             capacity = sum(s.quantity_mU for s in supplies if s.hub == hub)
             critical = sum(l.demand_mU for l in loads if l.hub == hub and l.band in ('B0', 'B1'))
-            if grid.update(capacity, critical):
+            blackout = grid.update(capacity, critical)
+            if hub in state.local_cycles and grid.recovering:
+                state.local_cycles[hub].blackout_ticks += 1
+            if blackout:
                 for lid, plant in initial.plants.items():
                     if initial.lines[lid].hub == hub and plant.mode == PlantMode.ON:
                         plant.mode, plant.timer = PlantMode.TRIPPED, 1
@@ -915,6 +918,10 @@ class Economy:
             metric = state.cycles[load.owner]
             metric.power_received_mU += result.received[load.id]
             metric.power_needed_mU += load.demand_mU
+            if load.band == 'B1' and load.hub in state.local_cycles:
+                local = state.local_cycles[load.hub]
+                local.b1_needed_mU += load.demand_mU
+                local.b1_received_mU += result.received[load.id]
             if load.id.startswith('municipal:'):
                 state.credit_consumption(load.owner, 'electricity', Q(result.received[load.id]))
                 state.record_civilian(load.owner, load.hub, 'electricity', result.received[load.id])
@@ -1280,6 +1287,7 @@ def opening_economy(catalog, initial, *, total_ticks: int = 150, debug: bool = T
                System('water_canals', Phase.POWER, lambda state, ctx: state.utilities.advance(ctx), after=('power',)),
                System('asat', Phase.COMBAT, lambda state, ctx: state.asat.advance(ctx)),
                System('export_policy_events', Phase.COMBAT, lambda state, ctx: state.export_controls.record_policy_events(ctx)),
+               System('corridor_policy_events', Phase.COMBAT, lambda state, ctx: state.cargo.record_policy_events(ctx)),
                System('battle', Phase.COMBAT, lambda state, ctx: state.battles.advance(ctx)),
                System('military_control', Phase.COMBAT, lambda state, ctx: state.military_governance.advance(ctx), after=('battle',)),
                System('bond_primary', Phase.MARKETS, lambda state, ctx: state.sovereign_finance.clear_primary(ctx)),

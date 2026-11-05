@@ -35,12 +35,18 @@ class Corridor:
     capacity_mU_cycle: int
     health_mU: int = 1000
     blocked: dict[str, Fraction] = field(default_factory=dict)
-    # Mode-specific ACL and user fee.  The default keeps the historical road
-    # behaviour (open to the local owner, no fee); ports/rail adapters can set
-    # these fields without changing the transit state machine.
+    # 06 logistics/corridor_policy: per-target access tier (0 closed,
+    # 1 commerce, 2 military supplies, 3 troop transit) and per-target toll in
+    # basis points of the 06 cargo base.  A nation absent from access_tier has
+    # no explicit row: domestic edges stay open to it and foreign-controlled
+    # endpoints still require an explicit right (see CargoOperations.permitted).
+    # restricted[target] is the highest tier the operator granted before a
+    # tightening; while the current tier is below it, 07 hostile-policy events
+    # accrue every tick.
     mode: str = 'road'
-    toll_mU: int = 0
-    passage_rights: dict[str, bool] = field(default_factory=dict)
+    access_tier: dict[str, int] = field(default_factory=dict)
+    toll_bp: dict[str, int] = field(default_factory=dict)
+    restricted: dict[str, int] = field(default_factory=dict)
 
     def other(self, hub: str) -> str:
         if hub == self.a:
@@ -53,7 +59,10 @@ class Corridor:
         return floor(Q(self.capacity_mU_cycle, 10) * Q(self.health_mU, 1000) * (1 - self.blocked.get(owner, Q(0))))
 
     def allowed(self, owner: str) -> bool:
-        return self.passage_rights.get(owner, True) and self.blocked.get(owner, Q(0)) < 1
+        return self.access_tier.get(owner) != 0 and self.blocked.get(owner, Q(0)) < 1
+
+    def tier(self, owner: str) -> int:
+        return self.access_tier.get(owner, 0)
 
 
 @dataclass
