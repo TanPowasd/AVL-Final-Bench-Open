@@ -25,7 +25,10 @@ python3 -m unittest discover -s organizer/rift_era/tests -v
 
 ## A. 完整单局与守恒
 
-- [ ] 实际执行到 Tick 28,799，完成 **28,800 Tick / 5,760 决策窗口 / 2,880 工业周期 / 四个 720 周期纪元**；不得提前截断、复制帧或外推后半局。
+- [x] 实际执行到 Tick 28,799，完成 **28,800 Tick / 5,760 决策窗口 / 2,880 工业周期 / 四个 720 周期纪元**；不得提前截断、复制帧或外推后半局。
+  - 2026-11-07（7f9f194，seed 1000，atlas，空局无指令）：`match --checkpoint --resume --budget-s 900` 分 17 段续跑，2026-11-06 20:3x 起至 2026-11-07 02:16（CST）跑完 28,800 Tick / 2,880 周期，各段 exit 3（预算到点存档）、末段 exit 0，run.log 无异常。`complete_trajectory=true`，最终 state_hash `6ab7cc14939ecbadcf84c8a07d68d8f59b0348df434415bfae72e3c90eda2bd3`。
+  - 结果（8 国几乎一致）：mean_U 2.92–2.99，末周期 U 0.75–0.78，V −0.24～−0.27。末周期支柱：control 4.04，industry −0.10～−0.25，population / technology / international 均为 0。
+  - **发现：空局 8 国人口全部崩溃**。每国人口 194,000 mU → 249 mU（只剩首都），首都 support_mU=0、red_streak=2769（约从第 110 周期起一直红）。末 40 周期家庭消费 food/water/electricity/medicine 全为 0，sink_debt 累积（n0 food 36,540、water 59,512）。此前 1,618 Tick 探测只看到城邦饥荒、国家 Hub 仍在增长；长局下国家 Hub 也断供。需作者判断：空局是否应有自动维持的基础食物/水/电生产，还是"无指令即崩溃"符合设计。
 - [ ] 核对每 Tick 的 P1–P8 次序、周期结算次数、持续计划时序，以及期末处理不额外增发收入或免除未偿债务。
 - [ ] 检查所有币种的初始供给、显式发行及余额守恒；库存、锁仓、在途、信用、在制品不重复计数，生产与资金来源均可追溯。
 - [ ] 核对历史 RU 成本细网格的 `basis_rounding_steps` / `basis_error_bound_mU`，对照高精度账检查实际误差与 NFA/评分精度；禁止用实时汇率重估旧现金或发行负债。
