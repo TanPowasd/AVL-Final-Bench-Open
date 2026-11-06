@@ -90,3 +90,36 @@ class SupportEventStateTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class MedicalB1CouplingTests(unittest.TestCase):
+    """C05: M_eff = min(1, M) * (1 - 0.5 * delta_B1), delta_B1 from the hub's B1 power service."""
+    setUpClass = classmethod(fixture_source.CargoCommandTests.setUpClass.__func__)
+    fixture = fixture_source.CargoCommandTests.fixture
+
+    def medical(self, **power):
+        from unittest import mock
+        from organizer.rift_era.engine import local_economy
+        state = self.fixture().state
+        hub = next(h for h, p in sorted(state.initial.populations.items())
+                   if p.total_mU and state.initial.map.hubs[h].owner == 'n0')
+        state.research['n0'].known |= {'A04', 'A08', 'A11'}
+        need = {'medicine': Q(1000), 'medical_supplies': Q(1000)}
+        for h in state.local_cycles:
+            state.local_cycles[h] = CycleEconomy(**(dict(needed=dict(need), household_consumed=dict(need), **power)
+                                                    if h == hub else {}))
+        seen = {}
+        real = local_economy.grow
+        def spy(seed, cycle, population, demography):
+            if population is state.initial.populations[hub]:
+                seen['m'] = demography.effective_medical
+            return real(seed, cycle, population, demography)
+        with mock.patch.object(local_economy, 'grow', spy):
+            settle_residents(state, SimpleNamespace(seed=1000, cycle=0, tick=9))
+        return seen['m']
+
+    def test_b1_shortfall_halves_medical_at_most(self):
+        self.assertEqual(self.medical(), 1)
+        self.assertEqual(self.medical(b1_needed_mU=1000, b1_received_mU=1000), 1)
+        self.assertEqual(self.medical(b1_needed_mU=1000, b1_received_mU=500), Q(3, 4))
+        self.assertEqual(self.medical(b1_needed_mU=1000, b1_received_mU=0), Q(1, 2))

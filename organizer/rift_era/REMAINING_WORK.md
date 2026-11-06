@@ -112,7 +112,7 @@
    - 规则：`access_tier: 0..3` 和 `toll_rate_bp: 0..2000`，费用按实际载货批次的基数计算。
    - 引擎：`allowed: bool` 和固定的 `toll_ru_mU`，见 `transport_operations.py:696`。
    - 费率还写在走廊上，改一国费率会影响所有国家。`blockade_food_substitution` 依赖 `access_tier`。
-3. ~~**本国地区的支持度事件几乎没接。**~~ 已接（2026-11-05），口径见 `IMPLEMENTATION_CONTRACT.md` 的 `support_events_v1`；C05 对医疗系数的 B1 修正仍未接。 `local_economy.py:44` 把 `occupied` 写死为 `False`，`events_mU` 只有经济学说切换一项。因此下列规则未生效：敌占 −12、C04 黑网 −20、E26 B1 欠供、E71 bombard −300。
+3. ~~**本国地区的支持度事件几乎没接。**~~ 已接（2026-11-05），口径见 `IMPLEMENTATION_CONTRACT.md` 的 `support_events_v1`；C05 对医疗系数的 B1 修正已接（2026-11-06，`local_economy.py`，δ_B1 与 E26 同口径）。 `local_economy.py:44` 把 `occupied` 写死为 `False`，`events_mU` 只有经济学说切换一项。因此下列规则未生效：敌占 −12、C04 黑网 −20、E26 B1 欠供、E71 bombard −300。
 
 ### 未找到实现的耦合
 
