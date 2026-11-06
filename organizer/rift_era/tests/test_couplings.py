@@ -171,6 +171,33 @@ class CouplingTests(unittest.TestCase):
         self.assertEqual(state.v07_last_extracted[mid], 500)
         state.research['n0'].known.discard('V07')
 
+    def test_active_scale_meters_for_g07_g12_v07_l12(self):
+        from types import SimpleNamespace as NS
+        from organizer.rift_era.engine.active_scale import ActiveScale
+        from organizer.rift_era.engine.clock import ClockConfig
+        state = self.game().state
+        scale, ctx = ActiveScale(state), NS(tick=20, cycle=2, clock=ClockConfig())
+        meter = lambda tech, name: scale._meter('n0', tech, {'kind': 'meter', 'meter': name}, ctx)
+        self.assertEqual(meter('G07', 'ready_combined_arms_formations'), 0)
+        land, other = [f for f in state.formations.rows.values() if f.owner == 'n0'][:2]
+        other.domain, other.region = 'Air', land.region
+        land.slot_a = other.slot_a = 'radio'
+        state.research['n0'].known |= {'G07', 'G12'}
+        self.assertEqual(meter('G07', 'ready_combined_arms_formations'), 2)
+        self.assertEqual(meter('G12', 'ready_joint_command_formations'), 2)
+        state.cyber_frozen_until['n0-h0'] = 20
+        self.assertEqual(meter('G12', 'ready_joint_command_formations'), 0)
+        state.research['n0'].known -= {'G07', 'G12'}
+        self.assertEqual(meter('L12', 'completed_megaprojects'), 0)
+        aid = next(a for a, x in state.initial.assets.items() if x.owner == 'n0' and not x.under_construction)
+        state.megaprojects['rail:x'] = {'kind': 'L12_bridge', 'owner': 'n0', 'asset': aid}
+        self.assertEqual(meter('L12', 'completed_megaprojects'), 1)
+        mid = next(m for m, d in state.deposits.items() if d.good == 'biomass'
+                   and (state.resource_sites.get(m) or state.initial.mines.get(m)).owner == 'n0')
+        state.v07_last_extracted[mid] = 20 - 1200
+        self.assertEqual(meter('V07', 'restored_closed_mines'), 1)
+        self.assertEqual(meter('V08', 'consented_climate_regions'), 0)
+
     def test_i12_molecular_lines_cut_inputs_only_in_s5_with_ai_core(self):
         from dataclasses import replace
         from types import SimpleNamespace as NS

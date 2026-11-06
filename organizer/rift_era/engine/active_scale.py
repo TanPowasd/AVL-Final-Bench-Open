@@ -87,8 +87,10 @@ class ActiveScale:
         if meter=='running_high_temp_lines':return Q(sum(l.id in self.heat for l in running))
         if meter=='running_precision_agri_lines':return Q(sum(state.line_options.get(l.id,{}).get('precision_agri',False) for l in running))
         if meter=='running_gene_edited_lines':return Q(sum(state.line_options.get(l.id,{}).get('gene_edited',False) for l in running))
-        if meter=='running_molecular_lines':return Q(sum(l.recipe.id=='P101' and 'ai_core' in state.line_options.get(l.id,{}).get('addons',()) and
-             state.initial.facilities[l.id.rsplit('/line',1)[0]].profile=='S5' for l in running))
+        if meter=='running_molecular_lines':
+            # 04 I12 names P013/P016/P087 (P101 is the R09 validation pack).
+            from .industry_effects import molecular_line
+            return Q(sum(l.recipe.id in ('P013','P016','P087') and molecular_line(state,l) for l in running))
         if meter=='listed_companies':return Q(sum(c.listed and c.issuer==owner for c in state.initial.companies.values()))
         if meter=='central_bank_active':return Q(int(owner in state.macro.active_policies))
         if meter=='social_paid_ratio':return state.governance.social_ratio(owner)
@@ -117,9 +119,28 @@ class ActiveScale:
             if tech=='R08':return Q(0) # requires a real asynchronous backup receipt
         # These meters depend on entities whose actual business implementations
         # must supply receipts. They remain zero until that receipt exists.
-        pending={'flowing_intercontinental_cables','online_offshore_mines','active_automated_routes',
-                 'completed_megaprojects','supplied_field_depots','ready_combined_arms_formations',
-                 'ready_joint_command_formations','restored_closed_mines','consented_climate_regions'}
+        if meter=='flowing_intercontinental_cables':
+            util=state.utilities
+            return Q(sum(l.mode=='power' and util.operator(l)==owner and util.availability(l)>0 and
+                         any(state.initial.map.terrain_cells[c]==0 for c in l.cells) for l in util.links.values()))
+        if meter=='completed_megaprojects':
+            return Q(sum(r['owner']==owner and r['asset'] in state.initial.assets and
+                         not state.initial.assets[r['asset']].under_construction for r in state.megaprojects.values()))
+        if meter in ('ready_combined_arms_formations','ready_joint_command_formations'):
+            boosted=state.battles.combined_arms({},ctx.tick if meter=='ready_joint_command_formations' else None)
+            ready={f.id for f in state.formations.rows.values() if f.owner==owner and any(u in boosted for u in f.unit_ids)}
+            if meter=='ready_joint_command_formations' and not state.battles.joint_doctrine_online(owner,ctx.tick):return Q(0)
+            return Q(len(ready))
+        if meter=='restored_closed_mines':
+            from .economy import Economy
+            return Q(sum(Economy._v07_restored(state,mid,ctx) for mid in state.v07_last_extracted
+                         if (state.resource_sites.get(mid) or state.initial.mines.get(mid)).owner==owner))
+        if meter=='consented_climate_regions':
+            run=state.climate.interventions.get(owner)
+            if run is None or not run.active:return Q(0)
+            regions=(run.region,*run.affected)
+            return Q(len(regions)) if all(state.climate.consented(owner,r,ctx.cycle) for r in regions) else Q(0)
+        pending={'online_offshore_mines','active_automated_routes','supplied_field_depots'}
         if meter in pending:return Q(0)
         raise InvariantViolation('unregistered technology usage meter: '+meter)
 
