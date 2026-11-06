@@ -40,24 +40,49 @@
 - 完成 `active_scale.py` 的待定指标后再接入主线。它目前未被任何模块导入。
 - 实现 NFA、可持续性、Loss_action 的唯一归属，以及 `fx_revaluation_invariance` 要求的汇率变化不重估。
 
-### P0-3 正式地图接线
+### ~~P0-3 正式地图接线~~（已做，2026-11-05）
 
-- 入口仍调用旧 `world.generate_candidate`。`world_atlas.generate_world` 没有被主线使用。
-- 572 条 `resource_atlas` 中只有 72 个起始 deposit 可开采，其余远端矿点要注册进 `resource_sites/resource_sources/deposits`。
-- 起始储量统一读 atlas，`Hydrology` 改读 `world.river_downstream`。
-- 地图接受必须来自真实 150 Tick 自举，失败后重抽。
+- 主线入口改用 `world_atlas`：`world`、`bootstrap`、`strategy-opening` 默认 `--map atlas`，旧地图保留为 `--map legacy`。
+- 对局用的地图经 `bootstrap.accepted_atlas_world(seed)` 产生：每个候选都真实跑 150 Tick 开局（`atlas_bootstrap`），失败就换下一个 attempt，不补资源；256 次都失败报 `INFRA_FAULT_WORLDGEN`。seed 1000 的 attempt 0 通过（约 116 秒）。
+- 回放清单记录 `map_version`、`map_attempt`，`replay-strategy-opening` 按它们重建同一张图。
+- 572 条 atlas 资源全部注册：72 个起始矿照旧，另外 500 个远端矿点进入 `resource_sites`/`deposits`/`resource_sources`，并在 `nature` 账上存入真实储量（水共用 `basin:<hub>`）。它们没有采掘线，要用 `build_mine` 建矿后才开采。
+- 起始矿储量读 atlas 的 `reserve_mU`（数值与旧开局表相同）；旧地图没有 atlas，仍读开局表。
+- `Hydrology` 在有 `world.river_downstream` 时直接用 atlas 的河流 DAG，按高程从高到低处理；旧地图仍用原来的推导。
+- 测试 `tests/test_atlas_wiring.py`（4 项）：资源注册与储量、河流 DAG、远端矿建成并实际消耗储量、重抽门禁。旧地图逐 Tick 哈希不变。
+- 已知限制：远端矿只有己方控制的枢纽能建；建材要在该枢纽有库存，所以首都以外的矿需要先运料。
 
-### P0-4 引擎性能（交接未提及）
+### P0-4 引擎性能（第一轮已做，2026-11-05）
 
-现状：无玩家命令时约 **1 秒/Tick**，新旧地图接近。按此线性估算，一局约 8 小时，64 seed 不含影子局也要约 21 CPU 天。实体规模增长后还会更慢，所以这是下限。
+**单局墙钟上限：6 小时**（28,800 Tick，即无玩家命令时 ≤ 0.75 s/Tick，单核）。
 
-20 Tick 剖面的主要耗时（含剖面器开销）：
+依据：正式批次 64 seed 加同数量影子局共 128 局。按 6 小时/局，64 核机器并行两轮约 12 小时，一个通宵能跑完一批。上限比这再松，批次就要跨天，无法当天出分复核。
 
-- `materials` 的 `intersection_update`（约 11 秒/20 Tick）
-- `determinism` 的键生成，约 32 万次调用（约 11 秒）
-- `Fraction` 运算（约 8 秒）
+第一轮结果（seed 1000，`opening_economy` 无命令，aarch64 沙箱单核，同机前后各跑 25 Tick）：
 
-目标：单局墙钟上限由接手 AI 决定，用户已授权，不用再询问。定下后写明数值和依据，要能跑完 64 seed 正式批次（含影子局）。优化不能改变任何状态哈希，必须用同 seed 新旧哈希对比验证。
+| | 秒/Tick | 一局估算 |
+|---|---|---|
+| 优化前（c4586c7） | 1.35 | 10.8 h |
+| 优化后 | 0.71 | 5.7 h |
+
+60 Tick 内逐 Tick 状态哈希与优化前完全一致（每 Tick 后取 `fingerprint(state.snapshot())` 逐行比对）。每 Tick 耗时稳定，没有随 Tick 增长，整周期结算 Tick 约慢 25%。
+
+改了什么（都不改变结果，只减少重复计算）：
+
+- `materials.commit`：不再每次对全部材料池做 `intersection_update`，只处理本次计划动过的账户。依据是每次提交后都有 `_virtual ⊆ _pools`。
+- `determinism.primitive` / `digest`：常见精确类型走快速路径；`digest` 的键只含 `str`/`int`，直接编码。字节输出不变。
+- `split_payment`：没有余数要分时直接返回；有余数时只给余数为正的键算哈希。余数和等于待分数且每个都小于 1，所以零余数的键不可能被选中。
+- `split_origins`：没有零头时不再排序算哈希；`delivery_key` 每笔只算一次。
+- `_input_payment`：本 Tick 材料事件按 (owner, good, bucket) 建增量索引，替代每次全表扫描（原来是 Tick 内平方级）。
+- `warehouse_load_at(hub)`：只算一个枢纽的仓储占用。
+- 电力预留里的 `unpaid_fraction` 改为循环前一次性按付款方汇总。
+
+剩余耗时主要在标准库 `Fraction` 运算本身（约占一半），引擎自身的扫描已不突出。再往下需要改数值表示，会碰到结果口径，不在本轮做。
+
+尚未验证：
+
+- 有玩家命令时的单 Tick 耗时（需 P0-1 的对局入口和参考策略后测）。
+- 正式地图接线（P0-3）后实体规模变大时的耗时。
+- 上限 6 小时是针对本沙箱单核测得的。官方机器若更慢，要按同一脚本重测。
 
 ## P1：规则缺失
 

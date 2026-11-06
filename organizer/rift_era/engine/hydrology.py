@@ -35,14 +35,27 @@ class Hydrology:
         if len(distance) != len(world.regions):
             raise InvariantViolation('land drainage is disconnected from the ocean')
         self.downstream = {}
-        for rid, region in world.regions.items():
-            if region.terrain == 'ocean':
-                continue
-            choices = [n for n in region.adjacent if distance[n] < distance[rid]]
-            # Multiple outlets are a fixed split, never duplicate full outflow.
-            chosen = sorted(choices, key=lambda n: digest(world.seed, 'river_outlet', world.attempt, rid, n))[:2]
-            self.downstream[rid] = tuple(chosen)
-        self.order = tuple(sorted(self.downstream, key=lambda rid: (-distance[rid], rid)))
+        atlas_rivers = getattr(world, 'river_downstream', None)
+        if atlas_rivers:
+            # world_atlas_v1 carries its own validated descending river DAG
+            # (one outlet per land region, strictly lower elevation), so
+            # upstream-first order is simply descending elevation.
+            for rid, region in world.regions.items():
+                if region.terrain == 'ocean':
+                    continue
+                if rid not in atlas_rivers:
+                    raise InvariantViolation('atlas land region has no river outlet')
+                self.downstream[rid] = tuple(atlas_rivers[rid])
+            self.order = tuple(sorted(self.downstream, key=lambda rid: (-world.regions[rid].elevation, rid)))
+        else:
+            for rid, region in world.regions.items():
+                if region.terrain == 'ocean':
+                    continue
+                choices = [n for n in region.adjacent if distance[n] < distance[rid]]
+                # Multiple outlets are a fixed split, never duplicate full outflow.
+                chosen = sorted(choices, key=lambda n: digest(world.seed, 'river_outlet', world.attempt, rid, n))[:2]
+                self.downstream[rid] = tuple(chosen)
+            self.order = tuple(sorted(self.downstream, key=lambda rid: (-distance[rid], rid)))
         self.baseline = {}
         incoming = defaultdict(int)
         natural = units(state.endowments['local_natural_water_per_cycle'])
