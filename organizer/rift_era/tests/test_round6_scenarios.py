@@ -379,5 +379,71 @@ class Round6ScenarioTests(unittest.TestCase):
                 Batch(**{**{k: getattr(first, k) for k in first.__dataclass_fields__},
                          'seeds': first.seeds[:-1] + (first.seeds[0],)}).validate()
 
+    # -- damage_power_and_repair ----------------------------------------------
+    def test_damage_power_and_repair(self):
+        exp = expected('damage_power_and_repair')
+        setup = SCENARIOS['damage_power_and_repair']['setup']
+        game = self.game(ticks=260)
+        state = game.state
+        lid = 'n0/P070/0/line'
+        plant = state.initial.plants[lid]
+        self.assertEqual(plant.spec.nameplate_mU, setup['plant_P070_nameplate'] * 1000)
+        capacity = lambda: Q(plant.spec.nameplate_mU * state.initial.assets[lid].availability, 1000)
+        while game.tick < 3:
+            game.step()
+        # P4 of tick 3 destroys only the P070 line (the shell keeps its health).
+        hit_tick = game.tick
+        real = state.blockades.advance
+        def p4(ctx):
+            real(ctx)
+            if ctx.tick == hit_tick:
+                state.asset_lifecycle.damage(lid, 1000, event_id='scenario_strike')
+        state.blockades.advance = p4
+        produced = []
+        real_transform = state.initial.inventory.transform
+        def spy(remove, add, reason=None, **kw):
+            if reason and 'production' in reason and any(a.location == lid or a.bucket.endswith(lid) for a in add):
+                produced.append(reason)
+            return real_transform(remove, add, reason=reason, **kw)
+        state.initial.inventory.transform = spy
+        game.step()
+        state.initial.inventory.transform = real_transform
+        state.blockades.advance = real
+        self.assertEqual(state.initial.assets[lid].health_mU, 0)
+        self.assertEqual(state.initial.assets['n0/P070/0'].health_mU, 1000)
+        self.assertEqual(len(produced), exp['same_tick_P6_output'])
+        game.step()                                               # next tick: P3 sees the loss
+        self.assertEqual(capacity(), exp['next_tick_generator_capacity'])
+        self.assertEqual(state.frame.plant_bounds[lid][1], 0)
+        # Repair the line from 0 to 1.
+        self.until_decision(game)
+        orders = [{'id': 1, 'kind': 'industry', 'op': 'repair_asset', 'asset_id': lid,
+                   'target_health_mU': 1000, 'work_hub_id': 'n0-h0'}]
+        for other, line in state.initial.lines.items():   # free the labour and power for the work
+            if line.owner == 'n0' and other not in state.initial.plants:
+                orders.append({'id': len(orders) + 1, 'kind': 'industry', 'op': 'set_line',
+                               'line_id': other, 'recipe': None, 'mode': 'general'})
+        game.step({'n0': tuple(orders)})
+        job = next(j for j in state.work.jobs.values() if j.kind == 'repair_asset')
+        self.assertEqual(job.duration_ticks, exp['repair_duration_full_cycles'] * 10)
+        while state.work.jobs and game.tick < 255:
+            game.step()
+        self.assertFalse(state.work.jobs)
+        self.assertEqual(capacity(), exp['after_repair_generator_capacity'])
+        # A grid line at health .25 carries a quarter of its 60-unit rating; at 0 nothing.
+        from organizer.rift_era.engine.utility_network import UtilityLink
+        carrier = 'n0/P001/0'                                    # fixture: an existing asset carries the line
+        state.utilities.links['grid:test'] = UtilityLink('grid:test', 'n0', 'n0-h0', 'n0-h1', 'power', 1,
+                                                         (0, 1), carrier)
+        rating, _ = state.utilities.power_rating(state.utilities.links['grid:test'])
+        self.assertEqual(rating, setup['line_nameplate'] * 1000)
+        state.asset_lifecycle.damage(carrier, 750, event_id='scenario_grid_hit')
+        edge = next(e for e in state.utilities.dispatch_edges() if e.id == 'grid:test')
+        self.assertEqual(Q(edge.capacity_mU * 10, 1000), exp['corridor_capacity_at_quarter'])
+        state.asset_lifecycle.damage(carrier, 250, event_id='scenario_grid_cut')
+        self.assertNotIn('grid:test', {e.id for e in state.utilities.dispatch_edges()})
+        self.assertEqual(exp['corridor_capacity_at_zero'], 0)
+        del state.utilities.links['grid:test']
+
 if __name__ == '__main__':
     unittest.main()
