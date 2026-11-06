@@ -192,6 +192,15 @@ class CouplingTests(unittest.TestCase):
         self.assertEqual(line.recipe.inputs, {g: round(q * Q(7, 10)) for g, q in base.items()})
         plain = Recipe.from_catalog(self.catalog, 'P013').outputs
         self.assertEqual(line.recipe.outputs, dict(plain))              # no 6% defect loss
+        calls = []
+        production = NS(discard_and_switch=lambda l, r: calls.append((l.id, r.id)))
+        self.assertFalse(industry_effects.scrap_molecular_on_outage(state, production, line))  # nothing in progress
+        line.credit_nmU['iron_ore' if 'iron_ore' in line.recipe.inputs else next(iter(line.recipe.inputs))] = 500
+        self.assertTrue(industry_effects.scrap_molecular_on_outage(state, production, line))
+        self.assertEqual(calls, [(line.id, 'P013')])
+        state.initial.facilities[fid] = replace(facility, profile='S4')
+        self.assertFalse(industry_effects.scrap_molecular_on_outage(state, production, line))  # not S5
+        line.credit_nmU.clear()
         state.initial.facilities[fid] = facility
 
 

@@ -1008,6 +1008,8 @@ class Economy:
             demand = f.power_demands.get(lid, 0)
             power_ratio = min(Q(1), Q(f.power_received.get(lid, 0), demand)) if demand else Q(1)
             maximum = floor(maximum * power_ratio)
+            if power_ratio < 1:
+                industry_effects.scrap_molecular_on_outage(state, self.production, line)
             cash = initial.cash.balance(f.input_locks[lid]).native_mU
             caps[lid] = max_feasible(maximum, lambda x, line=line, cash=cash:
                 sum(self._input_quote(line.id,g,Q(a*x,1000),f.input_locks[line.id]) for g,a in line.recipe.inputs.items()) <= cash)

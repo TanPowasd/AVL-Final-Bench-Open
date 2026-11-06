@@ -82,6 +82,17 @@ def molecular_line(state, line):
     return facility is not None and facility.profile == 'S5'
 
 
+def scrap_molecular_on_outage(state, production, line):
+    """04 I12: a molecular line short of its power this tick scraps its whole
+    work in progress (input credit and unreleased output), as a recorded loss."""
+    if not (line.credit_nmU or line.output_nmU) or line.recipe.id not in ('P013', 'P016', 'P087'):
+        return False
+    if not molecular_line(state, line):
+        return False
+    production.discard_and_switch(line, line.recipe)
+    return True
+
+
 def precision_farm(state, line):
     """04 A07 condition: A07 known, the line carries a sensor addon, and the owner
     has C08 telemetry (an online fusion_sensor system of its own; implementation reading)."""
