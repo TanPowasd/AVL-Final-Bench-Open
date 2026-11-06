@@ -332,6 +332,11 @@ class OperatingWorld:
         for hub,quantity in self.refits.capacity_reserved().items():occupied[hub]+=quantity
         return occupied
 
+    def warehouse_load_at(self,hub):
+        """warehouse_load()[hub], without summing every other hub."""
+        occupied=warehouse_load(self.initial.inventory,self.cargo_weights,{hub:None})[hub]
+        return occupied+self.refits.capacity_reserved().get(hub,Q(0))
+
     def native(self, owner: str, name: str) -> CashAccount:
         return CashAccount(owner, name, owner if owner in self.rates else 'RU')
 
