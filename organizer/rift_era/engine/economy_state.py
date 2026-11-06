@@ -296,6 +296,8 @@ class OperatingWorld:
         self.fx_shorts = FXShorts(self)
         from .forwards import Forwards
         self.forwards = Forwards(self)
+        from .hypersonic import Hypersonics
+        self.hypersonics = Hypersonics(self)
         self.storage = EnergyStorage(self)
         self.macro = Macroeconomy(self)
         self.cargo = CargoOperations(self)
@@ -562,13 +564,15 @@ class OperatingWorld:
                 **({'climate': self.climate.snapshot()} if not self.climate.empty() else {}),
                 **({'blockades': self.blockades.snapshot()} if not self.blockades.empty() else {}),
                 **({'fx_shorts': self.fx_shorts.snapshot()} if not self.fx_shorts.empty() else {}),
-                **({'forwards': self.forwards.snapshot()} if not self.forwards.empty() else {})}
+                **({'forwards': self.forwards.snapshot()} if not self.forwards.empty() else {}),
+                **({'hypersonics': self.hypersonics.snapshot()} if not self.hypersonics.empty() else {})}
 
     def audit(self) -> None:
         self.initial.audit()
         if self.national_power is not None:
             self.national_power.audit()
         self.fx_shorts.audit()
+        self.hypersonics.audit()
         self.spot.audit()
         self.consumption.audit()
         self.maintenance.audit()

@@ -96,7 +96,7 @@
 | ~~`finance/secondary_offering`~~ | 已做（2026-11-05），见 `secondary_offering_v1`、`tests/test_secondary_offering.py` | 是 |
 | ~~`finance/fx_short`、`finance/fx_cover`~~ | 已做（2026-11-05），见 `fx_short_v1`、`tests/test_fx_short.py` | 是 |
 | ~~`diplomacy/terminate_contract`~~ | 已做（2026-11-05）：类型 1/3/5/7/8/9 可终止，防务 −.25、其余 −.15，免责见 `contract_termination_v1`；类型 2/4/6 按各自规则结束，返回 `ERR_NO_PERMISSION` | 是 |
-| `military/hypersonic_strike` | N10，仅 G11 可拦截 | 是 |
+| ~~`military/hypersonic_strike`~~ | 已做（2026-11-06），见 `hypersonic_v1`、`tests/test_hypersonic.py` | 是 |
 | ~~`military/blockade`~~（已做 2026-11-05，见 `blockade_v1`）、~~`military/interdict`~~（已做 2026-11-05） | `blockade_fraction` 已接入走廊 `blocked`，并进入 07 的 Blockade_r 与行动损耗 | 是 |
 | `intelligence/steal_model` | E84 | 是 |
 | ~~`governance/climate_intervention`~~ | 已做（2026-11-05），见 `climate_v1`、`tests/test_climate.py` | 是 |

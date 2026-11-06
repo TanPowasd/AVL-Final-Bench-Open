@@ -137,7 +137,8 @@ class NationalPower:
         destroyed = metric.destroyed_value if metric else Q(0)
         actions = (self._cycle_table(s.battles.loss_cycles, cycle, p) + self._cycle_table(s.asat.action_cycles, cycle, p)
                    + self._cycle_table(s.deception.action_cycles, cycle, p) + self._cycle_table(s.climate.action_cycles, cycle, p)
-                   + self._cycle_table(s.blockades.action_cycles, cycle, p))
+                   + self._cycle_table(s.blockades.action_cycles, cycle, p)
+                   + self._cycle_table(s.hypersonics.action_cycles, cycle, p))
         transit = s.consumption.receipt_mean20(p, 'transit')
         return industrial_pillar(va, destroyed, actions, transit, self.nfa_mU(p, cycle) / 1000)
 
