@@ -40,7 +40,7 @@ def load_any(path):
     p = os.path.abspath(path)
     if not os.path.isfile(p):
         raise SystemExit("找不到文件：%s" % path)
-    if policy.is_public_champion(p):
+    if policy.is_trusted_agent(p):
         return load_trusted(p)
     return load_agent(p)
 
@@ -109,11 +109,11 @@ def main():
     ap.add_argument("--list", action="store_true", help="列出公开基线")
     ap.add_argument("--seeds", type=int, nargs="+", help="指定种子重放；默认每次随机抽样")
     ap.add_argument("--seed-count", type=int, default=None, help="随机种子数，默认 64")
-    ap.add_argument("--organizer", action="store_true", help=argparse.SUPPRESS)
+    ap.add_argument("--unrestricted", action="store_true", help=argparse.SUPPRESS)
     args = ap.parse_args()
 
-    if args.organizer and policy.is_contestant_workspace():
-        print("独立选手工作区禁止 --organizer。", file=sys.stderr)
+    if args.unrestricted and policy.is_contestant_workspace():
+        print("选手工作区不支持 --unrestricted。", file=sys.stderr)
         sys.exit(2)
 
     if args.list:

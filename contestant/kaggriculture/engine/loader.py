@@ -72,7 +72,7 @@ def _make_builtins():
 
 
 def load_trusted(path: str):
-    """对照组/参考 agent：不受沙箱与静态扫描约束（只允许加载组委会自备文件）。"""
+    """可信 agent：不受沙箱与静态扫描约束。"""
     import types as _t
     with open(path, "r", encoding="utf-8") as f:
         src = f.read()

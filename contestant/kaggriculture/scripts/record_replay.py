@@ -48,7 +48,7 @@ def main():
     ap.add_argument("--timeout", type=float, default=0.0, help="覆盖单步时限；0=官方 1s")
     ap.add_argument("--overage", type=float, default=0.0, help="覆盖超时池；0=官方 60s")
     ap.add_argument("--no-verify", action="store_true", help="跳过复算校验（更快）")
-    ap.add_argument("--organizer", action="store_true", help="组委会模式：放行 选手vs选手")
+    ap.add_argument("--unrestricted", action="store_true", help=argparse.SUPPRESS)
     ap.add_argument("--serve", action="store_true", help="录完后起本地 http 服务并打印播放地址")
     ap.add_argument("--port", type=int, default=8777)
     args = ap.parse_args()
@@ -72,7 +72,7 @@ def main():
             raise policy.PolicyError("选手工作区不提供 HTTP 共享服务；用离线播放器读取自己的回放。")
         a_path = spar.resolve(args.a)
         b_path = spar.resolve(args.b)
-        policy.check_pair(a_path, b_path, organizer=args.organizer)
+        policy.check_pair(a_path, b_path, unrestricted=args.unrestricted)
     except policy.PolicyError as e:
         print(str(e))
         sys.exit(2)

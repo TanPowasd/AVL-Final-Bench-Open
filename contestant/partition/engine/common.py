@@ -84,6 +84,9 @@ def compile_cpp(
         cmd.extend(extra_flags)
     cmd.extend(os.path.abspath(s) for s in sources)
     cmd.extend(["-o", os.path.abspath(out_exe)])
+    wrap = os.environ.get("AVL_SANDBOX_WRAP")
+    if wrap:
+        cmd = [wrap, "--compile", *cmd]
 
     t0 = time.perf_counter()
     try:
@@ -321,6 +324,9 @@ def run_sandboxed(
         if launcher:
             meter_r, meter_w = os.pipe()
             argv = [launcher, str(meter_w), exe_abs]
+        wrap = os.environ.get("AVL_SANDBOX_WRAP")
+        if wrap:
+            argv = [wrap, "--run", sandbox_dir, launcher or "", str(meter_w), exe_abs]
 
         proc = subprocess.Popen(
             argv,

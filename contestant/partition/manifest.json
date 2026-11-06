@@ -12,13 +12,13 @@
     "data/include/stub.cpp": "8754f6cee76e666ec28670d59f91e561c632e28d778e0a8b00a171d55076458f",
     "data/samples/01.in": "85dc74557c51d64cc14c7b077bc4b3265548949a3a46220f290404c8ba70a14e",
     "data/samples/01.out": "292a9761797ffce76b85fe484903f06069506ce686456f3fd55d3b68ac978237",
-    "engine/calib.py": "4b706bf45425ef591ae4f0cc2125d02786ca8ae5ac1555b0eb83559faee1c487",
-    "engine/common.py": "6ec53f5c5453eb59093baa39900a8f00462200e3b56f79c8751d859dea34de3b",
+    "engine/calib.py": "4c28e0ef4fc7e2a4cbe79f133f38e9ced9195b086ee46413147486719b374a17",
+    "engine/common.py": "c905a157a0fb108c7b857233c34b0517b43bf83761a79dd920d4b3ade698cefa",
     "engine/graders/partition_grader.cpp": "229b9aa10d48f678a665cde7daeed3ab2be5a301a476dd7963dbf4cf2c0c1f3a",
     "engine/policy.py": "106fc452c380918c109995e46fcfe6b1a9c0fd50bcc6c20d2d50e4ad92431012",
     "engine/runner.py": "1c088143b20c752e3b3bd56e88084bd04113c8a1b775c6cf22f5130e9a43a482",
     "logs/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "results/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "scripts/spar.py": "1bdfcf1ba4896d42e2acbd4e90d25c837deaeb357dc686b94d7f327b31dc4271"
+    "scripts/spar.py": "7a98c417fd22eab40de4f37742531c3c7e95c3fee5621f78706b7a7fb39c06e5"
   }
 }

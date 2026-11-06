@@ -26,15 +26,15 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=random.SystemRandom().randrange(1, 2**31), help="默认随机；指定整数可重放")
     ap.add_argument("--ticks", type=int, default=engine.TICKS)
     ap.add_argument("--out", default="", help="可选：保存回放 JSON（选手工作区限 replays/ 下）")
-    ap.add_argument("--organizer", action="store_true", help=argparse.SUPPRESS)
+    ap.add_argument("--unrestricted", action="store_true", help=argparse.SUPPRESS)
     ns = ap.parse_args()
 
-    if ns.organizer and policy.is_contestant_workspace():
-        print("独立选手工作区禁止 --organizer。", file=sys.stderr)
+    if ns.unrestricted and policy.is_contestant_workspace():
+        print("选手工作区不支持 --unrestricted。", file=sys.stderr)
         sys.exit(2)
 
     try:
-        if not ns.organizer:
+        if not ns.unrestricted:
             policy.check_pair(ns.a, ns.b)
         if ns.out and policy.is_contestant_workspace():
             policy.check_output_dir(os.path.dirname(os.path.abspath(ns.out)), "replays")

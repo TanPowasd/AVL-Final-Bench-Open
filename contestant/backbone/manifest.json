@@ -13,11 +13,11 @@
     "config/workspace.json": "9cf4ab89de1894470affdf88a76c64adc0bb0f95a07d131fe986f271c8b47963",
     "engine/engine.py": "9c76b219ab81ab02d08ad694aec829e5da798e7330d8ee1d820edc8f98815b46",
     "engine/mapgen.py": "3679a65ab0ff94c4891d18559a2fbf4f6ff0005d98efcedb467f3337ddaa6c07",
-    "engine/policy.py": "cacb4bc392c90802255f348faba5ee4186099ff82f85c0b4ee5eb0197e56ab71",
+    "engine/policy.py": "55c6a08fe1955907d474201dd70290e273384040e0e388e29190c1a852ca9017",
     "logs/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "replays/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "results/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "scripts/run_match.py": "73352a5696e7f78745ec2e9c5050a726ad68f74656ee5c79302ab46d90136719",
-    "scripts/spar.py": "153cb15deb976d8b55ddb684bf1d8efc45d946404990dd022bb06f7bca069433"
+    "scripts/run_match.py": "475e967169b15f7d3442ebece9e148dda52a47699559d60dccce86cf36a74f0f",
+    "scripts/spar.py": "b0ab339ba310a38b41689c36a25b04af5dea0810673e504ebd100d032ec8b744"
   }
 }

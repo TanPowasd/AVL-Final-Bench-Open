@@ -17,7 +17,6 @@ CONTESTANT_PUBLIC_AGENTS = (
     os.path.join(BASELINE_DIR, "random_legal.py"),
     os.path.join(BASELINE_DIR, "greedy_farm.py"),
 )
-CHAMPION_FILE = os.path.join(REFERENCE_DIR, "champion.py")
 
 
 class PolicyError(Exception):
@@ -57,8 +56,9 @@ def default_submission_path():
 def public_agents():
     if is_contestant_workspace():
         return CONTESTANT_PUBLIC_AGENTS
-    if os.path.isfile(CHAMPION_FILE):
-        return CONTESTANT_PUBLIC_AGENTS + (CHAMPION_FILE,)
+    if os.path.isdir(REFERENCE_DIR):
+        return CONTESTANT_PUBLIC_AGENTS + tuple(
+            os.path.join(REFERENCE_DIR, name) for name in sorted(os.listdir(REFERENCE_DIR)) if name.endswith(".py"))
     return CONTESTANT_PUBLIC_AGENTS
 
 
@@ -86,8 +86,8 @@ def check_output_dir(path, category):
         raise PolicyError("%s 只能写入当前选手工作区的 %s/。" % (category, category))
 
 
-def is_public_champion(path):
-    return (not is_contestant_workspace()) and os.path.isfile(CHAMPION_FILE) and _norm(path) == _norm(CHAMPION_FILE)
+def is_trusted_agent(path):
+    return (not is_contestant_workspace()) and _within(path, REFERENCE_DIR)
 
 
 def is_submission(path):
@@ -114,13 +114,13 @@ def check_opponent(mine, opponent):
         )
 
 
-def check_pair(path_a, path_b, organizer=False):
+def check_pair(path_a, path_b, unrestricted=False):
     if is_contestant_workspace():
-        if organizer:
-            raise PolicyError("独立选手工作区禁止 --organizer；正式比赛只能在组委会工作区运行。")
+        if unrestricted:
+            raise PolicyError("选手工作区不支持 --unrestricted。")
         check_agent_path(path_a)
         check_agent_path(path_b)
-    if organizer:
+    if unrestricted:
         return
     if _norm(path_a) == _norm(path_b):
         return

@@ -42,11 +42,11 @@ def main() -> None:
     ap.add_argument("src", nargs="?", default="", help="C++20 源文件路径（如 agents/submissions/my_solution.cpp）")
     ap.add_argument("--list", action="store_true", help="列出公开样例")
     ap.add_argument("--input", default="", help="可选：测试单个自定义输入文件（需放在 data/samples/ 或 logs/ 下）")
-    ap.add_argument("--organizer", action="store_true", help=argparse.SUPPRESS)
+    ap.add_argument("--unrestricted", action="store_true", help=argparse.SUPPRESS)
     ns = ap.parse_args()
 
-    if ns.organizer and policy.is_contestant_workspace():
-        print("独立选手工作区禁止 --organizer；正式评测只能在组委会目录运行。", file=sys.stderr)
+    if ns.unrestricted and policy.is_contestant_workspace():
+        print("选手工作区不支持 --unrestricted。", file=sys.stderr)
         sys.exit(2)
 
     samples = list_samples()

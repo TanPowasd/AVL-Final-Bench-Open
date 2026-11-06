@@ -55,11 +55,11 @@ def main() -> None:
     ap.add_argument("--list", action="store_true")
     ap.add_argument("--seeds", type=int, nargs="+", help="指定种子重放；默认每次随机抽样")
     ap.add_argument("--seed-count", type=int, default=None, help="随机种子数，默认 64")
-    ap.add_argument("--organizer", action="store_true", help=argparse.SUPPRESS)
+    ap.add_argument("--unrestricted", action="store_true", help=argparse.SUPPRESS)
     ns = ap.parse_args()
 
-    if ns.organizer and policy.is_contestant_workspace():
-        print("独立选手工作区禁止 --organizer。", file=sys.stderr)
+    if ns.unrestricted and policy.is_contestant_workspace():
+        print("选手工作区不支持 --unrestricted。", file=sys.stderr)
         sys.exit(2)
 
     if ns.list:

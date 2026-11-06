@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""选手工作区边界守卫：禁止跨目录访问、禁止选手互测、禁止 --organizer，兼容顶层 ../submissions/mem_recall.py。"""
+"""选手工作区边界守卫：禁止跨目录访问、禁止选手互测、禁止 --unrestricted，兼容顶层 ../submissions/mem_recall.py。"""
 from __future__ import annotations
 
 import os
@@ -80,13 +80,13 @@ def check_opponent(mine: str, opponent: str) -> None:
         raise PolicyError("赛制红线：自测对手必须是公开基线（或自身镜像），禁止与其他选手提交互测。")
 
 
-def check_pair(path_a: str, path_b: str, organizer: bool = False) -> None:
+def check_pair(path_a: str, path_b: str, unrestricted: bool = False) -> None:
     if is_contestant_workspace():
-        if organizer:
-            raise PolicyError("独立选手工作区禁止 --organizer。")
+        if unrestricted:
+            raise PolicyError("选手工作区不支持 --unrestricted。")
         check_agent_path(path_a)
         check_agent_path(path_b)
-    if organizer or _norm(path_a) == _norm(path_b):
+    if unrestricted or _norm(path_a) == _norm(path_b):
         return
     if is_submission(path_a) and is_submission(path_b):
         raise PolicyError("赛制红线：禁止两个不同提交文件互测，请以公开基线作为对手（或自身镜像）。")

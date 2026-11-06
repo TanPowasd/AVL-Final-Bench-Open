@@ -10,11 +10,11 @@
     "agents/submissions/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "config/format.json": "8dbe0cdd675492ccec6d2300105bd863213fd1d11cc1d11e39d6ee6b24b30de0",
     "config/workspace.json": "9cf4ab89de1894470affdf88a76c64adc0bb0f95a07d131fe986f271c8b47963",
-    "data/SHA256SUMS.json": "ea30dccb7e81742b5a30903bf6fffd3abb46660e672539d841ea252a619b257f",
-    "engine/policy.py": "cfae5e04cf6d4c4df6bb547fe30391edc01c254728a245e61da3373778ab819c",
+    "data/SHA256SUMS.json": "aa801a6a554fe2cee988e0e2ea07cb6d38703ae06f4f56f90d92f885e61d7fb2",
+    "engine/policy.py": "318af2d54812d7965a1bd835128c02670a793f81e3fcc66a4ee9dc7f4bf4613b",
     "engine/runner.py": "3e0d2e2f7325ca4ab9576ce2148e5a2a359f5681ca085d7850d99606b78c8e3c",
     "logs/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "results/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "scripts/spar.py": "9022dd25ddcf5c300ae125f285758dfeb83ecb4bb635c7a136eeba4cdf494997"
+    "scripts/spar.py": "e8895d0eecc50d6c68070c6b5e93695529cbd20f04a3e2c6a1319f7828565d95"
   }
 }

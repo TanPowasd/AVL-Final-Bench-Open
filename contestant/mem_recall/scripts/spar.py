@@ -32,11 +32,11 @@ def main() -> None:
     ap.add_argument("--all", action="store_true", help="评测 data/dev 下全部 23 个开发集")
     ap.add_argument("--jobs", type=int, default=2)
     ap.add_argument("--per-q", action="store_true")
-    ap.add_argument("--organizer", action="store_true", help=argparse.SUPPRESS)
+    ap.add_argument("--unrestricted", action="store_true", help=argparse.SUPPRESS)
     ns = ap.parse_args()
 
-    if ns.organizer and policy.is_contestant_workspace():
-        print("独立选手工作区禁止 --organizer。", file=sys.stderr)
+    if ns.unrestricted and policy.is_contestant_workspace():
+        print("选手工作区不支持 --unrestricted。", file=sys.stderr)
         sys.exit(2)
 
     if not ns.list and not ns.mine:

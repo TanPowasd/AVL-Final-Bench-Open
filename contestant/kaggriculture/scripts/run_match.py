@@ -14,7 +14,7 @@ import policy  # noqa: E402
 
 def pick(path):
     policy.check_agent_path(path)
-    if policy.is_public_champion(path):
+    if policy.is_trusted_agent(path):
         return load_trusted(path)
     return load_agent(path)
 
@@ -32,8 +32,8 @@ def main():
     ap.add_argument("--seeds", default="", help="逗号分隔；默认随机抽样")
     ap.add_argument("--seed-count", type=int, default=None, help="默认 64 个随机种子")
     ap.add_argument("--trace", action="store_true")
-    ap.add_argument("--organizer", action="store_true",
-                    help="组委会模式：放行 选手vs选手（参赛自测请勿使用）")
+    ap.add_argument("--unrestricted", action="store_true",
+                    help=argparse.SUPPRESS)
     ap.add_argument("--timeout", type=float, default=0.0,
                     help="覆盖单步基础时限秒数；0=官方口径（1s/步 + 60s 超时池）")
     ap.add_argument("--overage", type=float, default=0.0,
@@ -53,7 +53,7 @@ def main():
     try:
         pa = expand(args.a)
         pb = pa if args.b == "--self" else expand(args.b)
-        policy.check_pair(pa, pb, organizer=args.organizer)
+        policy.check_pair(pa, pb, unrestricted=args.unrestricted)
     except policy.PolicyError as e:
         print(str(e))
         sys.exit(2)

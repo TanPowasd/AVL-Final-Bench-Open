@@ -12,13 +12,13 @@
     "config/format.json": "5694fbcac463e81d6807f78253ca8f1f393a83291507ff71300e532a7fffa2a7",
     "config/workspace.json": "9cf4ab89de1894470affdf88a76c64adc0bb0f95a07d131fe986f271c8b47963",
     "engine/engine.py": "cba060bf1bd1a5a2b94fdaeab14a5f579d6d02aedfb0d3802781bf869743a7ae",
-    "engine/policy.py": "d17f81718492412be662b8ac8da1ddb9fa74e362d27a96117a88b3ce3329d7b8",
+    "engine/policy.py": "a23b370d96ac912482d6a6c77f237fadfd3bc09708db93233614132a1efa1e8a",
     "engine/solo_npc.py": "8c151af24754910712fc0456a45406c750249a7a196e211bfcd98a7859cda3c5",
     "engine/world.py": "41914a1cadacf11b0143b9155f4963f5c9944a1bdbdca694f9493dcfb73403e6",
     "logs/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "replays/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "results/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "scripts/run_match.py": "fc43e43c84797db0d523da01558354ff96a173d6aba0cf13b353ef02f3880c57",
-    "scripts/spar.py": "28cfa92f7c32cb852a655555cbdb52c80d416efcc7ca38c8c32753f5e7191872"
+    "scripts/run_match.py": "3174a2a61023969f810c95651f65875c6f3a6dade297c678b67faa2e8d797c4a",
+    "scripts/spar.py": "53b5589bd313f29ea26df887518a751bc072a6563cb8dc50dc545c24d2c3ea36"
   }
 }

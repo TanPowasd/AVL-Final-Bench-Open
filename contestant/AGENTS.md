@@ -11,7 +11,7 @@
 
 ## 硬性边界
 
-- 只访问本工作区内的文件。如果能看到本工作区之外的 `organizer/` 或其他选手目录，不要打开。
+- 只访问本工作区内的文件。不要打开工作区之外的任何文件和目录。
 - 不联网，不调用任何外部模型服务。
 - 不修改 `engine/`、`scripts/`、`config/`、`data/`、`agents/baselines/`、`README.md` 和 `manifest.json`。
 - 只写入顶层 `submissions/`，以及各题的 `agents/submissions/`、`results/`、`replays/`、`logs/`。

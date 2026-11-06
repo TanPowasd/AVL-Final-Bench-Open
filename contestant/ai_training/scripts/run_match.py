@@ -29,11 +29,11 @@ def main() -> None:
     ap.add_argument("--ticks", type=int, default=engine.TICKS)
     ap.add_argument("--quiet", action="store_true")
     ap.add_argument("--out", default="", help="可选：保存回放 JSON（选手工作区限 replays/ 下）")
-    ap.add_argument("--organizer", action="store_true", help=argparse.SUPPRESS)
+    ap.add_argument("--unrestricted", action="store_true", help=argparse.SUPPRESS)
     ns = ap.parse_args()
 
-    if ns.organizer and policy.is_contestant_workspace():
-        print("独立选手工作区禁止 --organizer。", file=sys.stderr)
+    if ns.unrestricted and policy.is_contestant_workspace():
+        print("选手工作区不支持 --unrestricted。", file=sys.stderr)
         sys.exit(2)
     if not ns.solo and not ns.b:
         ap.error("对抗赛需指定第二个对手文件；单人赛请加 --solo")
@@ -41,7 +41,7 @@ def main() -> None:
     try:
         if ns.solo:
             policy.check_agent_path(ns.a)
-        elif not ns.organizer:
+        elif not ns.unrestricted:
             policy.check_pair(ns.a, ns.b)
         if ns.out and policy.is_contestant_workspace():
             policy.check_output_dir(os.path.dirname(os.path.abspath(ns.out)), "replays")

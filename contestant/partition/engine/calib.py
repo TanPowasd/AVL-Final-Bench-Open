@@ -11,7 +11,7 @@
    于是题面上的 1000 ms 在任何电脑上都表示"标准机上的 1000 ms"。
 
 所有算法题 engine/ 下的 calib.py 内容完全相同；改 BASELINE_MS 请用
-`python organizer/calibrate.py --set-baseline`，它会同步改所有副本。
+标定工具，它会同步改所有副本。
 
 环境变量
 --------
@@ -32,7 +32,7 @@ import sys
 import tempfile
 import time
 
-# 标准机跑基准程序的 CPU 时间（毫秒）。由 organizer/calibrate.py --set-baseline 写入。
+# 标准机跑基准程序的 CPU 时间（毫秒）。由标定工具写入。
 BASELINE_MS = 882.8
 BASELINE_NOTE = "AMD Ryzen 9 9950X3D / g++ 15.2.0"
 
