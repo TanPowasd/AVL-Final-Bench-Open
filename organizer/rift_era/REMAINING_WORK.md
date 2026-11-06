@@ -37,7 +37,7 @@
 
 - 每周期统一采集国力，保留 2,880 周期轨迹。
 - 接入已有的只读接口：`asset_book`、`debt_book`、`long_book`、`external_equity_book`、`short_liability_book`、`creditor_book`、`scoring_inputs`、`population_scoring_rows`。保证金已在现金账内，不要重复计入。
-- 完成 `active_scale.py` 的待定指标后再接入主线。它目前未被任何模块导入。
+- ~~完成 `active_scale.py` 的待定指标后再接入主线。~~ 已接入（2026-11-06）：仅 full_match 装配，周期末取值，`national_power.technology` 读取 ActiveScale/LicensedScale。`online_offshore_mines`、`active_automated_routes`、`supplied_field_depots` 三个计量仍为 0（没有业务回执），只会让对应节点停在 .15 底分。
 - 实现 NFA、可持续性、Loss_action 的唯一归属，以及 `fx_revaluation_invariance` 要求的汇率变化不重估。
 
 ### ~~P0-3 正式地图接线~~（已做，2026-11-05）

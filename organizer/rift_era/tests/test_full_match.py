@@ -89,3 +89,39 @@ class FullMatchTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class ActiveScaleWiringTests(unittest.TestCase):
+    """P7 technology pillar reads active_scale.py values in the full match."""
+
+    def test_technology_pillar_uses_metered_active_scale(self):
+        from organizer.rift_era.engine.scoring import technology_pillar
+        catalog = Catalog()
+        game = full_match(catalog, initialize(catalog, generate_candidate(1000)), total_ticks=10)
+        state = game.state
+        self.assertIsNotNone(state.active_scale)
+        for _ in range(9):
+            game.step()
+        # n0 learns I02 and has two P008 batches metered this cycle.
+        state.research['n0'].known.add('I02')
+        state.active_scale.recipes['n0', 'P008'] += 2
+        game.step()
+        self.assertEqual(state.active_scale.cycle, 0)
+        self.assertEqual(state.active_scale.values['n0']['I02'], 2)
+        power = state.national_power
+        for p in power.nations:
+            known = frozenset(t for t in state.research[p].known
+                              if t in catalog.technologies or t in catalog.milestones)
+            values = state.active_scale.values[p]
+            self.assertEqual(set(values), set(state.research[p].known))
+            self.assertTrue(all(v >= 0 for v in values.values()))
+            self.assertEqual(power.pillars[p][-1].technology,
+                             technology_pillar(catalog, known, values, state.active_scale.licensed[p]))
+            floor = technology_pillar(catalog, known, {}, {})
+            self.assertGreaterEqual(power.pillars[p][-1].technology, floor)
+        spec = catalog.tables['scoring']['pillars']['tech']
+        weight = spec['tier_weights'][str(catalog.technologies['I02']['tier'])]
+        half = Q(2) / spec['active_scale_rules']['I02']['theta']
+        self.assertEqual(power.pillars['n0'][-1].technology,
+                         Q(3, 5) * weight * (Q(15, 100) + Q(85, 100) * min(Q(1), half)))
+        self.assertIn('active_scale', state.snapshot())

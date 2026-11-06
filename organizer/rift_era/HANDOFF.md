@@ -32,7 +32,7 @@
 
 下面按重要性排列，**不是已完成能力清单**：
 
-1. **完整五支柱采集和正式比赛装配**：`scoring.py` 有纯公式，但尚无统一实际 P7 国力采集器/完整 2,880 周期轨迹/正式 finalizer。`active_scale.py` 是未接入的开发草稿，部分 meter 明确为 0，不能直接用于正式成绩。还需处理全部 tech ActiveScale/LicensedScale、控制连通与穿透份额、损毁/敌对扣项唯一归属、真实 NFA、城邦人口/援助/伙伴、可持续性。金融可用接口包括 `stock_market.long_book/external_equity_book`、`stock_market.finance.debt_book/short_liability_book`、`sovereign_finance.debt_book`、`bond_market.asset_book`、`contracts.loans.debt_book/creditor_book`、`payables.debt_book`；保证金已经在现金 book，不可再列第二份资产。
+1. **完整五支柱采集和正式比赛装配**：`scoring.py` 有纯公式，但尚无统一实际 P7 国力采集器/完整 2,880 周期轨迹/正式 finalizer。`active_scale.py` 已在 full_match 接入（2026-11-06），三个无回执的 meter 仍为 0。还需处理全部 tech ActiveScale/LicensedScale、控制连通与穿透份额、损毁/敌对扣项唯一归属、真实 NFA、城邦人口/援助/伙伴、可持续性。金融可用接口包括 `stock_market.long_book/external_equity_book`、`stock_market.finance.debt_book/short_liability_book`、`sovereign_finance.debt_book`、`bond_market.asset_book`、`contracts.loans.debt_book/creditor_book`、`payables.debt_book`；保证金已经在现金 book，不可再列第二份资产。
 2. **正式地图真正接线**：新 `world_atlas` 候选及性质检查已实现，正式入口仍用旧候选；`InitialState.resource_atlas` 中远端矿点尚未全部注册为 `OperatingWorld.resource_sites/resource_sources/deposits`。动态 Hydrology 仍需读取新河 DAG；起始 reserve 与新候选 atlas 需统一。只能通过实际 150 Tick 自举拒绝采样，不能拿模拟的 BootstrapResult 代替运行。
 3. **完整命令与耦合**：远期合约、secondary_offering/受限 Capex 支付与原路退款、FX 做空/平仓、破产重整/强制拍卖、其余复杂合同归责、通用合同终止仍需核对和完成。九类合同已有部分业务不等于全部字段/违约语义已完成。
 4. **剩余军政/情报/环境**：高超声速打击、封锁破交、投降/俘虏、完整野战补给、航空航程、S03/S08/C12/模型窃取、气候干预等仍有缺失或未完整集成。停止时没有开始新的 strike/blockade/prisoners 分支；不要假定存在相应模块。

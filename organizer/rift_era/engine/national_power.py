@@ -31,7 +31,7 @@ COVERAGE = {
     'control.chokepoint_phi': 'zero: per-region receipt path flow not retained',
     'control.kinfra_alpha_maint': '1 for assets that are not maintenance_offline, else 0',
     'control.readiness': 'sum over own units of hp_ratio*crew_ratio*installed catalog value*(.5+.5*morale)*(1-.4*fatigue); supply ratio 1',
-    'technology.active_scale': 'zero: active_scale.py meters are not yet wired, every known node scores its .15 floor',
+    'technology.active_scale': 'active_scale.py meters, cycle-end values; online_offshore_mines, active_automated_routes, supplied_field_depots meter zero (no receipt yet)',
     'sustainability.unrest': 'population of controlled national hubs with support_mU < 300',
     'sustainability.shortage': '1 - min(food, electricity) satisfaction, population weighted, per cycle',
 }
@@ -201,7 +201,10 @@ class NationalPower:
         s = self.s
         catalog = s.catalog
         known = frozenset(t for t in s.research[p].known if t in catalog.technologies or t in catalog.milestones)
-        return technology_pillar(catalog, known, {}, {})
+        scale = s.active_scale
+        if scale is None:
+            return technology_pillar(catalog, known, {}, {})
+        return technology_pillar(catalog, known, scale.values.get(p, {}), scale.licensed.get(p, {}))
 
     def international(self, p):
         s = self.s

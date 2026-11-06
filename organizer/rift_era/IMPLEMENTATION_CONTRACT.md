@@ -431,3 +431,12 @@ P8 发布缓存后读取不重新探测；测控失联时只报告失联，不�
 - `M_eff = min(1, M) · (1 − 0.5 · δ_B1)`。`δ_B1 = 1 − b1_received / b1_needed`，按本枢纽本周期的 B1 电力服务计算，与 E26 的支持度扣分同口径；本周期没有 B1 需求时 δ_B1 = 0。
 - 此前按家庭用电满足率修正，现改为规则原文的 B1 欠供份额。
 - 测试：`tests/test_support_events.py::MedicalB1CouplingTests`。
+
+## active_scale 接入评分（2026-11-06）
+
+- 只在 `full_match`（scoring=True）装配：`active_scale_clock`（COMMANDS 阶段）重置周期计数，`active_scale`（SETTLEMENT，排在其余结算之后、`national_power` 之前）逐 Tick 计量，周期末写出 values/licensed。
+- 生产计量挂在 `economy.py` 的产线结算处，与 `industry_activity.production` 同一位置。
+- `national_power.technology(p)` 用当周期末的 ActiveScale 与 LicensedScale 调用 `scoring.technology_pillar`。COVERAGE 的 `technology.active_scale` 已改写。
+- 三个计量（`online_offshore_mines`、`active_automated_routes`、`supplied_field_depots`）没有业务回执，仍为 0；对应节点只拿 .15 底分。
+- `opening_economy` 不装配，空局哈希不变。快照在 full_match 中新增 `active_scale` 键。
+- 测试：`tests/test_full_match.py::ActiveScaleWiringTests`。

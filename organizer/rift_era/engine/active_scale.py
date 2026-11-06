@@ -1,11 +1,9 @@
-"""Development scaffold for P7 technology meters; NOT in the game assembly.
+"""P7 technology active scale meters (full_match assembly only).
 
-The registry distinguishes implemented and pending r6 meters. Unbuilt
-infrastructure has zero scale; a technology ID or a hostile action is never
-proof of use.
-The pending meter set below is deliberately incomplete. No formal score may
-use this module until all required consumers and licensed-scale rules are
-integrated and validated. See HANDOFF.md.
+Unbuilt infrastructure has zero scale; a technology ID or a hostile action is
+never proof of use. Three meters (online_offshore_mines, active_automated_routes,
+supplied_field_depots) have no business receipt yet and meter zero, which only
+lowers a node toward its .15 floor. national_power reads the cycle-end values.
 """
 from collections import defaultdict
 

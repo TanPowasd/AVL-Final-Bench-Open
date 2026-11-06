@@ -1065,6 +1065,8 @@ class Economy:
             line = self._line(result.line_id)
             state.industry_activity.production(line,result)
             state.ai.production(line, result)
+            if state.active_scale is not None:
+                state.active_scale.production(line, result)
             metric = state.cycles[line.owner]
             metric.line_batches[line.id] = metric.line_batches.get(line.id, 0) + result.batch_mU
             state.macro.output(line.owner, line.hub, result.released_mU)
@@ -1432,9 +1434,14 @@ def _assemble(catalog, initial, *, total_ticks: int, debug: bool, commerce: bool
                System('observation', Phase.OBSERVATION, economy.observe, after=('shared_intelligence','city_views', 'weather_forecasts', 'contract_views','orbital_observation','ai_license_views')))
     if scoring:
         from .national_power import NationalPower
+        from .active_scale import ActiveScale
         state.national_power = NationalPower(state)
+        state.active_scale = ActiveScale(state)
         settlement = tuple(s.id for s in systems if s.phase == Phase.SETTLEMENT)
-        systems += (System('national_power', Phase.SETTLEMENT, lambda state, ctx: state.national_power.advance(ctx),
-                           after=settlement),)
+        systems += (System('active_scale_clock', Phase.COMMANDS, lambda state, ctx: state.active_scale.begin_tick(ctx)),
+                    System('active_scale', Phase.SETTLEMENT, lambda state, ctx: state.active_scale.advance(ctx),
+                           after=settlement),
+                    System('national_power', Phase.SETTLEMENT, lambda state, ctx: state.national_power.advance(ctx),
+                           after=(*settlement, 'active_scale')))
     return Kernel(initial.map.seed, state, systems, clock=ClockConfig(total_ticks=total_ticks),
                   debug=debug, fingerprint_each_tick=debug)
