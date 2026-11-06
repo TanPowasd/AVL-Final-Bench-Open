@@ -271,7 +271,10 @@ class Blockades:
             if hubs[edge.a].region != region and hubs[edge.b].region != region:
                 continue
             total += edge.capacity_mU_cycle
-            weighted += edge.capacity_mU_cycle * edge.blocked.get(nation, Q(0))
+            # 03 s7.3: B = max(ACL denial flag, b). Only an explicit tier-0 row
+            # is a denial; an edge with no arrangement for the nation is not.
+            denied = Q(int(edge.access_tier.get(nation, 1) == 0))
+            weighted += edge.capacity_mU_cycle * max(denied, edge.blocked.get(nation, Q(0)))
         return Q(weighted) / total if total else Q(0)
 
     def visible(self, owner):

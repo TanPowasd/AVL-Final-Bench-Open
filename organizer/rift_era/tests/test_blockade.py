@@ -77,3 +77,27 @@ class BlockadeTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class AclDenialShareTests(unittest.TestCase):
+    """03 s7.3: Blockade_r uses B = max(ACL denial flag, b) per in-edge."""
+
+    def test_explicit_tier_zero_counts_as_full_denial(self):
+        from fractions import Fraction as Q
+        catalog = Catalog()
+        game = opening_economy(catalog, initialize(catalog, generate_candidate(1000)), total_ticks=10, debug=False)
+        state = game.state
+        hubs = state.initial.map.hubs
+        region = hubs['n1-h0'].region
+        edges = [e for e in state.cargo.corridors.values() if region in (hubs[e.a].region, hubs[e.b].region)]
+        total = sum(e.capacity_mU_cycle for e in edges)
+        self.assertEqual(state.blockades.region_share(region, 'n0'), 0)
+        first, second = sorted(edges, key=lambda e: e.id)[:2]
+        first.access_tier['n0'] = 0                       # operator closed it to n0
+        second.blocked['n0'] = Q(1, 2)
+        second.access_tier['n0'] = 2                       # open tier: b alone counts
+        expected = Q(first.capacity_mU_cycle + second.capacity_mU_cycle / 2) / total
+        self.assertEqual(state.blockades.region_share(region, 'n0'), expected)
+        first.blocked['n0'] = Q(1, 3)                      # max, never a sum
+        self.assertEqual(state.blockades.region_share(region, 'n0'), expected)
+        self.assertEqual(state.blockades.region_share(region, 'n2'), 0)
