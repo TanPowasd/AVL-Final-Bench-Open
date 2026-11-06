@@ -211,3 +211,8 @@ C03、C05、C09、C13、C14、C22、C23、C29、C31、C32 已确认有实现。
 ### 空局人口下降（2026-11-06 排查）
 
 atlas seed 1000 空局前 43 周期：8 国首都 Hub 每周期净增约 +0.05%（食物满足 1.0）；50 个人口 Hub 中 42 个是城邦，食物满足度一直为 0、支持度 0，每周期净减约 0.4%（死亡率 .001 + 饥荒 .003），总人口因此下降。原因是城邦只有两座矿、没有农场，食物只能从市场买，空局里没有任何席位挂食物卖单。按 03 城邦规则这属于预期行为，但完整一局 2,880 周期下，无人交易的城邦会饿到接近零。是否给城邦一个兜底食物来源（例如 world 卖方或初始储备），需要作者决定。诊断脚本在开发目录 `dev/diag/popdiag.py`。
+
+## 2026-11-06 国力近似项进展
+
+- 已改：`control.powered_slots` 检查供电 ≥ .8；`control.readiness` 乘食水补给比。
+- 仍是近似：`control.connected`（未按补给路径/替代指挥 Hub）、`control.chokepoint_phi`（0）、`supply_ratio` 的补给连通标志、`population.remediation`、`population.advanced_medicine`、`sustainability.*`。详见 `national_power.COVERAGE`。

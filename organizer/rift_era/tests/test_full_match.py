@@ -125,3 +125,49 @@ class ActiveScaleWiringTests(unittest.TestCase):
         self.assertEqual(power.pillars['n0'][-1].technology,
                          Q(3, 5) * weight * (Q(15, 100) + Q(85, 100) * min(Q(1), half)))
         self.assertIn('active_scale', state.snapshot())
+
+
+class ControlInputsTests(unittest.TestCase):
+    """07: powered_slots need >= .8 power; Vready scales by the food/water supply ratio."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.catalog = Catalog()
+        cls.world = generate_candidate(1000)
+
+    def test_power_and_supply_ratios(self):
+        from types import SimpleNamespace
+        game = full_match(self.catalog, initialize(self.catalog, self.world), total_ticks=10)
+        power = game.state.national_power
+        line = SimpleNamespace(id='L-test')
+        self.assertTrue(power.powered('L-none'))
+        power.record_line_power(line, 79, 100)
+        self.assertFalse(power.powered('L-test'))
+        power.record_line_power(line, 81, 100)
+        self.assertTrue(power.powered('L-test'))      # 160/200 = .8
+        self.assertEqual(power.supply_ratio('F-none'), 1)
+        power.supply['F-test']['food'] = [Q(3), Q(4)]
+        power.supply['F-test']['water'] = [Q(1), Q(2)]
+        self.assertEqual(power.supply_ratio('F-test'), Q(1, 2))
+        power.supply['F-test']['water'] = [Q(0), Q(0)]
+        self.assertEqual(power.supply_ratio('F-test'), Q(3, 4))
+
+    def test_cycle_meters_reset_and_readiness_tracks_supply(self):
+        game = full_match(self.catalog, initialize(self.catalog, self.world), total_ticks=20)
+        state = game.state
+        power = state.national_power
+        for _ in range(9):
+            game.step()
+        self.assertTrue(power.supply)
+        game.step()
+        self.assertFalse(power.supply)
+        self.assertFalse(power.line_power)
+        full = {p: power.control(p) for p in power.nations}
+        # Starve every formation of n0 for the cycle: its readiness term drops to zero.
+        for fid, f in state.formations.rows.items():
+            if f.owner == 'n0':
+                power.supply[fid]['food'] = [Q(0), Q(1)]
+        starved = power.control('n0')
+        if any(f.owner == 'n0' and f.unit_ids for f in state.formations.rows.values()):
+            self.assertLess(starved, full['n0'])
+        self.assertEqual(power.control('n1'), full['n1'])

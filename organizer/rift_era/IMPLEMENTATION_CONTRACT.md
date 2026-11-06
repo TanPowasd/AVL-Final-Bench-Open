@@ -440,3 +440,10 @@ P8 发布缓存后读取不重新探测；测控失联时只报告失联，不�
 - 三个计量（`online_offshore_mines`、`active_automated_routes`、`supplied_field_depots`）没有业务回执，仍为 0；对应节点只拿 .15 底分。
 - `opening_economy` 不装配，空局哈希不变。快照在 full_match 中新增 `active_scale` 键。
 - 测试：`tests/test_full_match.py::ActiveScaleWiringTests`。
+
+## 国力控制支柱：供电槽位与战备补给比（2026-11-06）
+
+- `powered_slots`：本周期有正产出的产线，且运行 Tick 内累计「实收电 / 按批次所需电」≥ 0.8 才计。所需电与 `industry_activity.use_power` 同口径（`required_power × 批次 × 模式系数`）。
+- `Vready` 的 `supply_ratio`：编队本周期食、水累计「实拨 / 需求」取两者较小值，需求为零记 1。不在编队中的单位记 1。
+- 未做：`supply_ratio` 中的「实际补给连通标志」；`connected` 仍按控制区邻接近似，没有按授权、未损毁的补给路径与替代指挥 Hub 判定；`chokepoint_phi` 仍为 0（没有保留逐区回执路径流量）。
+- 测试：`tests/test_full_match.py::ControlInputsTests`。

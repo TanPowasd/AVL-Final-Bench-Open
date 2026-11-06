@@ -1076,6 +1076,8 @@ class Economy:
             self._worked(line.id, labor_needed, ctx)
             power_used=ceil(required_power*Q(result.batch_mU,1000)*(mode['power_factor'] if mode else 1))
             state.industry_activity.use_power(line.id,min(f.power_received.get(line.id,0),power_used))
+            if state.national_power is not None and result.batch_mU:
+                state.national_power.record_line_power(line, min(f.power_received.get(line.id, 0), power_used), power_used)
             if result.batch_mU and industry_effects.ccs_running(state,line.id):
                 state.industry_activity.use_power('ccs:'+line.id,min(150,f.power_received.get('ccs:'+line.id,0)))
             for good, quantity in result.consumed_nmU.items():

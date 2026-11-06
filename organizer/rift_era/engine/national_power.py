@@ -27,10 +27,10 @@ COVERAGE = {
     'population.advanced_medicine': 'medical_supplies satisfaction',
     'industry.va': 'industry_activity.last_company_va (signed catalog VA x direct share), by issuer',
     'control.connected': 'controlled regions reachable from the capital region over controlled adjacent regions',
-    'control.powered_slots': 'non-housing lines with a positive batch in the cycle (power >= 0.8 not checked)',
+    'control.powered_slots': 'lines with a positive batch in the cycle whose received/needed power over running ticks >= .8',
     'control.chokepoint_phi': 'zero: per-region receipt path flow not retained',
     'control.kinfra_alpha_maint': '1 for assets that are not maintenance_offline, else 0',
-    'control.readiness': 'sum over own units of hp_ratio*crew_ratio*installed catalog value*(.5+.5*morale)*(1-.4*fatigue); supply ratio 1',
+    'control.readiness': 'sum over own units of hp_ratio*crew_ratio*installed catalog value*(.5+.5*morale)*(1-.4*fatigue)*supply_ratio; supply_ratio = min over food/water of cycle supplied/needed, the supply-connection flag is not applied',
     'technology.active_scale': 'active_scale.py meters, cycle-end values; online_offshore_mines, active_automated_routes, supplied_field_depots meter zero (no receipt yet)',
     'sustainability.unrest': 'population of controlled national hubs with support_mU < 300',
     'sustainability.shortage': '1 - min(food, electricity) satisfaction, population weighted, per cycle',
@@ -49,6 +49,8 @@ class NationalPower:
         self.pillars = {p: [] for p in self.nations}          # one Pillars row per cycle
         self.shortage = {p: deque(maxlen=20) for p in self.nations}
         self.extracted = defaultdict(lambda: defaultdict(int))  # region -> good -> mU this cycle
+        self.supply = defaultdict(lambda: defaultdict(lambda: [Q(0), Q(0)]))  # formation -> good -> [got, need]
+        self.line_power = defaultdict(lambda: [0, 0])  # line -> [received, needed] over running ticks this cycle
         self.initial_cash_book = {p: state.initial.cash.owner_book(p) for p in self.nations}
         self.default_cycles = {p: [] for p in self.nations}
         self.last_tick = -1
@@ -59,11 +61,33 @@ class NationalPower:
         if amount:
             self.extracted[self.s.initial.map.hubs[hub].region][good] += amount
 
+    def record_line_power(self, line, received, needed):
+        row = self.line_power[line.id]
+        row[0] += received
+        row[1] += needed
+
+    def supply_ratio(self, fid):
+        """07 Vready: min over food and water of this cycle's supplied / needed; zero need is 1."""
+        rows = self.supply.get(fid, {})
+        return min((Q(got, need) if need else Q(1) for got, need in rows.values()), default=Q(1))
+
+    def powered(self, lid):
+        """07: a slot counts when its power over its running ticks is at least .8 of need."""
+        received, needed = self.line_power.get(lid, (0, 0))
+        return not needed or Q(received, needed) >= Q(4, 5)
+
     def advance(self, ctx):
         """Last SETTLEMENT system; meters combat every tick, scores at cycle end."""
         if ctx.tick <= self.last_tick:
             raise InvariantViolation('national power metered twice')
         self.last_tick = ctx.tick
+        frame = self.s.frame
+        for fid, need in frame.military_need.items():
+            got = frame.military.get(fid, {})
+            for good, quantity in need.items():
+                row = self.supply[fid][good]
+                row[0] += min(Q(got.get(good, 0)), Q(quantity))
+                row[1] += Q(quantity)
         if not ctx.clock.is_cycle_end(ctx.tick):
             return
         if ctx.cycle != self.cycle:
@@ -74,6 +98,8 @@ class NationalPower:
             if ctx.cycle < 2880:
                 self.trajectories[p].commit(ctx.cycle, row.total)
         self.extracted.clear()
+        self.line_power.clear()
+        self.supply.clear()
         self.cycle += 1
 
     # -- pillars --------------------------------------------------------------------
@@ -168,7 +194,7 @@ class NationalPower:
         slots = defaultdict(int)
         for lid, batch in batches.items():
             line = s.initial.lines.get(lid)
-            if batch > 0 and line is not None:
+            if batch > 0 and line is not None and self.powered(lid):
                 slots[world.hubs[line.hub].region] += 1
         sigma = Q(0)
         for rid in connected:
@@ -187,14 +213,17 @@ class NationalPower:
         satellites = sum(1 for sat in s.orbit.satellites.values() if sat.owner == p)
         population = sum(pop.total_mU for hub, pop in s.initial.populations.items() if world.hubs[hub].owner == p)
         readiness = Q(0)
-        for unit in s.initial.units.values():
+        unit_formation = {uid: fid for fid, f in s.formations.rows.items() for uid in f.unit_ids}
+        for uid, unit in s.initial.units.items():
             if unit.owner != p:
                 continue
+            fid = unit_formation.get(uid)
+            ratio = self.supply_ratio(fid) if fid is not None else Q(1)
             spec = catalog.units[unit.unit_type]
             installed = sum((Q(q) * catalog.weights[g] for g, q in spec['installed'].items()), Q(0))
             hp, crew = Q(spec['hp']) * 1000, Q(spec['crew']) * 1000
             readiness += (min(Q(1), unit.hp_mU / hp) * min(Q(1), unit.crew_mU / crew) * installed
-                          * (Q(1, 2) + Q(1, 2) * unit.morale) * (1 - Q(2, 5) * unit.fatigue))
+                          * (Q(1, 2) + Q(1, 2) * unit.morale) * (1 - Q(2, 5) * unit.fatigue) * ratio)
         return control_pillar(sigma, book, satellites, population, sum(slots.values()), readiness)
 
     def technology(self, p):
@@ -250,6 +279,8 @@ class NationalPower:
                             for p, rows in self.pillars.items()},
                 'shortage': {p: list(v) for p, v in self.shortage.items()},
                 'extracted': {r: dict(v) for r, v in sorted(self.extracted.items())},
+                'line_power': {l: list(v) for l, v in sorted(self.line_power.items())},
+                'supply': {f: {g: list(r) for g, r in sorted(v.items())} for f, v in sorted(self.supply.items())},
                 'trajectory': {p: {'cycles': t.cycles, 'era_sums': list(t.era_sums), 'last40': list(t.last40)}
                                for p, t in self.trajectories.items()}}
 
