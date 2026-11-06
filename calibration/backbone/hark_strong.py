@@ -40,7 +40,7 @@ class Bot:
     P = {"vid_base": 0.95, "rt_base": 0.95, "bk_base": 1.0, "bk_max": 4.0, "vid_max": 1.6,
          "cong_hi": 0.05, "cong_lo": 0.01, "harvest_days": 8, "harvest_cap": 5.0,
          "pre_days": 4, "pre_price": 0.6, "pre_cls": (0, 1), "k_deliv": 0.995,
-         "term28_cash": 15000, "release": 1}
+         "term28_cash": 15000, "release": 1, "lease_margin": 500}
 
     def __init__(self, init):
         m = init["map"]
@@ -98,6 +98,7 @@ class Bot:
         self.contracts = {}       # id -> event
         self.won = []             # [a,b,k,units,end]
         self.sla7 = 1.0
+        self.cwatch = {}
         self.price_changes_day = -1
         self.scrubbing = set()
         self.harvest_from = self.T - int(self.P["harvest_days"] * DAY)
@@ -408,6 +409,9 @@ class Bot:
                 k = self.contracts.get(e["contract"])
                 if k is not None and e.get("winner") == self.seat:
                     self.won.append((k["a"], k["b"], CLS.index(k["cls"]), k["units"], t + 28 * DAY))
+                    self.cwatch[e["contract"]] = {"key": (min(k["a"], k["b"]), max(k["a"], k["b"]), k["cls"]),
+                                                  "price": float(e.get("price") or k["reserve"]),
+                                                  "end": t + 28 * DAY, "num": 0.0, "den": 0.0}
                     self.need_replan = True
         self.maint = [m for m in self.maint if m[2] > t]
         self.won = [w for w in self.won if w[4] > t]
@@ -429,6 +433,11 @@ class Bot:
                 key = (min(a, b), max(a, b), cl)
                 old = self.gdel.get(key)
                 self.gdel[key] = dr if old is None else 0.7 * old + 0.3 * dr
+                for w in self.cwatch.values():
+                    if w["key"] == key and dem > 0:
+                        w["num"] += dem * dr
+                        w["den"] += dem
+        self.cwatch = {i: w for i, w in self.cwatch.items() if w["end"] > t}
         if "leases" in obs:
             self.my_leases = {x[0]: x for x in obs["leases"]}
         if t % DAY == 0:
@@ -503,6 +512,14 @@ class Bot:
             act["price"] = pr
         return act
 
+    def penalty_exposure(self):
+        # 已中标合同中，累计送达率低于 SLA 余量的，按 2 倍中标价计入可能罚款
+        exp = 0.0
+        for w in self.cwatch.values():
+            if w["den"] > 0 and w["num"] / w["den"] < self.P.get("cq_risk", 0.995):
+                exp += 2.0 * w["price"]
+        return exp
+
     # ------------------------------------------------------------ 租约
     def _lease_items(self, obs, t, cash, want):
         lp = obs["lp"]
@@ -511,7 +528,7 @@ class Bot:
         if term == 28 and cash < self.P.get("term28_cash", 15000):
             term = 7
         disc = {1: 1.0, 7: 0.8, 28: 0.6}[term]
-        budget = cash + 10000 - 500
+        budget = cash + 10000 - self.P.get("lease_margin", 500)
         items = []
         for l, u in sorted(want.items(), key=lambda x: -x[1]):
             u = min(u, avail[l])
@@ -581,7 +598,7 @@ class Bot:
             pred[a] = pred.get(a, 0.0) + tot
             pred[b] = pred.get(b, 0.0) + tot
         out = []
-        budget = self.cash + 10000 - 2500
+        budget = self.cash + 10000 - 2500 - self.penalty_exposure()
         for c, q in self.pops.items():
             cap = q[1] + sum(u for _, u in self.port_pend.get(c, []))
             need = max(pred.get(c, 0.0) * 0.75, self.port_peak.get(c, 0.0) * 1.3)
@@ -606,7 +623,7 @@ class Bot:
     def build(self, obs, t):
         if len(self.pops) >= 20 or t > self.T - 6 * DAY:
             return None
-        floor = -10000 + 3000 + 200 * len(self.pops)
+        floor = -10000 + 3000 + 200 * len(self.pops) + self.penalty_exposure()
         if self.cash - 1500 < floor:
             return None
         own = obs["own_lease"]
@@ -713,6 +730,9 @@ class Bot:
                 continue
             contested = a in self.opp_pops and b in self.opp_pops
             price = k["reserve"] * (0.8 if contested else 1.0)
+            # 罚款 2 倍中标价，现金扛不住（会被打到破产线下）就不投
+            if self.cash + 10000 - 3000 - self.penalty_exposure() < 2.0 * price:
+                continue
             out.append({"contract": cid, "price": round(price, 1)})
             k["_done"] = True
         return out
