@@ -41,7 +41,7 @@
 - **座位**：merchant（种子 1001–1016）与 scaling（1001–1008）双座位都跑了，25 对交换座位结果**逐位相同**（引擎对两席完全对称，
   bot 确定性，`PYTHONHASHSEED=0`）。机器只有 2 核且同时跑另外两个任务，单局 7–70 s，因此其余对局只跑 0 号座位
   （与双座位平均等价）。“局数”一列是实际跑的局数，均分/CI 先按种子平均再统计。
-- 种子数：单人赛与 ref 代理 64；merchant 50；scaling 32；blank、starter、三项反制测试各 16（均 ≥16，未到 64 的原因是机器太慢，见第 6 节）。
+- 种子数：单人赛、ref 代理、merchant、scaling 64（2026-11-07 补满）；blank、starter、三项反制测试各 16（均 ≥16，未到 64 的原因是机器太慢，见第 6 节）。
 - 对手 `ref 代理` = `merchant.py` 去掉 `CFG.update` 的公开 ref 配置（`dev/ai_training/ref.py`），只是私有参考对手的猜测性代理，
   不代表正式参考对手。
 
@@ -52,8 +52,8 @@
 | 单人赛（solo_npc） | 64 | 64 | 91.58 | [91.03, 92.06] | — | — | — | 0.9158 | — | 81.80 |
 | blank | 16 | 16 | 97.08 | [91.23, 100.00] | 16/0/0 | 92,849 | 734 | 0.9149 | 0.2007 | 53.21 |
 | starter | 16 | 16 | 97.72 | [93.17, 100.00] | 16/0/0 | 93,722 | 116 | 0.9153 | 0.0000 | 63.57 |
-| scaling | 32 | 41 | 97.24 | [93.60, 100.00] | 41/0/0 | 90,234 | 798 | 0.9147 | 0.5313 | 56.78 |
-| merchant | 50 | 66 | 97.30 | [94.76, 99.21] | 66/0/0 | 44,199 | 269 | 0.8870 | 0.6076 | 58.21 |
+| scaling | 64 | 73 | 98.61 | [96.75, 99.99] | 73/0/0 | 89,956 | 802 | 0.9165 | 0.5185 | 56.78 |
+| merchant | 64 | 80 | 96.90 | [94.60, 98.77] | 80/0/0 | 48,242 | 286 | 0.8876 | 0.6089 | 58.21 |
 | ref 代理（merchant.py 内嵌 ref 配置） | 64 | 64 | 96.51 | [94.28, 98.38] | 64/0/0 | 51,698 | 2,430 | 0.8784 | 0.8141 | 56.68 |
 | 反制：ref + 同款终局收割 | 16 | 16 | 66.76 | [42.89, 86.44] | 11/5/0 | 35,732 | 38,298 | 0.8726 | 0.8243 | 0.00 |
 | 反制：拍卖抢卡（2.6× 出价） | 16 | 16 | 97.49 | [93.57, 99.97] | 16/0/0 | 49,153 | 1,482 | 0.8881 | 0.8939 | 70.40 |
@@ -70,8 +70,8 @@
 - solo: timeouts=0 dead=0 illegal=29 max_think_s=19.1 max_step_s=0.141
 - blank: timeouts=0 dead=0 illegal=17 max_think_s=8.92 max_step_s=0.092
 - starter: timeouts=0 dead=0 illegal=17 max_think_s=9.97 max_step_s=0.11
-- scaling: timeouts=0 dead=0 illegal=33 max_think_s=27.43 max_step_s=0.112
-- merchant: timeouts=0 dead=0 illegal=11 max_think_s=12.95 max_step_s=0.108
+- scaling: timeouts=0 dead=0 illegal=48 max_think_s=27.43 max_step_s=0.112
+- merchant: timeouts=0 dead=0 illegal=16 max_think_s=12.95 max_step_s=0.108
 - refproxy: timeouts=0 dead=0 illegal=18 max_think_s=9.97 max_step_s=0.116
 - x_refgouge: timeouts=0 dead=0 illegal=4 max_think_s=11.6 max_step_s=0.092
 - x_hog: timeouts=0 dead=0 illegal=3 max_think_s=10.37 max_step_s=0.088
@@ -109,7 +109,7 @@
 
 ## 6. 未完成事项
 
-- 目标 64 种子只在单人赛和 ref 代理上做满；merchant 50、scaling 32、blank/starter 与反制测试 16
+- 目标 64 种子已在单人赛、ref 代理、merchant、scaling 上做满；blank/starter 与反制测试 16
   （机器 2 核且有两个并行任务，单局实测 7–70 s，沙箱只在会话活跃时推进）。`dev/ai_training/evalq6.sh` 可续跑补齐。
 - 没有做“关掉终局收割”的干净版本对照（CFG 里 `endgame`/`end_raise` 设为 False 即可得到）。
 
