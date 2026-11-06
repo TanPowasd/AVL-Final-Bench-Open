@@ -525,10 +525,18 @@ P8 发布缓存后读取不重新探测；测控失联时只报告失联，不�
 - **chokepoint_phi_v1**：`Consumption` 按周期记录每个分区被终端回执（目录值，非信用加权）经过的价值，每张回执每分区只算一次；经过的分区 = 消环路径上的所有 Hub 所在分区，加上每段 leg 对应走廊（连接两端且 L1 长度相等的那条，按 id 取第一条；找不到则只算端点）的格子所在分区。`Phi_r=min(100, 近 20 周期之和/20)`，`sigma` 每个连通分区加 `.02*Phi_r`，仍受 `min(5, …)` 封顶。A 自己的出口路过本国分区也计入。
 - **ACL 收紧损耗**：`cargo.action_cycles`（对外国收紧走廊许可后每 tick 每目标 0.001）此前未计入工业支柱 ACTION_LOSS，已补。
 - **power_acl_v1**：`logistics/corridor_policy` 的 `corridor_id` 可以是输电线 id。线路经营者对外国设 `access_tier=0` 即拒入该国电源（电网路径搜索跳过该线），`≥1` 恢复；`toll_rate_bp` 对输电线无效（仍用目录过网费）。输电线默认对所有电源开放，所以每个拒入目标每 tick 记一次敌对政策事件（并入 `cargo.action_cycles`）。依据 03§7.3「输电/输水只有边控制拒入或物理战损可断」。输水线拒入未做。
-- **已知性能问题（未修）**：只要存在任何可用输电线，`power.dispatch` 就从按 Hub 的快速路径切到 1 mU 步进的 `dispatch_reference`，全国负荷下非常慢。整局里一旦建线就会拖慢，需要一个与 oracle 逐位一致的快速多 Hub 调度。
+- **性能问题（已修，见 grid_fast_v1）**：原先只要存在可用输电线，`power.dispatch` 就退回 1 mU 步进的 `dispatch_reference`，实测全国负荷单次调度约 63 s。
 
 ## batch_host_v1：批次宿主（2026-11-06）
 
 - `engine/batch_host.match_runner(submission, reference, replay_dir, ticks, map_kind)` 返回 `run_match(seed, seat, role)`：每次新建该 seed 的 full_match，按座位开 8 个策略会话（player 局选手坐 `seat`，其余参考；shadow 局 8 席参考），用 `MatchDriver` 跑完并返回 `finalize_match` 报告（附 seed/seat/role/submission_owner），回放写 `replay_dir/<seed>-<role>-<seat>.jsonl`。
 - 故障归属：选手故障留在局内（托管空命令、照常计分）。参考席的握手或任一决策出现错误或托管，立即抛 `ReferenceFault`（`InfrastructureFault` 子类）。引擎不变量、驱动/观测故障、宿主异常原样抛出。三者都逃出 `run_match`，由 `BatchRunner` 写 `INVALID_EVALUATION` 作废整批。
 - CLI：`python -m organizer.rift_era batch --manifest M --journal J --submission S --reference R --cgroup C --replay-dir D [--ticks] [--limit]`。manifest 不存在时按 CSPRNG 新建；manifest 的规则或引擎哈希不符则拒绝。参考归档的 sha256 记作 `reference_hash`。正式 Super 池由作者提供。
+
+## grid_fast_v1：有输电线时的快速调度（2026-11-06）
+
+- `dispatch` 有线路时调用 `dispatch_reference(..., fast_local=True)`，结果（receipts、received、spent、剩余电源、剩余线容量）与 1 mU oracle 逐位一致；`iterations` 只是诊断值，会不同。
+- 本地阶段：每个 (rank, band) 组的本地阶段改用无线路快速路径同一套按 Hub、按报价排序电源的 `fair_service` 批量服务（各 Hub 本地电源不共享）。
+- 网络阶段：当组内活跃负荷都没有用户价格上限时，`_group_batch` 一次提交 oracle 序列中最长的一段前缀，这段里每个负荷都沿用当前的 (电源, 路径)。理由：排在它前面的选项失败原因在资源只减少、spent 只增加、别的收据不变时不会恢复；选择顺序就是 `fair_service` 的前缀。前缀在任何负荷触及自身预算、单步成本比（`C(r)≤limit·r`，用 `C(r)<c·r+D` 的界跳过安全区，其余逐步精确检查）或需求时截断，在共享电源或线容量装不下整段时二分缩短。截断点之后交回原 oracle 单步。
+- 有用户价格上限的负荷在网络阶段仍逐 mU（其更早选项可能因收到量增加而恢复可负担）。
+- 验证：`tests/test_power_fast.py` 随机电网 850 例与 oracle 全等；另离线 2,700 例全等；真实对局一个 tick 的全国调度（360 负荷、4 条线）与 oracle 全等，耗时从 62.7 s 降到 0.07 s。
