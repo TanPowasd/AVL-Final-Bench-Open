@@ -562,6 +562,7 @@ class Economy:
             elif climate.raw_wind:
                 climate.raw_wind.pop(region.id, None)
             state.wind_mU[region.id], state.cloud_mU[region.id], state.sun_mU[region.id] = wind, cloud, sun
+        self._track_v07(state, ctx)
         if ctx.tick % 10 == 0:
             for mid, deposit in state.deposits.items():
                 if deposit.good == 'biomass':
@@ -569,6 +570,8 @@ class Economy:
                     stock = self.inventory.balance(account)
                     ratio = Q(stock, deposit.initial_mU)
                     rate = Q(4 if ratio < Q(2, 5) else 8, 100)
+                    if ratio < Q(2, 5) and self._v07_restored(state, mid, ctx):
+                        rate = Q(6, 100)  # V07: the degraded rate recovers half way to .08
                     growth = floor(rate * stock * (1 - ratio))
                     self.inventory.transform({}, {account: growth}, reason='biomass_regeneration',
                                              origins={account: Origin('nature', state.resource_sites[mid].hub)})
@@ -586,6 +589,28 @@ class Economy:
             factor = Q(policy.fertility_mU, 1000) * weather * gene * (1 - Q(1, 5) * pollution)
             original = state.catalog.recipes[line.recipe.id]['outputs']
             line.recipe = replace(line.recipe, outputs={g: round(units(q) * factor) for g, q in original.items()})
+
+    @staticmethod
+    def _track_v07(state, ctx) -> None:
+        """04 V07 (tech_effects_v1): track, for biomass sites whose owner knows V07,
+        the last tick the site's stock was drawn down. The closure clock starts
+        when the owner holds V07; earlier idle time does not count."""
+        for mid, deposit in state.deposits.items():
+            if deposit.good != 'biomass':
+                continue
+            site = state.resource_sites.get(mid) or state.initial.mines.get(mid)
+            research = state.research.get(site.owner) if site is not None else None
+            if research is None or 'V07' not in research.known:
+                state.v07_last_extracted.pop(mid, None)
+                continue
+            stock = state.initial.inventory.balance(Account(*state.resource_sources[mid], deposit.good))
+            if mid not in state.v07_last_extracted or stock < deposit.remaining_mU:
+                state.v07_last_extracted[mid] = ctx.tick
+
+    @staticmethod
+    def _v07_restored(state, mid, ctx) -> bool:
+        last = state.v07_last_extracted.get(mid)
+        return last is not None and ctx.tick - last >= 120 * ctx.clock.cycle_ticks
 
     def _material_events(self, owner: str, good: str, bucket: str) -> list:
         """This tick's material events for (owner, good, source_bucket), in event order.

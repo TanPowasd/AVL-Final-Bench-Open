@@ -171,6 +171,8 @@ class OperatingWorld:
         self.national_power = None  # full_match only (P0-2)
         self.conditional_plans: dict[str, dict] = {}  # C10, owner -> command id -> plan
         self.cyber_frozen_until: dict[str, int] = {}  # S03/S08 freeze, hub -> last frozen tick
+        self.v07_last_extracted: dict[str, int] = {}  # V07 biomass site -> last tick its stock was drawn
+        self.equity_stakes: dict[str, dict[str, int]] = {}  # F04 asset -> holder -> direct share mU
         initial.inventory.enable_provenance(seed=initial.map.seed, credits=self.credit)
         self.asset_lifecycle = AssetLifecycle(initial.inventory, initial.assets, catalog.weights, initial=True,economic_owner=self.asset_title)
         self.consumption = Consumption()
@@ -570,6 +572,8 @@ class OperatingWorld:
                 **({'national_power': self.national_power.snapshot()} if self.national_power is not None else {}),
                 **({'conditional_plans': self.conditional_plans} if any(self.conditional_plans.values()) else {}),
                 **({'cyber_frozen_until': self.cyber_frozen_until} if self.cyber_frozen_until else {}),
+                **({'v07_last_extracted': self.v07_last_extracted} if self.v07_last_extracted else {}),
+                **({'equity_stakes': self.equity_stakes} if self.equity_stakes else {}),
                 **({'climate': self.climate.snapshot()} if not self.climate.empty() else {}),
                 **({'blockades': self.blockades.snapshot()} if not self.blockades.empty() else {}),
                 **({'fx_shorts': self.fx_shorts.snapshot()} if not self.fx_shorts.empty() else {}),

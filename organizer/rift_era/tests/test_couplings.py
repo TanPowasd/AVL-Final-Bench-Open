@@ -127,6 +127,50 @@ class CouplingTests(unittest.TestCase):
         other.slot_a = None
         self.assertEqual(state.battles.combined_arms({}), {})
 
+    def test_g12_joint_doctrine_adds_ten_percent_and_freezes_on_command_hub_loss(self):
+        state = self.game().state
+        land, other = [f for f in state.formations.rows.values() if f.owner == 'n0'][:2]
+        other.domain = 'Air'
+        state.research['n0'].known |= {'G07', 'G12'}
+        land.slot_a = other.slot_a = 'radio'
+        other.region = land.region
+        uid = land.unit_ids[0]
+        base = state.initial.units[uid].tech_multiplier
+        self.assertEqual(state.battles.combined_arms({}, 5)[uid].tech_multiplier, base * Q(6, 5) * Q(11, 10))
+        self.assertEqual(state.battles.combined_arms({})[uid].tech_multiplier, base * Q(6, 5))  # no tick: G07 only
+        state.cyber_frozen_until['n0-h0'] = 6                       # command hub cut off at tick 6
+        self.assertEqual(state.battles.combined_arms({}, 6)[uid].tech_multiplier, base * Q(6, 5))
+        self.assertEqual(state.battles.combined_arms({}, 16)[uid].tech_multiplier, base * Q(6, 5))  # frozen 10 ticks
+        self.assertEqual(state.battles.combined_arms({}, 17)[uid].tech_multiplier, base * Q(6, 5) * Q(11, 10))
+        region = state.authority.regions[state.initial.map.hubs['n0-h0'].region]
+        region.controller, saved = 'n1', region.controller          # capital occupied
+        self.assertFalse(state.battles.joint_doctrine_online('n0', 30))
+        region.controller = saved
+        self.assertFalse(state.battles.joint_doctrine_online('n0', 40))
+        self.assertTrue(state.battles.joint_doctrine_online('n0', 41))
+
+    def test_v07_idle_biomass_site_recovers_half_the_degraded_rate_after_120_cycles(self):
+        from types import SimpleNamespace as NS
+        from organizer.rift_era.engine.clock import ClockConfig
+        from organizer.rift_era.engine.economy import Economy as E
+        from organizer.rift_era.engine.ledger import Account
+        state = self.game().state
+        mid = next(m for m, d in state.deposits.items() if d.good == 'biomass'
+                   and (state.resource_sites.get(m) or state.initial.mines.get(m)).owner == 'n0')
+        clock = ClockConfig()
+        E._track_v07(state, NS(tick=10, clock=clock))
+        self.assertEqual(state.v07_last_extracted, {})               # no V07: nothing tracked
+        state.research['n0'].known.add('V07')
+        E._track_v07(state, NS(tick=10, clock=clock))
+        self.assertEqual(state.v07_last_extracted[mid], 10)          # clock starts with V07
+        self.assertFalse(E._v07_restored(state, mid, NS(tick=1209, clock=clock)))
+        self.assertTrue(E._v07_restored(state, mid, NS(tick=1210, clock=clock)))
+        account = Account(*state.resource_sources[mid], 'biomass')
+        state.initial.inventory.transform({account: 1000}, {}, reason='test_draw')
+        E._track_v07(state, NS(tick=500, clock=clock))               # a draw restarts the clock
+        self.assertEqual(state.v07_last_extracted[mid], 500)
+        state.research['n0'].known.discard('V07')
+
     def test_i12_molecular_lines_cut_inputs_only_in_s5_with_ai_core(self):
         from dataclasses import replace
         from types import SimpleNamespace as NS

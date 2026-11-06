@@ -19,7 +19,11 @@ class FacilityOwnership:
     def shares(self,entity):
         parent=self.entities.get(entity,entity);rights=self.s.authority.assets.get(parent)
         if rights is None:return {EconomicOwner(self.s.initial.assets[parent].owner,'treasury'):Q(1)}
-        return {EconomicOwner(owner,'treasury'):Q(shares,1000) for owner,shares in rights.owner_shares.items()}
+        shares=dict(rights.owner_shares)
+        from .equity_stakes import frozen_holders
+        for holder in frozen_holders(self.s,parent,rights.operator):  # F04: frozen while at war
+            shares[rights.operator]=shares.get(rights.operator,0)+shares.pop(holder,0)
+        return {EconomicOwner(owner,'treasury'):Q(q,1000) for owner,q in shares.items() if q}
 
     def split_output(self,entity,origins):
         shares=self.shares(entity);result=defaultdict(Fraction)

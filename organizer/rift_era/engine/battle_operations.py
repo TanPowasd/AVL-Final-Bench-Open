@@ -27,6 +27,7 @@ class Battles:
         self.bombard_cycle = -1
         self.bombarded_regions = set()
         self.bombard_attackers = set()
+        self.joint_frozen_until = {}  # G12; written only when a command hub is lost
         self.power_demands = {}
         self.power_context = {}
         self.unit_formations = {}
@@ -132,7 +133,7 @@ class Battles:
                 for uid in state.formations.rows[fid].unit_ids:terrain_override[uid]=terrain
         combatants = self.combatants()
         boosted = self.drone_boost()
-        for uid, unit in self.combined_arms(boosted).items():
+        for uid, unit in self.combined_arms(boosted, ctx.tick).items():
             boosted[uid] = unit
         result = resolve(state.catalog,state.initial.diplomacy,{**combatants,**boosted} if boosted else combatants,contacts,supplies,
                          {rid:r.terrain for rid,r in state.initial.map.regions.items()},moving=moving,terrain_by_unit=terrain_override,inactive=state.refits.inactive_units(),target_only=frozenset(state.deception.rows))
@@ -248,10 +249,27 @@ class Battles:
                 result[uid] = replace(unit, tech_multiplier=unit.tech_multiplier * factor)
         return result
 
-    def combined_arms(self, boosted):
-        """04 G07: with G07, an owner's in-network formations (radio or sensor fitted) of
-        two or more domains in one region deal x1.20 damage (track sharing not modelled)."""
+    def joint_doctrine_online(self, owner, tick):
+        """03 G12: the joint doctrine runs while the owner's command hub (its capital
+        `{owner}-h0`) is held by the owner and not cyber-frozen; losing it freezes
+        the doctrine for 10 ticks after the last tick it was lost (tech_effects_v1)."""
         state = self.s
+        hub = f'{owner}-h0'
+        row = state.initial.map.hubs.get(hub)
+        controller = state.authority.regions[row.region].controller if row is not None else None
+        lost = row is None or controller not in (None, owner) or state.cyber_frozen_until.get(hub, -1) >= tick
+        if lost:
+            self.joint_frozen_until[owner] = tick + 10
+            return False
+        return self.joint_frozen_until.get(owner, -1) < tick
+
+    def combined_arms(self, boosted, tick=None):
+        """04 G07: with G07, an owner's in-network formations (radio or sensor fitted) of
+        two or more domains in one region deal x1.20 damage (track sharing not modelled).
+        03 G12: on top of that, x1.10 while the owner's joint doctrine is online."""
+        state = self.s
+        joint = {} if tick is None else {owner: self.joint_doctrine_online(owner, tick)
+                                         for owner, research in sorted(state.research.items()) if 'G12' in research.known}
         groups = {}
         for formation in state.formations.rows.values():
             if (formation.refitting or formation.slot_a not in ('radio', 'sensor')
@@ -262,10 +280,14 @@ class Battles:
         for rows in groups.values():
             if len({f.domain for f in rows}) < 2:
                 continue
+            owner = rows[0].owner
+            factor = Q(6, 5)
+            if joint.get(owner):
+                factor *= Q(11, 10)
             for formation in rows:
                 for uid in formation.unit_ids:
                     unit = boosted.get(uid, state.initial.units[uid])
-                    result[uid] = replace(unit, tech_multiplier=unit.tech_multiplier * Q(6, 5))
+                    result[uid] = replace(unit, tech_multiplier=unit.tech_multiplier * factor)
         return result
 
     def combat_share(self, region, cycle):
@@ -312,4 +334,5 @@ class Battles:
                 'unit_formations':self.unit_formations,'load_hubs':self.load_hubs,'power_demands':self.power_demands,'power_context':self.power_context,'locks':[[uid,good,lock,source] for (uid,good),(lock,source) in sorted(self.locks.items())],
                 'last_result':self.last_result,'loss_cycles':{str(c):v for c,v in self.loss_cycles.items()},
                 'destroyed_cycles':{str(c):v for c,v in self.destroyed_cycles.items()},
-                'combat_regions':self.combat_regions,**({'combat_cycle':self.combat_cycle} if self.combat_cycle else {})}
+                'combat_regions':self.combat_regions,**({'combat_cycle':self.combat_cycle} if self.combat_cycle else {}),
+                **({'joint_frozen_until':self.joint_frozen_until} if self.joint_frozen_until else {})}
