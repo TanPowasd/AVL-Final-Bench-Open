@@ -42,6 +42,46 @@ class UtilityTests(unittest.TestCase):
         state.initial.assets[link.asset_id].health_mU = 0
         self.assertFalse(state.utilities.dispatch_edges())
 
+    def test_c15_ai_grid_dispatch_cuts_line_loss_by_the_better_endpoint(self):
+        state, link = self.network()
+        state.ai_deployment.grid_multiplier = lambda owner, hub: Q(4, 5) if hub == 'n0-h1' else Q(1)
+        self.assertEqual(state.utilities.dispatch_edges()[0].survival, Q(961, 1000))  # no AI06
+        state.research['n0'].known.add('AI06')
+        self.assertEqual(state.utilities.dispatch_edges()[0].survival, 1 - Q(39, 1000) * Q(4, 5))
+
+    def test_e12_undersea_power_link_needs_e12_superconductor_and_caps_loss(self):
+        from organizer.rift_era.engine.commands import EngineCommands
+        from organizer.rift_era.engine.errors import RuleViolation
+        state = self.fixture().state
+        state.utilities = UtilityNetwork(state)
+        state.research['n0'].known.add('E02')
+        world = state.initial.map
+        path = list(state.cargo.paths['road:n0-h0:n0-h1'])
+        terrain = bytearray(world.terrain_cells)
+        terrain[path[5]] = 0                                     # fixture: one sea cell on the route
+        original = world.terrain_cells
+        object.__setattr__(world, 'terrain_cells', bytes(terrain))
+        try:
+            order = {'id': '93', 'kind': 'logistics', 'op': 'build_corridor', 'origin_hub': 'n0-h0',
+                     'dest_hub': 'n0-h1', 'mode': 'power', 'level': 1, 'path_cells': path}
+            with self.assertRaises(RuleViolation) as e:
+                EngineCommands(state).prepare('n0', order, self.context())
+            self.assertEqual(e.exception.code, 'ERR_TECH_LOCKED')
+            with self.assertRaises(RuleViolation):
+                EngineCommands(state).prepare('n0', {**order, 'mode': 'canal'}, self.context())
+            state.research['n0'].known.add('E12')
+            state.initial.inventory.transform({}, {Account('n0', 'n0-h0', 'available', 'superconductor'): 40000},
+                                              reason='utility_e12_test_endowment')
+            EngineCommands(state).prepare('n0', order, self.context()).commit()
+            work, = state.work.jobs.values()
+            self.assertEqual(work.materials_mU['superconductor'], 40000)
+            state.initial.assets['utility:long'] = Asset('utility:long', 'n0', 'n0-h0', {})
+            long_cells = tuple(path) + tuple(range(400))         # 400+ cells would lose 35%
+            state.utilities.links['long'] = UtilityLink('long', 'n0', 'n0-h0', 'n0-h1', 'power', 1, long_cells, 'utility:long')
+            self.assertEqual(state.utilities.power_rating(state.utilities.links['long'])[1], Q(92, 100))
+        finally:
+            object.__setattr__(world, 'terrain_cells', original)
+
     def test_canal_only_moves_real_water_with_loss_and_partial_pump_power(self):
         state, link = self.network('water')
         world = state.initial.map

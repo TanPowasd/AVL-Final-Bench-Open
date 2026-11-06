@@ -54,7 +54,15 @@ class UtilityNetwork:
         known = self.s.research[owner].known
         rating = 240000 if 'E09' in known else 120000 if link.level == 2 else 60000
         rate = Q(2, 1000) if 'E09' in known else Q(9, 1000) if 'E07' in known else Q(15, 1000)
-        return rating, 1 - min(Q(35, 100), rate * Q(len(link.cells) - 1, 10))
+        loss = min(Q(35, 100), rate * Q(len(link.cells) - 1, 10))
+        if any(self.s.initial.map.terrain_cells[c] == 0 for c in link.cells):
+            loss = min(loss, Q(8, 100))  # E12 intercontinental link: loss capped at 8%
+        # 10 C15: AI grid dispatch (AI06) cuts line loss by the same factor as forced
+        # outages; a line takes the better of its two endpoint hubs (couplings_v1).
+        deployment = getattr(self.s, 'ai_deployment', None)
+        if deployment is not None and 'AI06' in known:
+            loss *= min(deployment.grid_multiplier(owner, link.a), deployment.grid_multiplier(owner, link.b))
+        return rating, 1 - loss
 
     def dispatch_edges(self, ctx=None):
         edges = []
@@ -185,10 +193,14 @@ class UtilityConstruction:
         if cells[0] != start.y * SIZE + start.x or cells[-1] != end.y * SIZE + end.x or any(abs(p % SIZE - q % SIZE) + abs(p // SIZE - q // SIZE) != 1 for p, q in zip(cells, cells[1:])):
             raise RuleViolation('ERR_SITE_INCOMPATIBLE')
         palette = sorted(self.s.initial.map.regions)
-        if any(not self.s.authority.controls_hub(owner, h) for h in (a, b)) or any(self.s.authority.regions[palette[self.s.initial.map.region_cells[c]]].controller != owner for c in cells):
+        ocean = {c for c in cells if self.s.initial.map.terrain_cells[c] == 0}
+        if ocean:
+            # 04 E12: an undersea superconducting DC power link, one segment <= 60 cells.
+            if mode != 'power' or len(cells) - 1 > 60:
+                raise RuleViolation('ERR_SITE_INCOMPATIBLE', 'utility line crosses ocean without bridge')
+            self.industry._tech(owner, {'E12'})
+        if any(not self.s.authority.controls_hub(owner, h) for h in (a, b)) or any(self.s.authority.regions[palette[self.s.initial.map.region_cells[c]]].controller != owner for c in cells if c not in ocean):
             raise RuleViolation('ERR_NO_PERMISSION')
-        if any(self.s.initial.map.terrain_cells[c] == 0 for c in cells):
-            raise RuleViolation('ERR_SITE_INCOMPATIBLE', 'utility line crosses ocean without bridge')
         self.industry._tech(owner, {'E02'} if mode == 'power' else {'A01'} if level == 1 else {'A01', 'L06'})
         links = self.s.utilities.links
         existing = next((l for l in links.values() if l.mode == mode and l.cells in (cells, tuple(reversed(cells)))), None)
@@ -206,6 +218,8 @@ class UtilityConstruction:
         else:
             coefficients, periods = {'cement': 12, 'steel': 6, 'basic_parts': 2}, 12
         materials = {g: ceil(q * 1000 * blocks) for g, q in coefficients.items()}
+        if ocean:
+            materials['superconductor'] = materials.get('superconductor', 0) + 40000
         duration = ceil(periods * blocks) * ctx.clock.cycle_ticks
         if existing:
             installed = [self.s.initial.assets[aid] for aid in (existing.asset_id, *existing.component_assets)]
