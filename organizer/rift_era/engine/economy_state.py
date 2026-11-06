@@ -13,7 +13,7 @@ import json
 from pathlib import Path
 
 from .catalog import Catalog, freeze
-from .initialization import InitialState
+from .initialization import InitialState, MineSite
 from .ledger import Account, CashAccount
 from .numeric import Q, units
 from .payments import Payments, ForeignExchange
@@ -168,6 +168,7 @@ class OperatingWorld:
         self.cargo_weights = cargo_weights(catalog)
         # Adopted decision 0007 -> proposal D §2: initial international credit.
         self.credit = {p: Q(85, 100) for p in initial.known}
+        self.national_power = None  # full_match only (P0-2)
         initial.inventory.enable_provenance(seed=initial.map.seed, credits=self.credit)
         self.asset_lifecycle = AssetLifecycle(initial.inventory, initial.assets, catalog.weights, initial=True,economic_owner=self.asset_title)
         self.consumption = Consumption()
@@ -245,8 +246,12 @@ class OperatingWorld:
         # No balance or coefficient is topped up to rescue a failed bootstrap.
         reserve_units = dict(self.endowments['finite_reserve_units_per_starting_site'])
         reserve_units.update(biomass=self.endowments['biomass_capacity_units_per_starting_site'], water=0)
+        atlas = initial.resource_atlas
         for mid, mine in initial.mines.items():
-            reserve = units(reserve_units[mine.good])
+            # world_atlas_v1 declares each starting site's reserve; the legacy
+            # candidate map has no atlas and keeps the opening endowment table.
+            site = atlas.get(mid)
+            reserve = site.reserve_mU if site is not None and site.starting_mine == mid else units(reserve_units[mine.good])
             self.deposits[mid] = Deposit(mine.good, reserve, reserve, mine.good in ('water', 'biomass'))
             source_location = f'basin:{mine.hub}' if mine.good == 'water' else mid
             source = Account('nature', source_location, 'deposit', mine.good)
@@ -257,6 +262,23 @@ class OperatingWorld:
             self.extraction_lines[mid] = Line(mid, mine.owner, mine.hub, recipe)
             self.extraction_sources[mid] = ('nature', source_location, 'deposit')
             self.resource_sources[mid] = self.extraction_sources[mid]
+        # Remote atlas deposits (resource_atlas_v1): registered, hidden geology
+        # with real nature-custody stock, but no extraction line until a mine
+        # is built on them through `build`/`mine` (G1/G2).
+        for sid in sorted(atlas):
+            site = atlas[sid]
+            if site.starting_mine is not None or sid in self.resource_sites:
+                continue
+            hub_owner = initial.map.hubs[site.hub].owner or 'world'
+            self.resource_sites[sid] = MineSite(sid, hub_owner, site.hub, site.good, Q(site.grade_mU, 1000))
+            reserve = 0 if site.good == 'water' else site.reserve_mU
+            self.deposits[sid] = Deposit(site.good, reserve, reserve, site.renewable)
+            source_location = f'basin:{site.hub}' if site.good == 'water' else sid
+            source = Account('nature', source_location, 'deposit', site.good)
+            if reserve:
+                initial.inventory.transform({}, {source: reserve}, reason='declared_worldgen_deposit',
+                                            origins={source: Origin('nature', site.hub)})
+            self.resource_sources[sid] = ('nature', source_location, 'deposit')
         # Fix the bootstrap plan before execution: first eligible research node.
         for lid, line in initial.lines.items():
             if line.recipe.id == 'P075':
@@ -331,6 +353,11 @@ class OperatingWorld:
         occupied=warehouse_load(self.initial.inventory,self.cargo_weights,self.initial.warehouse_mU)
         for hub,quantity in self.refits.capacity_reserved().items():occupied[hub]+=quantity
         return occupied
+
+    def warehouse_load_at(self,hub):
+        """warehouse_load()[hub], without summing every other hub."""
+        occupied=warehouse_load(self.initial.inventory,self.cargo_weights,{hub:None})[hub]
+        return occupied+self.refits.capacity_reserved().get(hub,Q(0))
 
     def native(self, owner: str, name: str) -> CashAccount:
         return CashAccount(owner, name, owner if owner in self.rates else 'RU')
@@ -517,10 +544,13 @@ class OperatingWorld:
                 'grids': self.grids, 'last_satisfaction': self.last_satisfaction, 'last_unpaid': self.last_unpaid,
                 'wage_indices': self.wage_indices, 'cpi': self.cpi, 'inflation': self.inflation,
                 'completed_cycles': self.completed_cycles, 'observations': self.observations,
-                'bootstrap_failures': self.bootstrap_failures}
+                'bootstrap_failures': self.bootstrap_failures,
+                **({'national_power': self.national_power.snapshot()} if self.national_power is not None else {})}
 
     def audit(self) -> None:
         self.initial.audit()
+        if self.national_power is not None:
+            self.national_power.audit()
         self.spot.audit()
         self.consumption.audit()
         self.maintenance.audit()

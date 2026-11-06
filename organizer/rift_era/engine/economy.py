@@ -574,6 +574,23 @@ class Economy:
             original = state.catalog.recipes[line.recipe.id]['outputs']
             line.recipe = replace(line.recipe, outputs={g: round(units(q) * factor) for g, q in original.items()})
 
+    def _material_events(self, owner: str, good: str, bucket: str) -> list:
+        """This tick's material events for (owner, good, source_bucket), in event order.
+
+        The event list only grows within a tick and is cleared by begin_tick, so
+        an index extended from the last scanned position equals a full scan.
+        """
+        book = self.inventory.materials
+        events = book.events
+        cache = getattr(self, '_event_index', None)
+        if cache is None or cache[0] != book.tick or cache[1] is not events or cache[2] > len(events):
+            cache = self._event_index = [book.tick, events, 0, defaultdict(list)]
+        index = cache[3]
+        for e in events[cache[2]:]:
+            index[e.owner, e.good, e.source_bucket].append(e)
+        cache[2] = len(events)
+        return index.get((owner, good, bucket), ())
+
     def _input_payment(self, entity: str, good: str, quantity_mU: Fraction) -> None:
         self.s.macro.input(self._owner(entity), self._hub(entity), good, quantity_mU)
         account = self.s.frame.input_locks.get(entity)
@@ -581,8 +598,8 @@ class Economy:
             return
         owner = account.owner
         bucket=('generator_credit:' if entity in self.s.initial.plants else 'input_credit:')+entity
-        events=tuple(e for e in self.inventory.materials.events if e.id not in self.s.frame.procurement_seen
-                     and e.owner==owner and e.good==good and e.source_bucket==bucket)
+        seen=self.s.frame.procurement_seen
+        events=tuple(e for e in self._material_events(owner,good,bucket) if e.id not in seen)
         if sum((e.quantity_mU for e in events),Q(0))!=quantity_mU:
             raise InvariantViolation('input payment does not match actual material draw')
         payment,recipients=prepare_purchase(self.s.payments,account,events,{good:self.s.price(good,self._hub(entity))},
@@ -670,6 +687,7 @@ class Economy:
         # Existing fractional fees are real obligations. Keep enough actual
         # currency behind them before admitting any new electricity purchase.
         user_requests, subsidy_requests, required_ru = {}, {}, defaultdict(int)
+        unpaid = state.payments.unpaid_by_source()  # residuals are not touched in this loop
         for entity, (_, band, demand) in demands.items():
             owner = self._owner(entity)
             limit = (state.storage.stores[entity.split(':', 1)[1]].quote_ru if entity.startswith('storage:') else
@@ -679,12 +697,12 @@ class Economy:
             f.power_contract_caps[entity] = state.power_price_caps[owner]
             user_source = state.operating_account(entity, 'RU')
             user_lock = CashAccount(owner, f'power:{entity}', 'RU')
-            need = ceil(demand * cap * state.rates[owner] + state.payments.unpaid_fraction(user_lock))
+            need = ceil(demand * cap * state.rates[owner] + unpaid.get(user_lock, Q(0)))
             user_requests[entity] = (user_source, need)
             required_ru[user_source] += need
             subsidy_source = CashAccount(owner, 'reserves', 'RU')
             subsidy_lock = CashAccount(owner, f'power_subsidy:{entity}', 'RU')
-            subsidy = ceil(demand * (limit_native - cap) * state.rates[owner] + state.payments.unpaid_fraction(subsidy_lock))
+            subsidy = ceil(demand * (limit_native - cap) * state.rates[owner] + unpaid.get(subsidy_lock, Q(0)))
             if subsidy:
                 subsidy_requests[entity] = (subsidy_source, subsidy)
                 required_ru[subsidy_source] += subsidy
@@ -705,13 +723,14 @@ class Economy:
         f.power_locks.update(self._reserve_cash(ctx, user_requests, 'power'))
         f.power_subsidy_locks.update(self._reserve_cash(ctx, subsidy_requests, 'power_subsidy'))
         loads = []
+        unpaid = state.payments.unpaid_by_source()  # refreshed after FX and reservations
         for entity, (hub, band, demand) in demands.items():
             if not demand:
                 continue
             owner = self._owner(entity)
-            user = max(Q(0), initial.cash.balance(f.power_locks[entity]).native_mU - state.payments.unpaid_fraction(f.power_locks[entity]))
+            user = max(Q(0), initial.cash.balance(f.power_locks[entity]).native_mU - unpaid.get(f.power_locks[entity], Q(0)))
             subsidy_lock = f.power_subsidy_locks.get(entity)
-            subsidy = max(Q(0), initial.cash.balance(subsidy_lock).native_mU - state.payments.unpaid_fraction(subsidy_lock)) if subsidy_lock else Q(0)
+            subsidy = max(Q(0), initial.cash.balance(subsidy_lock).native_mU - unpaid.get(subsidy_lock, Q(0))) if subsidy_lock else Q(0)
             rank = state.power_priorities[owner].index(f'B{band}') + 1 if 1 <= band <= 4 else band
             limit = (state.storage.stores[entity.split(':', 1)[1]].quote_ru if entity.startswith('storage:') else
                      state.compute.bid_ru(entity) if entity in state.compute.frame_centers else 50 * state.rates[owner])
@@ -990,6 +1009,8 @@ class Economy:
                     state.water_used_mU[mine.hub] += amount
                 metric = state.cycles[mine.owner]
                 metric.extracted[mine.good] = metric.extracted.get(mine.good, 0) + amount
+                if state.national_power is not None:
+                    state.national_power.record_extraction(mine.hub, mine.good, amount)
                 state.macro.output(mine.owner, mine.hub, result.released_mU)
                 table = state.catalog.runtime['extraction'][mine.good]
                 labor_needed = ceil(units(table['labor']) * (Q(5, 4) if mine.level == 'G2' else 1) *
@@ -1226,7 +1247,21 @@ class Economy:
 def opening_economy(catalog, initial, *, total_ticks: int = 150, debug: bool = True,
                     commerce: bool = False) -> Kernel:
     if total_ticks > 150:
-        raise InfrastructureFault('opening_economy_v1 covers at most 150 ticks; full-match assembly is not implemented')
+        raise InfrastructureFault('opening_economy_v1 covers at most 150 ticks; use full_match for a complete game')
+    return _assemble(catalog, initial, total_ticks=total_ticks, debug=debug, commerce=commerce, scoring=False)
+
+
+def full_match(catalog, initial, *, total_ticks: int = 28_800, debug: bool = False,
+               commerce: bool = True) -> Kernel:
+    """P0-1: the complete game (28,800 ticks by default) with P0-2 national power.
+
+    Same systems as the opening; adds the per-cycle five-pillar collector as the
+    final SETTLEMENT system. `finalize_match` turns the finished kernel into V.
+    """
+    return _assemble(catalog, initial, total_ticks=total_ticks, debug=debug, commerce=commerce, scoring=True)
+
+
+def _assemble(catalog, initial, *, total_ticks: int, debug: bool, commerce: bool, scoring: bool) -> Kernel:
     state = OperatingWorld(catalog, initial)
     economy = Economy(state)
     economy.initialize_yields()
@@ -1339,5 +1374,11 @@ def opening_economy(catalog, initial, *, total_ticks: int = 150, debug: bool = T
                System('shared_intelligence', Phase.OBSERVATION, lambda state, ctx: state.intelligence_sharing.advance(ctx), after=('military_vision',)),
                System('city_views', Phase.OBSERVATION, lambda state, ctx: state.city_economy.publish(), after=('knowledge_boundary',)),
                System('observation', Phase.OBSERVATION, economy.observe, after=('shared_intelligence','city_views', 'weather_forecasts', 'contract_views','orbital_observation','ai_license_views')))
+    if scoring:
+        from .national_power import NationalPower
+        state.national_power = NationalPower(state)
+        settlement = tuple(s.id for s in systems if s.phase == Phase.SETTLEMENT)
+        systems += (System('national_power', Phase.SETTLEMENT, lambda state, ctx: state.national_power.advance(ctx),
+                           after=settlement),)
     return Kernel(initial.map.seed, state, systems, clock=ClockConfig(total_ticks=total_ticks),
                   debug=debug, fingerprint_each_tick=debug)
