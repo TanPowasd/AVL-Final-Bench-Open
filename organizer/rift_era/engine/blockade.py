@@ -30,7 +30,7 @@ from .combat import blockade_fraction
 from .command_schema import fields
 from .diplomacy import Relation
 from .errors import RuleViolation
-from .ledger import Account
+from .ledger import Account, Transfer
 from .numeric import Q, units
 from .protocol import PreparedCommand
 from .provenance import Use
@@ -214,9 +214,21 @@ class Blockades:
                 state.cycles[shipment.owner].destroyed_value += Q(lost, 1000) * state.catalog.weights[shipment.good]
         vehicle = state.cargo.vehicles[shipment.vehicle_id]
         vehicle.health_mU = max(0, vehicle.health_mU - floor(d * 1000))
+        wreck = 0
         if vehicle.health_mU == 0:
+            # 03 s5: the rest of the cargo lands at the current edge endpoint as
+            # an outdoor pile of the original owner (promoted into the warehouse
+            # as capacity frees, decays like any outdoor stock); the attacker
+            # gains nothing. The wreck keeps the vehicle assigned and STRANDED.
             shipment.mode = TransitMode.STRANDED
-        report.update(status='HIT', hit_mU=int(floor(d * 1000)), cargo_lost_mU=lost, vehicle_health_mU=vehicle.health_mU)
+            cargo = Account(shipment.owner, shipment.id, 'in_transit', shipment.good)
+            wreck = state.initial.inventory.balance(cargo)
+            if wreck:
+                state.initial.inventory.transfer_many((Transfer(cargo, Account(shipment.owner, shipment.current_hub, 'outdoor', shipment.good),
+                                                               wreck, destination_hub=shipment.current_hub),))
+                shipment.quantity_mU -= wreck
+        report.update(status='HIT', hit_mU=int(floor(d * 1000)), cargo_lost_mU=lost, vehicle_health_mU=vehicle.health_mU,
+                      **({'debris_mU': wreck, 'debris_hub': shipment.current_hub} if vehicle.health_mU == 0 else {}))
 
     def _draw(self, formation, ctx):
         """Take every unit's full combat_tick supply, or nothing (one event)."""

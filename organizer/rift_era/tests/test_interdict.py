@@ -74,6 +74,34 @@ class InterdictTests(unittest.TestCase):
         self.assertLess(vehicle.health_mU, before_hp)
         state.audit()
 
+    def test_destroyed_vehicle_drops_cargo_as_owner_debris(self):
+        game, state, formation = self.scenario()
+        tracks = self.wait_for_track(game, state)
+        (tid, shipment), = tracks.items()
+        vehicle = state.cargo.vehicles[shipment.vehicle_id]
+        vehicle.health_mU = 1  # test placement: one more hit wrecks it
+        hub = shipment.current_hub
+        inv = state.initial.inventory
+        pile = Account(shipment.owner, hub, 'outdoor', shipment.good)
+        stock = Account(shipment.owner, hub, 'available', shipment.good)
+        before_qty = shipment.quantity_mU
+        before_pile = inv.balance(pile) + inv.balance(stock)
+        game.step({'n0': [{'id': '9', 'kind': 'military', 'op': 'interdict', 'formation_id': formation.id,
+                           'shipment_track_id': tid}]})
+        report = state.blockades.recent['n0'][-1]
+        self.assertEqual((report['status'], report['vehicle_health_mU']), ('HIT', 0), report)
+        self.assertEqual(report['debris_hub'], hub)
+        self.assertEqual(report['debris_mU'], before_qty - report['cargo_lost_mU'])
+        self.assertEqual(shipment.quantity_mU, 0)
+        self.assertEqual(shipment.mode.value, 'STRANDED')
+        # Debris stays the shipment owner's (outdoor or already promoted), never the attacker's.
+        self.assertGreaterEqual(inv.balance(pile) + inv.balance(stock) - before_pile,
+                                report['debris_mU'] - report['debris_mU'] // 20 - 1)
+        self.assertEqual(inv.balance(Account('n0', hub, 'outdoor', shipment.good)), 0)
+        # A wreck is not refuelled back onto the road.
+        self.assertEqual(vehicle.assigned, shipment.id)
+        state.audit()
+
     def test_requires_war_with_owner_and_carrier(self):
         game, state, formation = self.scenario(war=False)
         tracks = self.wait_for_track(game, state)

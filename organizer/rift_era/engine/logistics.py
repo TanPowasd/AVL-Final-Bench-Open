@@ -304,7 +304,7 @@ class Transport:
             raise RuleViolation('ERR_SITE_INCOMPATIBLE')
         self.inventory.transfer_many((Transfer(from_account, Account(shipment.owner, shipment.id, 'fuel_tank', 'fuel'),
                                                delivered_fuel_mU, destination_hub=shipment.current_hub),))
-        if shipment.mode == TransitMode.STRANDED:
+        if shipment.mode == TransitMode.STRANDED and self.vehicles[shipment.vehicle_id].health_mU > 0:
             shipment.mode = (TransitMode.RETURNING if shipment.returning else TransitMode.IN_TRANSIT)
 
     def audit(self) -> None:
