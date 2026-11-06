@@ -61,6 +61,20 @@ class CouplingTests(unittest.TestCase):
             self.assertEqual(unit.tech_multiplier, state.initial.units[uid].tech_multiplier * Q(112, 100))
             self.assertIsNot(unit, state.initial.units[uid])
 
+    def test_c18_fusion_narrowing_needs_ai09_and_an_online_fusion_system(self):
+        from types import SimpleNamespace as NS
+        state = self.game().state
+        vision = state.vision
+        self.assertEqual(vision.fusion_narrowing('n0'), 0)
+        state.research['n0'].known.add('AI09')
+        self.assertEqual(vision.fusion_narrowing('n0'), 0)           # no fusion system online
+        state.systems.instances['fx'] = NS(owner='n0', kind='fusion_sensor', online=True, hub='n0-h0')
+        state.ai_deployment.previous_strength = lambda owner, hub, task, threshold: Q(10)
+        self.assertEqual(vision.fusion_narrowing('n0'), Q(1, 20))
+        state.ai_deployment.previous_strength = lambda owner, hub, task, threshold: Q(100)
+        self.assertEqual(vision.fusion_narrowing('n0'), Q(1, 5))     # capped at 20%
+        del state.systems.instances['fx']
+
 
 if __name__ == '__main__':
     unittest.main()

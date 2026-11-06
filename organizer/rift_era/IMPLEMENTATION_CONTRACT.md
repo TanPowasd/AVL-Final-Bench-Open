@@ -386,5 +386,6 @@ P8 发布缓存后读取不重新探测；测控失联时只报告失联，不�
 - C24：采掘公司（sector mining）公允价 × max(.3, min(1, L/200)^.5)，L = 本国非再生在采矿床剩余储量 / 近 20 周期平均非水、非生物质采出（周期）；无采出时系数 1。
 - C25：机组停运率乘 (1 + 2(1 − Qsec))，只在本周期有实际交火或对该国有效封锁的区域生效；此处 Qsec = max(0, 1 − .4·Combat − .3·Blockade)（污染项不计入战区乘数）。Combat 为该区本周期实际交火 tick 数 /10（由战斗系统逐 tick 计数，同时供国力 Qsec 使用）。上限 ×3。
 - C19：编队在通信网内（所在枢纽与 cyber 算力来源属同一 C02 通信分量）、本国有 AI09 且未被 AI 事故停用时，其 ground_drone/air_drone/swarm 有效火力 ×(1 + min(.15, .004·Cap·min(1, a_cyber/10)))，Cap 与 a_cyber 读上一周期部署（`previous_strength(..., 'cyber', 10000)`）。只作用于当 tick 的纯战斗计算副本，不改单位存档的 tech_multiplier。
+- C18：观测方有 AI09、未被停用、并有在线 C08 `fusion_sensor` 系统时，多源（≥2 类传感器）目击的估计误差宽度再乘 (1 − min(.2, .005·Cap·s_c))，Cap·s_c 取其各融合枢纽 `previous_strength(..., 'cyber', 10000)` 最大值。C08 自身的基础收窄在规则中没有量化，未实现。
 - C16：已存在于 `StockMarket._npc_policy`（阈值 max(2%, 5% − Cap/1000)，动量池 × (1 − min(.5, Cap/70))）。
 - C28：阻塞，引擎尚无跨境电力线路/合同。

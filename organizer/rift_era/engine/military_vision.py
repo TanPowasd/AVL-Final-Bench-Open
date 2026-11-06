@@ -56,6 +56,7 @@ class MilitaryVision:
         state=self.s;frame=state.sensors.frame()
         signals=tuple(state.sensors.signal(f) for f in state.formations.rows.values()) + tuple(state.deception.signal(d) for d in state.deception.rows.values())
         for owner,observer in self.observers.items():
+            narrow=self.fusion_narrowing(owner)
             legal=[]
             for signal in signals:
                 if signal.owner==owner or state.deception.exposed(owner,signal.id):continue
@@ -78,6 +79,7 @@ class MilitaryVision:
                 z=normal(state.initial.map.seed,'military_sighting:'+owner,window,alias)
                 estimate=max(0,round(signal.strength_mU*math.exp(.35*(1-.75*float(quality))*z)))
                 width=ceil(estimate*Q(15,100)*(1-quality))
+                if narrow and '+' in source:width=ceil(width*(1-narrow))
                 sightings.append(Sighting(key,time,source,signal.region,round(quality*1000),max(0,estimate-width),
                     estimate+width,signal.domain,confirmed_destroyed=dead,owner=signal.owner,estimated_center_mU=estimate))
                 if not dead:current[signal.id]=key
@@ -93,6 +95,15 @@ class MilitaryVision:
             self.investigated[owner]={a:w for a,w in self.investigated[owner].items() if a in observer._aliases.values()}
             self.views[owner]=observer.view(time,self.speeds)|{name:sorted(ids) for name,ids in self.events[owner].items()}
             self.views[owner]['decoy_exposed']=sorted(self.exposure_events[owner])
+
+    def fusion_narrowing(self,owner):
+        """10 C18: with AI09 and an online C08 fusion system, multi-source error narrows by min(20%, .5%*Cap*s_c)."""
+        state=self.s
+        if 'AI09' not in state.research[owner].known or state.ai.suspended_until[owner]>state.ai_deployment.cycle:return Q(0)
+        hubs=sorted(s.hub for s in state.systems.instances.values() if s.owner==owner and s.kind=='fusion_sensor' and s.online)
+        if not hubs:return Q(0)
+        strength=max(state.ai_deployment.previous_strength(owner,h,'cyber',10000) for h in hubs)
+        return min(Q(1,5),strength/200)
 
     def advance(self,ctx):self._observe(ctx.tick+1,ctx.window)
 
