@@ -264,5 +264,120 @@ class Round6ScenarioTests(unittest.TestCase):
         self.assertEqual(state.consumption.receipt_mean20(owner, 'transit'), exp['receipt'])
         state.audit()
 
+    # -- healthy_relocation ---------------------------------------------------
+    def test_healthy_relocation(self):
+        """5 general workers move by a real passenger trip to an empty, unhoused core Hub."""
+        exp = expected('healthy_relocation')
+        setup = SCENARIOS['healthy_relocation']['setup']
+        game = self.game(ticks=60)
+        state = game.state
+        pops = state.initial.populations
+        origin, dest, owner = 'n0-h0', 'n0-h1', 'n0'
+        skills = ('general_worker', 'skilled_worker', 'engineer')
+        # Fixture: the scenario's origin census, an empty destination with no housing.
+        pops[origin].skills_mU = {k: q * 1000 for k, q in zip(skills, setup['origin_population_skills'])}
+        pops[dest].skills_mU = {k: 0 for k in skills}
+        state.initial.housing_mU[dest] = setup['destination_housing']
+        self.assertEqual(state.authority.regions[state.initial.map.hubs[origin].region].support_mU, setup['origin_Support'])
+        inv = state.initial.inventory
+        reserved = {}
+        real_prepare = inv.prepare_transfers
+        def spy(transfers, *a, **kw):
+            transfers = tuple(transfers)
+            for t in transfers:
+                if t.destination.bucket == 'passenger_provisions':
+                    reserved[t.destination.asset] = reserved.get(t.destination.asset, 0) + t.quantity
+            return real_prepare(transfers, *a, **kw)
+        inv.prepare_transfers = spy
+        game.step({owner: [{'id': '1', 'kind': 'governance', 'op': 'relocate_population', 'origin_hub': origin,
+                            'dest_hub': dest, 'skills_mU': {'general_worker': 5000, 'skilled_worker': 0, 'engineer': 0},
+                            'path': ['road:n0-h0:n0-h1'], 'allow_unhoused': True}]})
+        self.assertEqual(self.last(state, owner).status, 'ACCEPTED')
+        self.assertEqual(pops[dest].total_mU, exp['before_arrival_destination_pop'])
+        # A road carries at most 2 people a tick here, so the 5 leave in real batches.
+        arrived = {}
+        def track():
+            for sid, rec in tuple(state.passengers.shipments.items()):
+                seen[sid] = dict(rec.skills_mU)
+            for sid in tuple(seen):
+                if sid not in state.passengers.shipments:
+                    for k, q in seen.pop(sid).items():
+                        arrived[k] = arrived.get(k, 0) + q
+        seen = {}
+        while state.passengers.pending and game.tick < 30:
+            game.step(); track()
+        inv.prepare_transfers = real_prepare
+        self.assertEqual(reserved, {'food': 1500, 'water': 1000})     # provisions food 1.5, water 1 in total
+        self.assertEqual(pops[origin].skills_mU['general_worker'], exp['origin_general_pop_after_departure'] * 1000)
+        while state.passengers.shipments and game.tick < 55:
+            game.step(); track()
+        self.assertFalse(state.passengers.shipments)
+        # Everyone who left arrived, as general workers (later deaths are ordinary demography).
+        self.assertEqual(arrived, {'general_worker': exp['after_arrival_destination_general_pop'] * 1000,
+                                   'skilled_worker': 0, 'engineer': 0})
+        self.assertGreater(pops[dest].skills_mU['general_worker'], 0)
+        self.assertEqual(pops[dest].skills_mU['skilled_worker'] + pops[dest].skills_mU['engineer'], 0)
+        from organizer.rift_era.engine.population import housing_factor
+        h = housing_factor(pops[dest].total_mU, state.initial.housing_mU[dest])
+        self.assertEqual(h, exp['destination_H'])
+        self.assertEqual(h * Q(1), exp['destination_birth_rate'])     # births scale with H
+        active = Q(sum(arrived.values()), 1000) * state.labor_participation(owner, dest)
+        self.assertTrue(near(active, exp['destination_active_labor']))
+        self.assertTrue(exp['no_military_conversion'])
+        self.assertFalse(any(f.owner == owner and f.id.startswith('formation:') for f in state.formations.rows.values()))
+        state.audit()
+
+    # -- cpu_budget -----------------------------------------------------------
+    def test_cpu_budget(self):
+        from organizer.rift_era.engine.evaluation import GIB, ResourceBudget
+        setup, exp = SCENARIOS['cpu_budget']['setup'], expected('cpu_budget')
+        engine_memory = 2 * GIB
+        per_match = engine_memory + setup['simultaneous_strategy_processes'] * GIB
+        total = 64 * GIB
+        budget = ResourceBudget(effective_cpu=Q(setup['effective_cpu']), memory_available=total,
+                                memory_total=total, engine_cpu_peak=Q(setup['engine_cpu']),
+                                engine_memory_peak=engine_memory,
+                                active_strategies=setup['simultaneous_strategy_processes'],
+                                resident_strategies=setup['simultaneous_strategy_processes'])
+        self.assertGreaterEqual((total - max(4 * GIB, total // 5)) // per_match, 1)   # memory is not the bound
+        c_match = setup['engine_cpu'] + setup['simultaneous_strategy_processes']
+        self.assertEqual(c_match, exp['C_match'])
+        reserve = min(max(0, setup['effective_cpu'] - 1), max(1, -(-setup['effective_cpu'] // 4)))
+        self.assertEqual(reserve, setup['cpu_reserve'])
+        self.assertEqual((setup['effective_cpu'] - reserve) // c_match, exp['K_CPU'])
+        self.assertEqual(budget.concurrency(), exp['Kmax'])
+
+    # -- batch_consistency ----------------------------------------------------
+    def test_batch_consistency(self):
+        import tempfile
+        from organizer.rift_era.engine.errors import InfrastructureFault
+        from organizer.rift_era.engine.evaluation import Batch
+        hashes = dict(rules_hash='r' * 64, engine_hash='e' * 64, reference_hash='f' * 64,
+                      runtime_hash='i' * 64, resource_plan_hash='p' * 64)
+        batch = Batch.create(**hashes)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = pathlib.Path(tmp) / 'manifest.json'
+            batch.write_new(path)
+            first, second = Batch.read(path), Batch.read(path)   # two submissions read the frozen manifest
+            fields = {'seed64_sequence': 'seeds', 'seat_mapping': 'seats', 'rules_hash': 'rules_hash',
+                      'engine_hash': 'engine_hash', 'reference_hash': 'reference_hash',
+                      'runtime_image': 'runtime_hash', 'resource_budgets': 'resource_plan_hash',
+                      'scheduler_plan': 'resource_plan_hash'}
+            self.assertEqual(set(fields), set(expected('batch_consistency')['equal_fields']))
+            for attr in fields.values():
+                self.assertEqual(getattr(first, attr), getattr(second, attr))
+            self.assertEqual(len(set(first.seeds)), 64)
+            self.assertEqual(first.seats, tuple(i % 8 for i in range(64)))
+            # A changed rule cannot reuse the batch: the manifest is write-once and
+            # every shadow key is bound to the rule hash.
+            changed = Batch(**{**{k: getattr(first, k) for k in first.__dataclass_fields__}, 'rules_hash': 'x' * 64})
+            with self.assertRaises(FileExistsError):
+                changed.write_new(path)
+            self.assertNotEqual(changed.shadow_key(first.seeds[0], 0), first.shadow_key(first.seeds[0], 0))
+            self.assertTrue(expected('batch_consistency')['changed_rule_requires_new_batch'])
+            with self.assertRaises(InfrastructureFault):
+                Batch(**{**{k: getattr(first, k) for k in first.__dataclass_fields__},
+                         'seeds': first.seeds[:-1] + (first.seeds[0],)}).validate()
+
 if __name__ == '__main__':
     unittest.main()
