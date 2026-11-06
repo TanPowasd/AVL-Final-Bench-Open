@@ -132,6 +132,8 @@ class Battles:
                 for uid in state.formations.rows[fid].unit_ids:terrain_override[uid]=terrain
         combatants = self.combatants()
         boosted = self.drone_boost()
+        for uid, unit in self.combined_arms(boosted).items():
+            boosted[uid] = unit
         result = resolve(state.catalog,state.initial.diplomacy,{**combatants,**boosted} if boosted else combatants,contacts,supplies,
                          {rid:r.terrain for rid,r in state.initial.map.regions.items()},moving=moving,terrain_by_unit=terrain_override,inactive=state.refits.inactive_units(),target_only=frozenset(state.deception.rows))
         self.apply_bombard(ctx, result, combatants)
@@ -244,6 +246,26 @@ class Battles:
             for uid in drones:
                 unit = state.initial.units[uid]
                 result[uid] = replace(unit, tech_multiplier=unit.tech_multiplier * factor)
+        return result
+
+    def combined_arms(self, boosted):
+        """04 G07: with G07, an owner's in-network formations (radio or sensor fitted) of
+        two or more domains in one region deal x1.20 damage (track sharing not modelled)."""
+        state = self.s
+        groups = {}
+        for formation in state.formations.rows.values():
+            if (formation.refitting or formation.slot_a not in ('radio', 'sensor')
+                    or 'G07' not in state.research[formation.owner].known):
+                continue
+            groups.setdefault((formation.owner, formation.region), []).append(formation)
+        result = {}
+        for rows in groups.values():
+            if len({f.domain for f in rows}) < 2:
+                continue
+            for formation in rows:
+                for uid in formation.unit_ids:
+                    unit = boosted.get(uid, state.initial.units[uid])
+                    result[uid] = replace(unit, tech_multiplier=unit.tech_multiplier * Q(6, 5))
         return result
 
     def combat_share(self, region, cycle):

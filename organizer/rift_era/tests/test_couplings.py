@@ -90,6 +90,66 @@ class CouplingTests(unittest.TestCase):
         state.completed_cycles = 7
         self.assertFalse(parity.net_importer('n0', 'chip'))           # outside the 5-cycle window
 
+    def test_a07_precision_farming_cuts_inputs_and_lifts_bad_weather(self):
+        from types import SimpleNamespace as NS
+        from organizer.rift_era.engine import industry_effects
+        from organizer.rift_era.engine.clock import ClockConfig
+        state = self.game().state
+        from organizer.rift_era.engine.production import Recipe
+        farm = next(l for l in state.initial.lines.values() if l.owner == 'n0' and l.recipe.id in ('P028', 'P029'))
+        farm.recipe = Recipe.from_catalog(self.catalog, 'P029')   # fixture: a fertilised farm line
+        ctx = NS(tick=0, seed=1000, cycle=0, clock=ClockConfig())
+        industry_effects.refresh(state, ctx)
+        base = dict(farm.recipe.inputs)
+        state.research['n0'].known.add('A07')
+        state.line_options.setdefault(farm.id, {})['addons'] = ('sensor',)
+        industry_effects.refresh(state, ctx)
+        self.assertEqual(farm.recipe.inputs, base)                     # no C08 telemetry yet
+        state.systems.instances['fx'] = NS(owner='n0', kind='fusion_sensor', online=True, hub='n0-h0')
+        industry_effects.refresh(state, ctx)
+        self.assertEqual(farm.recipe.inputs['water'], round(base['water'] * Q(3, 4)))
+        self.assertEqual(farm.recipe.inputs['fertilizer'], round(base['fertilizer'] * Q(3, 4)))
+        self.assertEqual(industry_effects.gene_weather(state, farm, Q(1, 2))[0], Q(65, 100))
+        self.assertEqual(industry_effects.gene_weather(state, farm, Q(95, 100))[0], 1)
+        del state.systems.instances['fx']
+
+    def test_g07_combined_arms_needs_two_domains_in_network(self):
+        state = self.game().state
+        land, other = [f for f in state.formations.rows.values() if f.owner == 'n0'][:2]
+        other.domain = 'Air'  # fixture: a second domain at the same place
+        state.research['n0'].known.add('G07')
+        land.slot_a = other.slot_a = 'radio'
+        other.region = land.region
+        arms = state.battles.combined_arms({})
+        self.assertTrue(set(land.unit_ids) <= set(arms))
+        uid = land.unit_ids[0]
+        self.assertEqual(arms[uid].tech_multiplier, state.initial.units[uid].tech_multiplier * Q(6, 5))
+        other.slot_a = None
+        self.assertEqual(state.battles.combined_arms({}), {})
+
+    def test_i12_molecular_lines_cut_inputs_only_in_s5_with_ai_core(self):
+        from dataclasses import replace
+        from types import SimpleNamespace as NS
+        from organizer.rift_era.engine import industry_effects
+        from organizer.rift_era.engine.clock import ClockConfig
+        from organizer.rift_era.engine.production import Recipe
+        state = self.game().state
+        fid, facility = next((k, f) for k, f in state.initial.facilities.items() if f.owner == 'n0' and f.line_ids)
+        line = state.initial.lines[facility.line_ids[0]]
+        line.recipe = Recipe.from_catalog(self.catalog, 'P013')     # fixture
+        ctx = NS(tick=0, seed=1000, cycle=0, clock=ClockConfig())
+        state.research['n0'].known.add('I12')
+        state.line_options.setdefault(line.id, {})['addons'] = ('ai_core',)
+        state.initial.facilities[fid] = replace(facility, profile='S4')
+        industry_effects.refresh(state, ctx)
+        base = dict(line.recipe.inputs)
+        state.initial.facilities[fid] = replace(facility, profile='S5')
+        industry_effects.refresh(state, ctx)
+        self.assertEqual(line.recipe.inputs, {g: round(q * Q(7, 10)) for g, q in base.items()})
+        plain = Recipe.from_catalog(self.catalog, 'P013').outputs
+        self.assertEqual(line.recipe.outputs, dict(plain))              # no 6% defect loss
+        state.initial.facilities[fid] = facility
+
 
 if __name__ == '__main__':
     unittest.main()
