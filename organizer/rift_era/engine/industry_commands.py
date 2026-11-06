@@ -222,6 +222,26 @@ class IndustryCommands:
 
         return self.state.work.prepare_start(job, register)
 
+    def _set_platform(self, owner, order):
+        """03 N11: an orbital platform runs one general line of P081 or P087 (or pauses)."""
+        from .orbital_operations import ORBITAL_RECIPES
+        platform = self.state.orbit.platforms[order['line_id']]
+        if platform.owner != owner:
+            raise RuleViolation('ERR_NO_VISIBLE_TARGET')
+        if 'expected_version' in order and order['expected_version'] != platform.version:
+            raise RuleViolation('ERR_STALE_VERSION')
+        rid = order['recipe']
+        if order['mode'] != 'general' or set(order) - {'id', 'kind', 'op', 'line_id', 'recipe', 'mode', 'expected_version'}:
+            raise RuleViolation('ERR_SCHEMA')
+        if rid is not None:
+            if rid not in ORBITAL_RECIPES:
+                raise RuleViolation('ERR_SITE_INCOMPATIBLE', 'orbital platforms run P081 or P087 only')
+            self._tech(owner, self.state.catalog.recipes[rid]['requires_all'])
+        def commit():
+            platform.recipe = rid
+            platform.version += 1
+        return PreparedCommand(commit)
+
     def _island(self, owner, order, site, kind, ctx):
         """04/03 L12 artificial island (artificial_island_v1, see island.py)."""
         from .island import COSTS, CYCLES, island_cell
@@ -304,6 +324,8 @@ class IndustryCommands:
             {'high_temp': bool, 'gene_edited': bool, 'target_stock_mU': int, 'addons': list, 'expected_version': int})
         state = self.state
         lid, rid, mode = order['line_id'], order['recipe'], order['mode']
+        if lid in state.orbit.platforms:
+            return self._set_platform(owner, order)
         asset = self._owned_asset(owner, lid, order)
         line = state.initial.lines.get(lid)
         if line is None:
