@@ -482,6 +482,35 @@ class OperatingWorld:
         self.quantity_remainders[key] = total - amount
         return amount
 
+    def path_regions(self, legs) -> frozenset:
+        """Regions a loop-erased civilian path passes through (07 Phi_chokepoint):
+        every hub on it, plus the cells of the corridor each leg used (the one
+        joining its hubs with the leg's L1 length; endpoints only if none fits)."""
+        world = self.initial.map
+        palette = tuple(sorted(world.regions))
+        key = (len(self.cargo.corridors), len(palette))
+        cached = getattr(self, '_pair_index', None)
+        if cached is None or cached[0] != key:
+            pairs = {}
+            for eid in sorted(self.cargo.corridors):
+                edge = self.cargo.corridors[eid]
+                pairs.setdefault(frozenset((edge.a, edge.b)), []).append(eid)
+            cached = (key, pairs)
+            self._pair_index = cached
+        index = cached[1]
+        regions = set()
+        for leg in legs:
+            for hub in (leg.origin, leg.destination):
+                if hub in world.hubs:
+                    regions.add(world.hubs[hub].region)
+            pair = frozenset((leg.origin, leg.destination))
+            for eid in index.get(pair, ()):
+                edge = self.cargo.corridors[eid]
+                if edge.length_cells == leg.length and eid in self.cargo.paths:
+                    regions.update(palette[world.region_cells[c]] for c in self.cargo.paths[eid])
+                    break
+        return frozenset(regions)
+
     def credit_consumption(self, owner: str, good: str, quantity_mU: Fraction) -> None:
         metric = self.cycles[owner]
         metric.consumed[good] = metric.consumed.get(good, Q(0)) + quantity_mU

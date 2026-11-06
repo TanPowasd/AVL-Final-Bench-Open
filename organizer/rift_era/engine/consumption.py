@@ -15,7 +15,7 @@ import heapq
 from .errors import InvariantViolation
 from .materials import MaterialBook, MaterialUse
 from .numeric import Q
-from .provenance import ELIGIBLE, Lot, Use, terminal_receipt
+from .provenance import ELIGIBLE, Lot, Use, erase_loops, terminal_receipt
 
 
 class InitialPaths:
@@ -57,15 +57,19 @@ class Consumption:
         self._receipts: dict[int, dict[tuple[str, str], Fraction]] = {}
         self._synthetic: dict[int, dict[tuple[str, str], Fraction]] = {}
         self._construction: dict[int, dict[tuple[str, str], Fraction]] = {}
+        # 07 control: catalog value of terminal receipts whose loop-erased path
+        # passes through each region (each receipt once per region), by cycle.
+        self._phi: dict[int, dict[str, Fraction]] = {}
 
     def advance(self, tick: int, cycle: int, events: tuple[MaterialUse, ...], *,
                 weights: Mapping[str, Fraction],
-                shortest: Callable[[str, str], int], services: tuple = ()) -> None:
+                shortest: Callable[[str, str], int], services: tuple = (),
+                path_regions: Callable[[tuple], frozenset] | None = None) -> None:
         if tick <= self.tick or cycle < self.cycle:
             raise InvariantViolation('duplicate or backdated consumption settlement')
         if any(event.tick != tick for event in events) or len({e.id for e in events}) != len(events):
             raise InvariantViolation('consumption events from another tick or duplicate event')
-        eligible, receipts, synthetic, debt, construction = (defaultdict(Fraction) for _ in range(5))
+        eligible, receipts, synthetic, debt, construction, phi = (defaultdict(Fraction) for _ in range(6))
         for event in events:
             if event.quantity_mU <= 0:
                 raise InvariantViolation('empty consumption event')
@@ -89,6 +93,9 @@ class Consumption:
                 weight=weights[event.good], origin_credit=event.origin_credit,
                 initial_shortest_length=shortest(origin.hub, event.hub))
             receipts[(origin.nation, 'export')] += receipt.credit_weighted_export
+            if path_regions is not None and origin.path and receipt.value:
+                for region in path_regions(erase_loops(origin.path)):
+                    phi[region] += receipt.value
             for carrier, value in receipt.transit.items():
                 receipts[(carrier, 'transit')] += value
         # Flow services have no physical origin batch or transferable stock.
@@ -107,7 +114,7 @@ class Consumption:
         for key, value in debt.items():
             self.sink_debt[key] = self.sink_debt.get(key, Q(0)) + value
         for table, updates in ((self._eligible, eligible), (self._receipts, receipts), (self._synthetic, synthetic),
-                               (self._construction, construction)):
+                               (self._construction, construction), (self._phi, phi)):
             current = table.setdefault(cycle, {})
             for key, value in updates.items():
                 if value:
@@ -124,6 +131,10 @@ class Consumption:
 
     def receipt_mean20(self, owner: str, kind: str) -> Fraction:
         return sum((row.get((owner, kind), Q(0)) for row in self._receipts.values()), Q(0)) / 20
+
+    def chokepoint_phi(self, region: str) -> Fraction:
+        """Phi_r = min(100, mean20 of terminal-receipt catalog values routed through r)."""
+        return min(Q(100), sum((row.get(region, Q(0)) for row in self._phi.values()), Q(0)) / 20)
 
     def synthetic_share(self, hub: str, cycle: int) -> Fraction:
         row = self._synthetic.get(cycle, {})
@@ -151,4 +162,6 @@ class Consumption:
                 'eligible': [[c, rows(row)] for c, row in sorted(self._eligible.items())],
                 'receipts': [[c, rows(row)] for c, row in sorted(self._receipts.items())],
                 'synthetic': [[c, rows(row)] for c, row in sorted(self._synthetic.items())],
-                'construction': [[c, rows(row)] for c, row in sorted(self._construction.items())]}
+                'construction': [[c, rows(row)] for c, row in sorted(self._construction.items())],
+                **({'phi': [[c, sorted(row.items())] for c, row in sorted(self._phi.items()) if row]}
+                   if any(self._phi.values()) else {})}

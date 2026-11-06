@@ -445,5 +445,122 @@ class Round6ScenarioTests(unittest.TestCase):
         self.assertEqual(exp['corridor_capacity_at_zero'], 0)
         del state.utilities.links['grid:test']
 
+    # -- blockade_food_substitution -------------------------------------------
+    def test_blockade_food_substitution(self):
+        """A=n0 closes its edge eC (road n0-h0:n0-h1) to carrier C=n2 while at war; the
+        buyer B (city-33's residents) then buys A's food over A's own disjoint route eA
+        (road city-33-h0:n0-h3). Every channel of the lower bound is read from the engine."""
+        from organizer.rift_era.engine.provenance import Leg
+        from organizer.rift_era.engine.scoring import international_pillar
+        exp = expected('blockade_food_substitution')
+        A, C, city_id = 'n0', 'n2', 'city-33'
+        eC, eA = 'road:n0-h0:n0-h1', 'road:city-33-h0:n0-h3'
+        game = self.game(ticks=60)
+        state = game.state
+        cargo, inv, weights = state.cargo, state.initial.inventory, self.catalog.weights
+        city = state.city_economy.cities[city_id]
+        w_food = weights['food']
+        self.assertEqual(cargo.operator(eC), A)
+        self.assertEqual({cargo.corridors[eC].a, cargo.corridors[eC].b} & {cargo.corridors[eA].a, cargo.corridors[eA].b},
+                         set())                                       # disjoint routes
+        setup = SCENARIOS['blockade_food_substitution']['setup']
+        state.credit[A] = state.credit[C] = Q(setup['A_Credit'])
+        # Fixture: B is 200 civilians (city-33 rescaled at the start of each measured
+        # cycle, so ordinary deaths do not blur the 12-food arithmetic) with a 20,000 RU budget.
+        def census():
+            total = city.population.total_mU
+            skills = {k: q * setup['B_population_civilian'] * 1000 // total for k, q in city.population.skills_mU.items()}
+            skills[sorted(skills)[0]] += setup['B_population_civilian'] * 1000 - sum(skills.values())
+            city.population.skills_mU = skills
+        from organizer.rift_era.engine.ledger import CashAccount
+        held = state.initial.cash.balance(city.household).native_mU
+        if held < setup['B_RU_budget'] * 1000:
+            state.initial.cash.transfer(CashAccount('world', 'pool', 'RU'), city.household,
+                                        setup['B_RU_budget'] * 1000 - held)
+        # Fixture: the city starts with no food of its own, so what residents eat is the delivered flow.
+        for account, q in tuple(inv.balances().items()):
+            if account.owner == city_id and account.asset == 'food' and q:
+                inv.transform({account: q}, {}, reason='scenario_fixture')
+        warehouse = state.city_economy.stock(city, 'food')
+        c_path = (Leg('n0-h0', 'n0-h1', C, cargo.corridors[eC].length_cells),
+                  Leg('n0-h1', 'city-33-h0', C, cargo.corridors['road:city-33-h0:n0-h1'].length_cells))
+        a_path = (Leg('n0-h3', 'city-33-h0', A, cargo.corridors[eA].length_cells),)
+
+        def deliver(nation, path):   # 12 food a cycle arrive in the buyer's warehouse by the stated route
+            census()
+            inv.transform({}, {warehouse: 12000}, reason='scenario_delivery',
+                          origins={warehouse: Origin(nation, path[0].origin, path)})
+
+        def receipt(owner, cycle):
+            return state.consumption._receipts.get(cycle, {}).get((owner, 'export'), Q(0))
+
+        # Cycle 0: war is already on in both branches; A grants C commerce on eC.
+        game.step({A: [{'id': '1', 'kind': 'diplomacy', 'op': 'declare_war', 'target_nation': C},
+                       {'id': '2', 'kind': 'logistics', 'op': 'corridor_policy', 'corridor_id': eC,
+                        'target_nation': C, 'access_tier': 1, 'toll_rate_bp': 0}]})
+        while game.tick < 10:
+            game.step()
+        # Cycle 1 baseline: C's food crosses A's edge and is eaten.
+        deliver(C, c_path)
+        while game.tick < 20:
+            game.step()
+        self.assertEqual(city.cycle_used.get('food'), 12000, city.cycle_used)   # B eats 12 food a cycle
+        c_receipt = receipt(C, 1)
+        self.assertTrue(near(c_receipt, 12 * w_food))                 # Phi_A baseline flow = 12 w_food
+        regions = state.path_regions(c_path)
+        a_regions = sorted(r for r in regions if state.authority.regions[r].controller in (None, A)
+                           and (state.authority.regions[r].controller or state.authority.regions[r].sovereign) == A)
+        self.assertTrue(a_regions)
+        for r in a_regions:
+            self.assertTrue(near(state.consumption._phi[1][r], 12 * w_food))
+        # Cycle 2: A sets C to tier 0 on eC.
+        game.step({A: [{'id': '3', 'kind': 'logistics', 'op': 'corridor_policy', 'corridor_id': eC,
+                        'target_nation': C, 'access_tier': 0, 'toll_rate_bp': 0}]})
+        self.assertEqual(self.last(state, A).status, 'ACCEPTED')
+        self.assertFalse(cargo.permitted(C, eC))
+        self.stock(state, C, 'n0-h0', {'food': 12000})
+        self.until_decision(game)
+        game.step({C: [{'id': '1', 'kind': 'logistics', 'op': 'route_shipment', 'origin_hub': 'n0-h0',
+                        'dest_hub': 'n0-h1', 'corridor_path': [eC], 'good': 'food', 'qty_mU': 12000,
+                        'carrier_recipe': 'manual'}]})
+        self.assertEqual(self.last(state, C).status, 'REJECTED')       # C deliveries after the lag: 0
+        self.assertEqual(exp['C_deliveries_after_lag'], 0)
+        while game.tick < 30:
+            game.step()
+        # Cycle 3: the buyer's paid purchases switch to A's food over eA.
+        deliver(A, a_path)
+        while game.tick < 40:
+            game.step()
+        self.assertEqual(receipt(C, 3), 0)
+        a_receipt = receipt(A, 3)
+        self.assertTrue(near(a_receipt, exp['A_receipt_value_per_cycle']))
+        self.assertEqual(exp['A_delivered_consumed_food_per_cycle'], 12)
+        a_route = state.path_regions(a_path)
+        for r in a_regions:                                            # Phi_A keeps only actual flow: C's is gone
+            self.assertEqual(state.consumption._phi.get(3, {}).get(r, Q(0)), 12 * w_food if r in a_route else 0)
+        # A's own policy loss: one 0.001 event per tick while C stays below the granted tier.
+        policy = state.cargo.action_cycles[3][A]
+        self.assertEqual(policy, Q(10, 1000))
+        power = state.national_power
+        with_policy = power.industry(A, 3)
+        saved = state.cargo.action_cycles.pop(3)
+        without = power.industry(A, 3)
+        state.cargo.action_cycles[3] = saved
+        action_u = (without - with_policy) / 4
+        self.assertTrue(near(action_u, exp['weighted_action_U_cost_per_cycle']))
+        # Steady 20-cycle channels with the engine's pillar weights.
+        export_u = Q(15, 100) * (international_pillar(a_receipt, Q(0), Q(0), Q(0)))
+        phi_u = Q(1, 5) * Q(2, 100) * min(Q(100), c_receipt)
+        self.assertTrue(near(export_u, exp['steady_weighted_export_U_gain']))
+        self.assertTrue(near(phi_u, exp['steady_weighted_Phi_U_loss']))
+        steady = export_u - phi_u - action_u
+        self.assertTrue(near(steady, exp['steady_delta_U_lower_bound']))
+        ramp = sum(Q(min(k, 20), 20) for k in range(1, 41))           # rolling20 ramp over 40 cycles
+        self.assertEqual(ramp, Q(305, 10))
+        era3 = Q(24, 100) / 720 * (ramp * (export_u - phi_u) - 40 * action_u)
+        self.assertTrue(near(era3, exp['era3_delta_V_lower_bound_ignoring_positive_NFA']))
+        self.assertGreater(era3, 0)
+        state.audit()
+
 if __name__ == '__main__':
     unittest.main()

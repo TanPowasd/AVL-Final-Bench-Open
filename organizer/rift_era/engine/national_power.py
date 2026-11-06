@@ -28,7 +28,7 @@ COVERAGE = {
     'industry.va': 'industry_activity.last_company_va (signed catalog VA x direct share), by issuer',
     'control.connected': 'controlled regions reachable from the capital region over controlled adjacent regions',
     'control.powered_slots': 'lines with a positive batch in the cycle whose received/needed power over running ticks >= .8',
-    'control.chokepoint_phi': 'zero: per-region receipt path flow not retained',
+    'control.chokepoint_phi': 'min(100, mean20 catalog value of terminal receipts whose loop-erased path crosses the region: hubs on the path plus the cells of the corridor matching each leg)',
     'control.kinfra_alpha_maint': '1 for assets that are not maintenance_offline, else 0',
     'control.readiness': 'sum over own units of hp_ratio*crew_ratio*installed catalog value*(.5+.5*morale)*(1-.4*fatigue)*supply_ratio; supply_ratio = min over food/water of cycle supplied/needed, the supply-connection flag is not applied',
     'technology.active_scale': 'active_scale.py meters, cycle-end values; online_offshore_mines, active_automated_routes, supplied_field_depots meter zero (no receipt yet)',
@@ -182,7 +182,9 @@ class NationalPower:
                    # 07 ACTION_LOSS also covers zero-material hostile policy events
                    # (declarations, embargo/export denials) at 0.001 each.
                    + self._cycle_table(s.relations.action_cycles, cycle, p)
-                   + self._cycle_table(s.export_controls.action_cycles, cycle, p))
+                   + self._cycle_table(s.export_controls.action_cycles, cycle, p)
+                   # foreign ACL tightening on own corridors: 0.001 per target per tick
+                   + self._cycle_table(s.cargo.action_cycles, cycle, p))
         transit = s.consumption.receipt_mean20(p, 'transit')
         return industrial_pillar(va, destroyed, actions, transit, self.nfa_mU(p, cycle) / 1000)
 
@@ -220,7 +222,8 @@ class NationalPower:
         sigma = Q(0)
         for rid in connected:
             extract = sum((catalog.weights[g] * Q(q, 1000) for g, q in self.extracted.get(rid, {}).items()), Q(0))
-            sigma += min(Q(5), Q(5, 100) * extract + Q(1, 2) * slots[rid])
+            sigma += min(Q(5), Q(5, 100) * extract + Q(1, 2) * slots[rid]
+                         + Q(2, 100) * s.consumption.chokepoint_phi(rid))
         book = Q(0)
         for aid, asset in s.initial.assets.items():
             if asset.under_construction or asset.maintenance_offline or world.hubs.get(asset.hub) is None:

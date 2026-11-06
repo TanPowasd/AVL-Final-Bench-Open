@@ -1315,7 +1315,8 @@ class Economy:
 
     def recognize_consumption(self, state: OperatingWorld, ctx: TickContext) -> None:
         state.consumption.advance(ctx.tick, ctx.cycle, tuple(self.inventory.materials.events),
-            weights=state.catalog.weights, shortest=state.initial_paths.distance,services=state.ai_services.scoring_events())
+            weights=state.catalog.weights, shortest=state.initial_paths.distance,services=state.ai_services.scoring_events(),
+            path_regions=state.path_regions)
         for event in state.asset_lifecycle.events:
             if event.owner in state.cycles:
                 # A cycle-end settlement has already archived its metric row.
