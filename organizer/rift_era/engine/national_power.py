@@ -11,6 +11,8 @@ the trajectory version string changes with it.
 """
 from __future__ import annotations
 
+from .ledger import Account
+
 from collections import defaultdict, deque
 
 from .errors import InvariantViolation
@@ -26,7 +28,7 @@ COVERAGE = {
     'population.remediation': 'governance remediation_mU >= 1000 counts as 1, else 0',
     'population.advanced_medicine': 'medical_supplies satisfaction',
     'industry.va': 'industry_activity.last_company_va (signed catalog VA x direct share), by issuer',
-    'control.connected': 'controlled regions reachable from the capital region over controlled adjacent regions',
+    'control.connected': 'supply_connected_v1: controlled regions on an authorized, undestroyed corridor path from the capital or a substitute command hub',
     'control.powered_slots': 'lines with a positive batch in the cycle whose received/needed power over running ticks >= .8',
     'control.chokepoint_phi': 'min(100, mean20 catalog value of terminal receipts whose loop-erased path crosses the region: hubs on the path plus the cells of the corridor matching each leg)',
     'control.kinfra_alpha_maint': '1 for assets that are not maintenance_offline, else 0',
@@ -188,25 +190,71 @@ class NationalPower:
         transit = s.consumption.receipt_mean20(p, 'transit')
         return industrial_pillar(va, destroyed, actions, transit, self.nfa_mU(p, cycle) / 1000)
 
-    def connected_regions(self, p):
+    def command_hubs(self, p):
+        """supply_connected_v1 roots: the own capital `{p}-h0` and every substitute
+        command Hub. A substitute must sit in a region p controls and hold
+        communication equipment (1 unit in its available stock, or an online
+        radio_backbone of p there) and an actual food reserve of 1 unit."""
         s = self.s
         world = s.initial.map
-        capital = world.hubs.get(f'{p}-h0')
-        if capital is None:
-            return set()
+        inventory = s.initial.inventory
+        roots = []
+        for hid in sorted(world.hubs):
+            hub = world.hubs[hid]
+            row = s.authority.regions.get(hub.region)
+            if row is None or (row.controller or row.sovereign) != p:
+                continue
+            if hid == f'{p}-h0':
+                roots.append(hid)
+                continue
+            if inventory.balance(Account(p, hid, 'available', 'food')) < 1000:
+                continue
+            if (inventory.balance(Account(p, hid, 'available', 'communication_equipment')) >= 1000
+                    or s.systems.online(hid, 'radio_backbone', owner=p)):
+                roots.append(hid)
+        return roots
+
+    def connected_regions(self, p):
+        """07 U_ctrl connection (supply_connected_v1): a region p currently
+        controls is connected when an authorized, undestroyed supply path joins
+        it to a command Hub. Paths run over cargo corridors with health > 0 that
+        CargoOperations.permitted lets p use (ACL tier, blockade < 1, an explicit
+        right on foreign endpoints, online terminals for sea/air). A region is
+        reached through a Hub in it or the cells of a usable corridor crossing it.
+        No command Hub, nothing is connected."""
+        s = self.s
+        world = s.initial.map
         controlled = {rid for rid, row in s.authority.regions.items()
                       if (row.controller or row.sovereign) == p}
-        start = capital.region
-        if start not in controlled:
+        roots = self.command_hubs(p)
+        if not roots:
             return set()
-        seen, queue = {start}, deque([start])
+        cargo = s.cargo
+        graph = defaultdict(list)
+        for eid in sorted(cargo.corridors):
+            edge = cargo.corridors[eid]
+            graph[edge.a].append(eid)
+            graph[edge.b].append(eid)
+        palette = tuple(sorted(world.regions))
+        seen_hubs, used, queue = set(roots), set(), deque(roots)
         while queue:
-            rid = queue.popleft()
-            for n in world.regions[rid].adjacent:
-                if n in controlled and n not in seen:
-                    seen.add(n)
-                    queue.append(n)
-        return seen
+            hub = queue.popleft()
+            for eid in graph.get(hub, ()):
+                if eid in used:
+                    continue
+                edge = cargo.corridors[eid]
+                if edge.health_mU <= 0 or not cargo.permitted(p, eid):
+                    continue
+                used.add(eid)
+                other = edge.other(hub)
+                if other not in seen_hubs:
+                    seen_hubs.add(other)
+                    queue.append(other)
+        reached = {world.hubs[h].region for h in seen_hubs if h in world.hubs}
+        for eid in used:
+            for cell in cargo.paths.get(eid, ()):
+                reached.add(palette[world.region_cells[cell]])
+        return reached & controlled
 
     def control(self, p):
         s = self.s

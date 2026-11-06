@@ -447,7 +447,7 @@ P8 发布缓存后读取不重新探测；测控失联时只报告失联，不�
 
 - `powered_slots`：本周期有正产出的产线，且运行 Tick 内累计「实收电 / 按批次所需电」≥ 0.8 才计。所需电与 `industry_activity.use_power` 同口径（`required_power × 批次 × 模式系数`）。
 - `Vready` 的 `supply_ratio`：编队本周期食、水累计「实拨 / 需求」取两者较小值，需求为零记 1。不在编队中的单位记 1。
-- 未做：`supply_ratio` 中的「实际补给连通标志」；`connected` 仍按控制区邻接近似，没有按授权、未损毁的补给路径与替代指挥 Hub 判定。`chokepoint_phi` 已实现（见下文 chokepoint_phi_v1）。
+- 未做：`supply_ratio` 中的「实际补给连通标志」；`connected` 已改为补给路径判定（见 supply_connected_v1）。`chokepoint_phi` 已实现（见下文 chokepoint_phi_v1）。
 - 测试：`tests/test_full_match.py::ControlInputsTests`。
 
 ## batch_v1：64 seed 批次、影子基准与 INVALID_EVALUATION（2026-11-06）
@@ -540,3 +540,11 @@ P8 发布缓存后读取不重新探测；测控失联时只报告失联，不�
 - 网络阶段：当组内活跃负荷都没有用户价格上限时，`_group_batch` 一次提交 oracle 序列中最长的一段前缀，这段里每个负荷都沿用当前的 (电源, 路径)。理由：排在它前面的选项失败原因在资源只减少、spent 只增加、别的收据不变时不会恢复；选择顺序就是 `fair_service` 的前缀。前缀在任何负荷触及自身预算、单步成本比（`C(r)≤limit·r`，用 `C(r)<c·r+D` 的界跳过安全区，其余逐步精确检查）或需求时截断，在共享电源或线容量装不下整段时二分缩短。截断点之后交回原 oracle 单步。
 - 有用户价格上限的负荷在网络阶段仍逐 mU（其更早选项可能因收到量增加而恢复可负担）。
 - 验证：`tests/test_power_fast.py` 随机电网 850 例与 oracle 全等；另离线 2,700 例全等；真实对局一个 tick 的全国调度（360 负荷、4 条线）与 oracle 全等，耗时从 62.7 s 降到 0.07 s。
+
+## supply_connected_v1（07 U_ctrl「连接」）
+
+- 根：本国首都 `{p}-h0`（其分区须为 p 实控）与替代指挥 Hub。替代 Hub 位于 p 实控分区，且当前有 `food` ≥1 单位（p 的 available 库存），并有通信设备：`communication_equipment` ≥1 单位的 available 库存，或 p 在该 Hub 有在线的 `radio_backbone`。没有任何根时，全部分区都不连通。
+- 路径：在货运走廊图上做 BFS。可用边须满足 `health_mU>0`（"未损毁"理解为未被摧毁，部分受损仍可通行），且 `CargoOperations.permitted(p, eid)` 为真，即 ACL tier≠0、封锁<1、外国端点有明确授权（tier≥1、过境合同或城邦权）、海空端点码头在线。授权按商业补给（tier 1）判定，不要求军需 tier 2。
+- 到达的分区：已到达 Hub 所在的分区，加上已用走廊格子经过的分区，再与 p 当前实控分区取交集。没有 Hub、也没有可用走廊经过的分区不连通。
+- 待作者确认："未损毁"取 health>0 还是满血；授权层级取 1 还是 2；替代 Hub 的通信设备是否只认已安装系统。
+- 测试：`tests/test_supply_connected.py`（5 项）。
