@@ -36,7 +36,7 @@ python3 -m unittest discover -s organizer/rift_era/tests
 
 ## 公开版不包含
 
-正式评测的保密内容不在这里：隐藏测试集、参考对手和 champion、官方评分配置，以及 3 道 C++ 题的 `problem_mod.py`（含隐藏点分组和数据生成逻辑）。这些内容不影响本地自测。
+正式评测的保密内容不在这里：隐藏测试集、私有参考对手、官方评分配置，以及 3 道 C++ 题的 `problem_mod.py`（含隐藏点分组和数据生成逻辑）。这些内容不影响本地自测。`kaggriculture` 的 champion 是公开的 RSIdemo 冠军包，不算保密内容，只是目前不放在这里。
 
 ## 许可
 
