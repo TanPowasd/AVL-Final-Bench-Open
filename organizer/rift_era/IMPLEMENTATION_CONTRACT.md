@@ -494,3 +494,12 @@ P8 发布缓存后读取不重新探测；测控失联时只报告失联，不�
 - 补给源切换：编队所在 Hub 不能供给时，食水口粮（经济结算）和封锁的 `combat_tick` 补给依次改从本国在同一分区内其他可用基地（`base_online`）提取，按 Hub ID 排序。只取同分区实物，不远程从首都调货。普通交战的弹药补给仍按原规则，未接。
 - 「战区」引擎没有定义，这里把「跨战区」理解为任务在编队间接力、补给在同分区基地间切换，需作者确认。
 - 测试：`tests/test_blockade.py::BlockadeTests::test_g12_relays_the_blockade_task`、`test_g12_relay_supply_hubs_only_same_region_online_bases`。
+
+## artificial_island_v1（2026-11-06，L12 人工岛）
+
+- 命令：`industry/build_facility {hub_id, facility_type: "public", profile_id: "L12_island"}`，需 L12，工地须是本国控制的临海 Hub。岛址取离工地最近的海洋格（曼哈顿距离，平局取格号小者），同一格不能同时开两项工程。
+- 造价 structure_module×80、steel×160、cement×300、metamaterial×8，全部在工地 Hub 预锁；工期 240 周期。
+- 建成时原地扩展地图：新增陆地分区 `~islNNNN`（编号递增，排序恒在最后，`region_cells` 用的分区调色板不移位）与 Hub `<国>-islNNNN`；该格改为平原；与工地分区、原所在海域分区互设邻接；主权与控制属建造国，无人口、无河流来水；岛体资产即该 Hub 的公共仓库（300 基础容量，岛体受损则仓容按可用度下降）。记入 `megaprojects`，计入 L12 已成巨构数。
+- 岛上没有自带走廊，需另建港口（sea）或 L12 桥隧连通。
+- 需作者确认：岛址的选法、分区的 row/column 与风光取工地分区的值、岛上无人口。
+- 测试：`tests/test_island.py`（命令校验、预锁与建成；建岛后对局继续运行并通过 audit；第二座岛排序仍在最后）。

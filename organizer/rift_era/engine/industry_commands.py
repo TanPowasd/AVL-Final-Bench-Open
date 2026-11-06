@@ -187,6 +187,8 @@ class IndustryCommands:
                 raise RuleViolation('ERR_SITE_INCOMPATIBLE')
             return self._mine(owner, str(int(order['id'])), hub, deposits[0], good, profile, ctx,
                               modular=order.get('use_modular_mU', 0))
+        if profile == 'L12_island':
+            return self._island(owner, order, site, kind, ctx)
         housing = profile == 'P110'
         if profile not in self.state.catalog.profiles and not housing:
             raise RuleViolation('ERR_SCHEMA')
@@ -219,6 +221,24 @@ class IndustryCommands:
             self.state.initial.facilities[aid] = facility
 
         return self.state.work.prepare_start(job, register)
+
+    def _island(self, owner, order, site, kind, ctx):
+        """04/03 L12 artificial island (artificial_island_v1, see island.py)."""
+        from .island import COSTS, CYCLES, island_cell
+        if kind != 'public' or 'good' in order or 'use_modular_mU' in order:
+            raise RuleViolation('ERR_SCHEMA')
+        self._tech(owner, {'L12'})
+        if not coastal_hub(self.state, site.id):
+            raise RuleViolation('ERR_SITE_INCOMPATIBLE', 'an island needs a coastal site')
+        cell = island_cell(self.state.initial.map, site.id)
+        if any(j.kind == 'build_island' and j.payload['cell'] == cell for j in self.state.work.jobs.values()):
+            raise RuleViolation('ERR_CAPACITY_EXCEEDED', 'island already under construction there')
+        jid, aid = self._ids(owner, order)
+        asset = self._asset(aid, owner, site.id, dict(COSTS))
+        job = WorkOrder(jid, str(int(order['id'])), owner, site.id, 'build_island', aid,
+                        CYCLES * ctx.clock.cycle_ticks, dict(COSTS), 0, temporary_asset=aid,
+                        payload={'cell': cell})
+        return self.state.work.prepare_start(job, lambda: self.state.initial.assets.__setitem__(aid, asset))
 
     def mine(self, owner, order, ctx):
         fields(order, {'hub_id': str, 'deposit_id': str, 'good': str, 'level': str})
@@ -429,6 +449,11 @@ class IndustryCommands:
 
     def complete(self, job):
         state, initial = self.state, self.state.initial
+        if job.kind == 'build_island':
+            from .island import found
+            state.asset_lifecycle.commission(job.target)
+            found(state, job)
+            return
         if job.kind == 'build_corridor':
             from .corridor_commands import CorridorCommands
             CorridorCommands.complete(state, job)
