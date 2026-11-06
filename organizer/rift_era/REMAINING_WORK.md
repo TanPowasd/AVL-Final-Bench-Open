@@ -215,7 +215,7 @@ atlas seed 1000 空局前 43 周期：8 国首都 Hub 每周期净增约 +0.05%�
 ## 2026-11-06 国力近似项进展
 
 - 已改：`control.powered_slots` 检查供电 ≥ .8；`control.readiness` 乘食水补给比。
-- 仍是近似：`control.connected`（未按补给路径/替代指挥 Hub）、`control.chokepoint_phi`（0）、`supply_ratio` 的补给连通标志、`population.remediation`、`population.advanced_medicine`、`sustainability.*`。详见 `national_power.COVERAGE`。
+- 仍是近似：`control.connected`（未按补给路径/替代指挥 Hub）、`supply_ratio` 的补给连通标志、`population.remediation`、`population.advanced_medicine`、`sustainability.*`。详见 `national_power.COVERAGE`。
 
 ## 2026-11-06 长局续跑
 

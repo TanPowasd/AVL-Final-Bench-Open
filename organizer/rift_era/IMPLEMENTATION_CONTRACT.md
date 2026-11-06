@@ -447,7 +447,7 @@ P8 发布缓存后读取不重新探测；测控失联时只报告失联，不�
 
 - `powered_slots`：本周期有正产出的产线，且运行 Tick 内累计「实收电 / 按批次所需电」≥ 0.8 才计。所需电与 `industry_activity.use_power` 同口径（`required_power × 批次 × 模式系数`）。
 - `Vready` 的 `supply_ratio`：编队本周期食、水累计「实拨 / 需求」取两者较小值，需求为零记 1。不在编队中的单位记 1。
-- 未做：`supply_ratio` 中的「实际补给连通标志」；`connected` 仍按控制区邻接近似，没有按授权、未损毁的补给路径与替代指挥 Hub 判定；`chokepoint_phi` 仍为 0（没有保留逐区回执路径流量）。
+- 未做：`supply_ratio` 中的「实际补给连通标志」；`connected` 仍按控制区邻接近似，没有按授权、未损毁的补给路径与替代指挥 Hub 判定。`chokepoint_phi` 已实现（见下文 chokepoint_phi_v1）。
 - 测试：`tests/test_full_match.py::ControlInputsTests`。
 
 ## batch_v1：64 seed 批次、影子基准与 INVALID_EVALUATION（2026-11-06）
@@ -518,3 +518,11 @@ P8 发布缓存后读取不重新探测；测控失联时只报告失联，不�
 - cyber_compute_v1（03 S03）：已知 AI09 且本国首都通信网上一个算力周期的有效 cyber 算力扣除本周期已用后仍 ≥10 单位时，S03 系列改为消耗 cyber_suite×1 + 10 单位有效 cyber 算力（行动损耗按 `compute` 权重计，不扣 computing_equipment）；否则仍走基础替代 cyber_suite×1 + computing_equipment×1。替代路线的「10 B4 电」仍未计量。round6 `cyber_credit_floor` 的 Loss=240.0308 依此通过。
 - patrol_v1（06 formation_task patrol）：原先 patrol 与 move 等同，到达后停住。现在下令时记下编队所在分区为另一端；到达任一端后同一 tick 立刻按当前路网改道回另一端，循环到任务被替换或取消；回程路线被封锁则结束循环。行军耗油照常计 ACTION_LOSS（round6 `patrol_loop`：12 辆装甲一整周期 fuel 144、Loss 630）。
 - 待作者定义：round6 `world_pool_pressure` 所需的"国家向世界池买卖库存货"通道（02 第 121、220 行）在 06 接口里没有对应命令；`barrage_no_gains` 需要炮击可以设施为目标，目前火力只打单位。
+
+
+## round6 场景验收第二批（2026-11-06）
+
+- **chokepoint_phi_v1**：`Consumption` 按周期记录每个分区被终端回执（目录值，非信用加权）经过的价值，每张回执每分区只算一次；经过的分区 = 消环路径上的所有 Hub 所在分区，加上每段 leg 对应走廊（连接两端且 L1 长度相等的那条，按 id 取第一条；找不到则只算端点）的格子所在分区。`Phi_r=min(100, 近 20 周期之和/20)`，`sigma` 每个连通分区加 `.02*Phi_r`，仍受 `min(5, …)` 封顶。A 自己的出口路过本国分区也计入。
+- **ACL 收紧损耗**：`cargo.action_cycles`（对外国收紧走廊许可后每 tick 每目标 0.001）此前未计入工业支柱 ACTION_LOSS，已补。
+- **power_acl_v1**：`logistics/corridor_policy` 的 `corridor_id` 可以是输电线 id。线路经营者对外国设 `access_tier=0` 即拒入该国电源（电网路径搜索跳过该线），`≥1` 恢复；`toll_rate_bp` 对输电线无效（仍用目录过网费）。输电线默认对所有电源开放，所以每个拒入目标每 tick 记一次敌对政策事件（并入 `cargo.action_cycles`）。依据 03§7.3「输电/输水只有边控制拒入或物理战损可断」。输水线拒入未做。
+- **已知性能问题（未修）**：只要存在任何可用输电线，`power.dispatch` 就从按 Hub 的快速路径切到 1 mU 步进的 `dispatch_reference`，全国负荷下非常慢。整局里一旦建线就会拖慢，需要一个与 oracle 逐位一致的快速多 Hub 调度。

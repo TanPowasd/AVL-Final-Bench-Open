@@ -27,6 +27,7 @@ class UtilityLink:
     asset_id: str
     enabled: bool = True
     component_assets: tuple[str, ...] = ()
+    denied: tuple[str, ...] = ()   # power_acl_v1: source nations refused by the line's controller
 
 
 class UtilityNetwork:
@@ -72,7 +73,8 @@ class UtilityNetwork:
             rating, survival = self.power_rating(link)
             capacity = floor(Q(rating, 10) * self.availability(link))
             if capacity:
-                edges.append(PowerEdge(link.id, link.a, link.b, capacity, survival, self.operator(link)))
+                edges.append(PowerEdge(link.id, link.a, link.b, capacity, survival, self.operator(link),
+                                       denied=frozenset(link.denied)))
         return tuple(edges)
 
     def water_lock(self, link):

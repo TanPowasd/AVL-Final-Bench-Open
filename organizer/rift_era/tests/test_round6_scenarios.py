@@ -562,5 +562,98 @@ class Round6ScenarioTests(unittest.TestCase):
         self.assertGreater(era3, 0)
         state.audit()
 
+    # -- energy_substitution --------------------------------------------------
+    def test_energy_substitution(self):
+        """A=n0 controls two power lines into B's hub: the old 1-cell line carries C=n2's
+        zero-bid power, the new 10-cell line A's own curtailed minimum output. A refuses C
+        on the old line (power_acl_v1); B's demand reroutes to A's power."""
+        from organizer.rift_era.engine.power import Load, Supply, dispatch
+        from organizer.rift_era.engine.scoring import industrial_pillar, international_pillar
+        from organizer.rift_era.engine.utility_network import UtilityLink
+        exp = expected('energy_substitution')
+        setup = SCENARIOS['energy_substitution']['setup']
+        A, C = 'n0', 'n2'
+        game = self.game(ticks=40)
+        state = game.state
+        utilities, weights = state.utilities, self.catalog.weights
+        hubC, hubA, hubB = 'n0-h1', 'n0-h2', 'n0-h0'
+        # Fixture lines, each carried by an existing A asset.
+        utilities.links['grid:old'] = UtilityLink('grid:old', A, hubC, hubB, 'power', 1, (0, 1), 'n0/P001/0')
+        utilities.links['grid:new'] = UtilityLink('grid:new', A, hubA, hubB, 'power', 1, tuple(range(11)), 'n0/P001/1')
+        # The grid oracle is evaluated directly below; while ticks run the fixture lines
+        # are switched off so the national dispatch keeps its local fast path.
+        def lines(on):
+            for lid in ('grid:old', 'grid:new'):
+                utilities.links[lid].enabled = on
+        survival = {lid: utilities.power_rating(l)[1] for lid, l in utilities.links.items() if lid.startswith('grid:')}
+        self.assertEqual(survival, {'grid:old': Q(9985, 10000), 'grid:new': Q(985, 1000)})
+        generated = 4000                                    # P070 at its .4 minimum: 4 units a cycle
+        self.assertEqual(state.initial.plants['n0/P070/0/line'].spec.minimum * 10000, generated)
+        supplies = (Supply('C', hubC, C, 10000, Q(0)), Supply('A', hubA, A, generated, Q(0)))
+        load = Load('B', hubB, 'n1', int(setup['B_demand'] * 1000), 5, Q(setup['B_buy_limit_RU']),
+                    Q(setup['B_buy_limit_RU']) * 10 ** 6)
+
+        def run():
+            lines(True)
+            edges = tuple(e for e in utilities.dispatch_edges() if e.id.startswith('grid:'))
+            lines(False)
+            return dispatch(0, 0, supplies, (load,), edges)
+
+        def by_source(result):
+            out = {}
+            for r in result.receipts:
+                out[r.source] = out.get(r.source, 0) + r.received_mU
+            return out
+
+        def tolls_to_A(result):
+            return sum((v for r in result.receipts for owner, v in r.tolls_ru_mU if owner == A), Q(0))
+
+        lines(False)
+        before = run()
+        self.assertEqual(by_source(before), {'C': 3940})    # cheaper delivered price .01/.9985
+        # A refuses C on the old line through corridor_policy.
+        game.step({A: [{'id': '1', 'kind': 'logistics', 'op': 'corridor_policy', 'corridor_id': 'grid:old',
+                        'target_nation': C, 'access_tier': 0, 'toll_rate_bp': 0}]})
+        self.assertEqual(self.last(state, A).status, 'ACCEPTED')
+        self.assertEqual(utilities.links['grid:old'].denied, (C,))
+        after = run()
+        self.assertEqual(by_source(after), {'A': int(exp['A_delivered_electricity'] * 1000)})
+        sent = sum(r.sent_mU for r in after.receipts)
+        self.assertEqual(sent, exp['A_generated_before_and_after'] * 1000)
+        delta_cash = (tolls_to_A(after) - tolls_to_A(before)) / 1000          # RU
+        self.assertLess(abs(delta_cash - Q(exp['A_delta_cash_RU'])), Q(1, 10 ** 5))   # 1 mU flow steps
+        self.assertGreater(delta_cash, 0)
+        # Separate mechanical check: a damaged old line reroutes the same quantity.
+        utilities.links['grid:old'].denied = ()
+        state.asset_lifecycle.damage('n0/P001/0', 1000, event_id='scenario_old_line_cut')
+        self.assertEqual(by_source(run()), {'A': 3940})
+        utilities.links['grid:old'].denied = (C,)
+        # Ten policy events this cycle (one per tick of the standing refusal).
+        while game.tick < 20:
+            game.step()
+        self.assertEqual(state.cargo.action_cycles[1][A], Q(10, 1000))
+        power = state.national_power
+        with_policy = power.industry(A, 1)
+        saved = state.cargo.action_cycles.pop(1)
+        without = power.industry(A, 1)
+        state.cargo.action_cycles[1] = saved
+        action_u = (without - with_policy) / 4
+        self.assertTrue(near(action_u, exp['weighted_action_U_loss']))
+        # The value channels, from the delivered quantity and the engine's pillar weights.
+        value = Q(by_source(after)['A'], 1000) * weights['electricity']
+        self.assertTrue(near(value, exp['A_confirmed_value']))
+        va_u = industrial_pillar(value, Q(0), Q(0), Q(0), Q(0)) / 4
+        export_u = Q(15, 100) * international_pillar(value / 20, Q(0), Q(0), Q(0))
+        phi_u = Q(1, 5) * Q(2, 100) * Q(str(setup['prior20_Phi_A']))
+        nfa_u = industrial_pillar(Q(0), Q(0), Q(0), Q(0), Q(exp['A_delta_cash_RU'])) / 4
+        for got, key in ((va_u, 'weighted_delta_VA_U'), (export_u, 'first_cycle_weighted_export_U'),
+                         (phi_u, 'conservative_full_weighted_Phi_loss'), (nfa_u, 'weighted_delta_NFA_U')):
+            self.assertTrue(near(got, exp[key]), key)
+        net = va_u + export_u - phi_u - action_u + nfa_u
+        self.assertTrue(near(net, exp['net_first_cycle_U_lower_bound']))
+        self.assertGreater(net, 0)
+        for lid in ('grid:old', 'grid:new'):
+            del utilities.links[lid]
+
 if __name__ == '__main__':
     unittest.main()

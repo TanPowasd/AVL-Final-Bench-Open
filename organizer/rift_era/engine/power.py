@@ -186,6 +186,7 @@ class PowerEdge:
     survival: Fraction
     owner: str
     toll: Fraction = Q(1, 100)
+    denied: frozenset = frozenset()  # power_acl_v1: owners of supplies that may not use this line
 
     def __post_init__(self):
         if self.capacity_mU < 0 or not 0 < self.survival <= 1 or self.toll < 0 or self.a == self.b:
@@ -308,7 +309,7 @@ def dispatch_reference(seed: int, tick: int, supplies: tuple[Supply, ...], loads
             if local:
                 continue
             for dest, edge in graph.get(hub, ()):
-                if dest in visited or edge_left[edge.id] == 0:
+                if dest in visited or edge_left[edge.id] == 0 or sources[sid].owner in edge.denied:
                     continue
                 next_path = path + (edge.id,)
                 next_cost = (cost + edge.toll) / edge.survival

@@ -44,9 +44,9 @@ python3 -m unittest discover -s organizer/rift_era/tests -v
 - [x] `zero_material_hostility` — PASS（`tests/test_round6_scenarios.py`，2026-11-06，full_match 装配）
 - [x] `repair_single_count` — PASS（`tests/test_round6_scenarios.py`，2026-11-06，full_match 装配）
 - [x] `relations_and_neutrality` — PASS（`tests/test_round6_scenarios.py`，2026-11-06，full_match 装配）
-- [ ] `blockade_food_substitution` — 未完成：需 B 按最低价逐期买食物的常驻计划与 rolling20 Phi 实测，夹具较大，下一批做
+- [x] `blockade_food_substitution` — PASS（2026-11-06，分通道）：C 经 A 的边 eC 送食物给 B（city-33 缩放到 200 人），A 对 C 设 tier 0 后 C 的发运被拒，B 改吃 A 经 eA 的食物；A 每周期出口回执 45.78、C 的 Phi 流量消失、政策损耗每 tick 0.001 均由引擎读出，再按引擎支柱权重组合出下界 .365365 与 era3 .00371177。未跑满 rolling20 的 40 周期，下界的 30.5 爬坡按公式算
 - [x] `damage_power_and_repair` — PASS（`tests/test_round6_scenarios.py`，2026-11-06，full_match 装配）
-- [ ] `energy_substitution` — 未完成：需双线路电力择价与政策事件计数，夹具较大，下一批做
+- [x] `energy_substitution` — PASS（2026-11-06，分通道）：新增 power_acl_v1，`corridor_policy` 可对输电线拒入外国电源；夹具两条 A 控制线路（存活率 .9985/.985 由引擎算出），电网 oracle 显示拒入前 B 买 C 的电、拒入后改买 A 的 3.94（A 发 4）；A 过网费增量 .00054（1 mU 步进误差 <1e-5）；断线对照同样改道；本周期 10 次政策事件。价值、VA、出口、Phi、NFA 各项按引擎权重核对，净下界 .066489
 - [x] `fx_revaluation_invariance` — PASS（`tests/test_round6_scenarios.py`，2026-11-06，full_match 装配）
 - [ ] `transit_formula` — PARTIAL：公式在 `tests/test_rules.py::test_transit_formula_and_fixed_credit` 用引擎 ReceiptBook 验证；真实地图上凑不出 D0=8 的两承运人路径，端到端未做
 - [x] `healthy_relocation` — PASS（`tests/test_round6_scenarios.py`，2026-11-06，full_match 装配）
