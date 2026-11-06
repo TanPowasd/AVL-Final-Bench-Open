@@ -185,5 +185,84 @@ class Round6ScenarioTests(unittest.TestCase):
         self.assertEqual(exp['positive_active_scale_increment'], 0)
         self.assertEqual(state.cyber.compute_used[('n0', 0)], 10000)
 
+    # -- patrol_loop ----------------------------------------------------------
+    def test_patrol_loop(self):
+        """12 armored units patrol A0 -> A1 -> A0 (n0-h0 / n0-h1) and are on the move every tick."""
+        exp = expected('patrol_loop')
+        n = SCENARIOS['patrol_loop']['setup']['armored_units']
+        game = self.game(ticks=40)
+        state = game.state
+        for hub in ('n0-h0', 'n0-h1'):     # depots at both ends of the loop
+            self.stock(state, 'n0', hub, {'fuel': 500000})
+        self.stock(state, 'n0', 'n0-h0', {'armored_unit': n * 1000})
+        game.step({'n0': [{'id': '1', 'kind': 'military', 'op': 'deploy_formation', 'hub_id': 'n0-h0',
+                           'domain': 'Land', 'units': {'armored': n}}]})
+        formation = next(f for f in state.formations.rows.values() if f.id.startswith('formation:'))
+        self.until_decision(game)
+        game.step({'n0': [{'id': '2', 'kind': 'military', 'op': 'formation_task', 'formation_id': formation.id,
+                           'task': 'patrol', 'target_region': state.initial.map.hubs['n0-h1'].region,
+                           'posture': 'preserve', 'supply_hub': 'n0-h0', 'retreat_loss_mU': 500}]})
+        self.assertEqual(self.last(state, 'n0').status, 'ACCEPTED')
+        visited, moving_ticks = set(), 0
+        while game.tick < 30:
+            game.step()
+            if game.tick - 1 >= 10 and game.tick - 1 < 20:
+                moving_ticks += formation.id in state.movement.moved_formations
+            if formation.hub:
+                visited.add(formation.hub)
+        self.assertEqual(visited, {'n0-h0', 'n0-h1'})              # it came back: a loop, not a one-way move
+        self.assertEqual(moving_ticks, 10)                          # cycle 1 is a full cycle on the road
+        loss = state.battles.loss_cycles[1]['n0']
+        self.assertEqual(loss, exp['loss'])
+        from organizer.rift_era.engine.scoring import action_loss, industrial_pillar
+        self.assertEqual(action_loss({'fuel': int(exp['fuel'] * 1000)}, self.catalog.weights), loss)
+        self.assertTrue(near(industrial_pillar(Q(int(exp['upper_refinery_VA'])), Q(0), loss, Q(0), Q(0)) / 4,
+                             exp['upper_delta_U']))
+        self.assertEqual(state.consumption.receipt_mean20('n0', 'transit'), exp['transit'])
+        state.audit()
+
+    # -- repair_single_count --------------------------------------------------
+    def test_repair_single_count(self):
+        """An S1 shell at health .5 is repaired to 1 once; the repair is capital, not consumption or action."""
+        exp = expected('repair_single_count')
+        game = self.game(ticks=140)
+        state = game.state
+        target, owner = 'n0/P001/0', 'n0'
+        weights = self.catalog.weights
+        value = lambda book: sum(q / Q(10 ** 6) * weights[g] for g, q in book.items())
+        asset = state.initial.assets[target]
+        self.assertEqual({g: q // 10 ** 6 for g, q in asset.original_nmU.items()},
+                         SCENARIOS['repair_single_count']['setup']['full_B0'])
+        state.asset_lifecycle.damage(target, 500, event_id='scenario_prior_damage')
+        self.assertTrue(near(value(asset.book_nmU), SCENARIOS['repair_single_count']['setup']['book']))
+        orders = [{'id': 1, 'kind': 'industry', 'op': 'repair_asset', 'asset_id': target,
+                   'target_health_mU': 1000, 'work_hub_id': 'n0-h0'}]
+        for lid, line in state.initial.lines.items():   # a real configuration frees the power for the work
+            if line.owner == owner and lid not in state.initial.plants:
+                orders.append({'id': len(orders) + 1, 'kind': 'industry', 'op': 'set_line',
+                               'line_id': lid, 'recipe': None, 'mode': 'general'})
+        game.step({owner: tuple(orders)})
+        job = next(j for j in state.work.jobs.values() if j.kind == 'repair_asset')
+        self.assertEqual(job.duration_ticks, exp['duration_cycles'] * 10)
+        self.assertEqual({g: q for g, q in job.materials_mU.items()},
+                         {g: q * 500 for g, q in SCENARIOS['repair_single_count']['setup']['full_B0'].items()})
+        losses_before = sum(c.get(owner, 0) for c in state.battles.loss_cycles.values())
+        destroyed_before = sum(m.destroyed_value for m in state.history[owner])
+        while state.work.jobs and game.tick < 135:
+            game.step()
+        self.assertFalse(state.work.jobs)
+        self.assertEqual(asset.health_mU, 1000)
+        self.assertTrue(near(value(asset.book_nmU), exp['final_book']))
+        self.assertTrue(near(value(asset.book_nmU) - SCENARIOS['repair_single_count']['setup']['book'],
+                             exp['capitalized_value']))
+        self.assertEqual(sum(c.get(owner, 0) for c in state.battles.loss_cycles.values()) - losses_before,
+                         exp['Loss_action_from_repair'])
+        self.assertEqual(sum(m.destroyed_value for m in state.history[owner]) - destroyed_before,
+                         exp['Loss_destroy_from_repair'])
+        for good in SCENARIOS['repair_single_count']['setup']['full_B0']:
+            self.assertEqual(state.consumption.consumption20(owner, good), exp['eta_consumption'])
+        self.assertEqual(state.consumption.receipt_mean20(owner, 'transit'), exp['receipt'])
+        state.audit()
+
 if __name__ == '__main__':
     unittest.main()

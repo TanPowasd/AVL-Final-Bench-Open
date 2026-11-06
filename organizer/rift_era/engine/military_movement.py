@@ -38,6 +38,7 @@ class MarchPlan:
     auto_retreat:bool=False
     abandoned:bool=False
     retreat_status:str='none'
+    patrol_home:str|None=None  # patrol_v1: the other end of the loop
 
 
 class MilitaryMovement:
@@ -265,8 +266,25 @@ class MilitaryMovement:
                     plan.path,plan.edges=plan.path[1:],plan.edges[1:]
             for uid in formation.unit_ids:state.initial.units[uid].region=formation.region
             if plan is not None and plan.auto_retreat and not self.planned(fid):plan.retreat_status='at_supply'
+            if (plan is not None and plan.task=='patrol' and plan.patrol_home and not plan.auto_retreat and not retreat
+                    and position.destination is None and not plan.path):
+                self._patrol_turn(formation,plan,ctx)
         self.moved_formations=frozenset(moved_formations)
         return frozenset(moved),self.abandon_supplies(ctx,departing)
+
+    def _patrol_turn(self,formation,plan,ctx):
+        """patrol_v1 (06 formation_task patrol): on reaching one end of the loop the
+        formation turns at once for the other end, so it is on the move every tick
+        until the task is replaced or cancelled. A blocked return ends the loop."""
+        try:
+            path,edges,end=self.route(formation,plan.patrol_home,ctx)
+        except RuleViolation:
+            plan.patrol_home=None
+            return
+        if not path:
+            return
+        plan.target_region,plan.patrol_home=plan.patrol_home,plan.target_region
+        plan.path,plan.edges,plan.end_progress=path,edges,end
 
     def abandon_supplies(self,ctx,formations):
         """User-confirmed scope: available onboard supplies, never crew/gear."""
@@ -438,6 +456,8 @@ class MarchCommands:
         path,edges,end=state.movement.route(formation,order['target_region'],ctx)
         plan=MarchPlan(owner,str(int(order['id'])),formation.id,order['task'],order['target_region'],order['supply_hub'],
                        order['retreat_loss_mU'],sum(state.initial.units[u].hp_mU for u in formation.unit_ids),path,edges,end)
+        if order['task']=='patrol' and formation.region!=order['target_region']:
+            plan.patrol_home=formation.region
         def commit():
             if formation.id not in state.movement.positions:
                 state.movement.positions[formation.id]=Position(formation.hub)
