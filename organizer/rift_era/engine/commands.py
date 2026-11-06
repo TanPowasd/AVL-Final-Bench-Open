@@ -39,6 +39,7 @@ from .blockade import BlockadeCommands, cancel as cancel_blockade
 from .fx_shorts import FXShortCommands
 from .forwards import ForwardCommands, cancel as cancel_forward
 from .hypersonic import HypersonicCommands
+from .cyber import CyberCommands
 
 
 class EngineCommands:
@@ -48,7 +49,7 @@ class EngineCommands:
         industry = IndustryCommands(state)
         self.handlers = (self.commerce, CityStateCommands(state), CorridorPolicyCommands(state), RelocationCommands(state), StockCommands(state), DividendCommands(state), AIServiceCommands(state), ComputeRefillCommands(state), AILicenseCommands(state), DeploymentCommands(state), ExportControlCommands(state), ResearchCommands(state), industry, SystemCommands(state, industry),
                          EnergyCommands(state), GovernanceCommands(state), StorageCommands(state, industry),
-                         MonetaryCommands(state), TransportCommands(state), CorridorCommands(state, industry), FormationCommands(state), ReinforcementCommands(state), DiplomacyCommands(state), MarchCommands(state), RefitCommands(state), RadarCommands(state), IntelligenceCommands(state), OrbitalCommands(state), BondCommands(state), BondOrderCommands(state), ContractCommands(state), AICommands(state), ASATCommands(state), ConditionalPlanCommands(state), ClimateCommands(state), BlockadeCommands(state), FXShortCommands(state), ForwardCommands(state), HypersonicCommands(state))
+                         MonetaryCommands(state), TransportCommands(state), CorridorCommands(state, industry), FormationCommands(state), ReinforcementCommands(state), DiplomacyCommands(state), MarchCommands(state), RefitCommands(state), RadarCommands(state), IntelligenceCommands(state), OrbitalCommands(state), BondCommands(state), BondOrderCommands(state), ContractCommands(state), AICommands(state), ASATCommands(state), ConditionalPlanCommands(state), ClimateCommands(state), BlockadeCommands(state), FXShortCommands(state), ForwardCommands(state), HypersonicCommands(state), CyberCommands(state))
         self.dispatch = {operation: handler for handler in self.handlers for operation in handler.OPERATIONS}
         if len(self.dispatch) != sum(len(h.OPERATIONS) for h in self.handlers):
             raise ValueError('duplicate command handler')

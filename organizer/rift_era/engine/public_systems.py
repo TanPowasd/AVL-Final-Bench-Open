@@ -105,7 +105,8 @@ class PublicSystems:
                 if any(self.state.initial.assets[h].maintenance_debt > Q(1, 5) for h in hosts):
                     system.collapse_until_tick = max(system.collapse_until_tick, ctx.tick + 3 * ctx.clock.cycle_ticks)
             system.online = bool(available and labor and system.power_received_mU >= needed_power
-                                 and ctx.tick >= system.collapse_until_tick)
+                                 and ctx.tick >= system.collapse_until_tick
+                                 and not (self.state.cyber_frozen_until and self.state.cyber.system_frozen(system, ctx.tick)))
             frame.worked[entity] = dict(workers) if system.online else {}
         self.reindex()
 

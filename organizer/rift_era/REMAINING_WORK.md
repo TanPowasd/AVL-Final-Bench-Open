@@ -98,10 +98,10 @@
 | ~~`diplomacy/terminate_contract`~~ | 已做（2026-11-05）：类型 1/3/5/7/8/9 可终止，防务 −.25、其余 −.15，免责见 `contract_termination_v1`；类型 2/4/6 按各自规则结束，返回 `ERR_NO_PERMISSION` | 是 |
 | ~~`military/hypersonic_strike`~~ | 已做（2026-11-06），见 `hypersonic_v1`、`tests/test_hypersonic.py` | 是 |
 | ~~`military/blockade`~~（已做 2026-11-05，见 `blockade_v1`）、~~`military/interdict`~~（已做 2026-11-05） | `blockade_fraction` 已接入走廊 `blocked`，并进入 07 的 Blockade_r 与行动损耗 | 是 |
-| `intelligence/steal_model` | E84 | 是 |
+| ~~`intelligence/steal_model`~~ | 已做（2026-11-06），见 `cyber_v1` | 是 |
 | ~~`governance/climate_intervention`~~ | 已做（2026-11-05），见 `climate_v1`、`tests/test_climate.py` | 是 |
 | ~~`diplomacy/grant_climate_consent`~~ | 已做（2026-11-05），见 `climate_v1` | **否** |
-| `intelligence/cyber_op` | S03，E82，E85，C33 | 仅写了 S03 |
+| ~~`intelligence/cyber_op`~~ | 已做（2026-11-06）：S03 渗透/窃密、S08 瘫痪，含 E82 系统冻结、E85 归因信用、C33 暂停竞价，见 `cyber_v1`、`tests/test_cyber.py` | 仅写了 S03 |
 | ~~`governance/conditional_plan`~~ | 已做（2026-11-05）：C10 + 枢纽 ai_core，最多 32 条，每窗口首 P1、玩家命令之前判定，冷却 ≥5 tick，可 cancel_by_id；口径见 `conditional_plan_v1` | **否** |
 | ~~`research/set_backup_hub`~~ | 已做（2026-11-05）：新公共系统 `research_backup`（R08，计算+通信设备各 1）；实验室损毁/失控时按 04 结算（无备份留 30% 理论、验证清零；有备份留 90%/75%），见 `research_continuity.py`、`tests/test_research_backup.py` | **否** |
 
@@ -128,7 +128,7 @@
 | C24 | 储量寿命进入采掘公司估值，`StockMarket.fair` 没有该系数 |
 | C25 | 战区机组强迫停运，目前 `outage_multiplier` 只有 AI 项 |
 | C28 | 信用约束跨国电力容量和新合同 |
-| C33 | 网络攻击暂停证券竞价，依赖 `cyber_op` |
+| ~~C33~~ | 已接（2026-11-06，cyber_v1） |
 
 C03、C05、C09、C13、C14、C22、C23、C29、C31、C32 已确认有实现。
 

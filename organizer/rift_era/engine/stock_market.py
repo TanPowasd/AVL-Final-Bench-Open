@@ -224,8 +224,10 @@ class StockMarket:
         if not ctx.clock.is_cycle_end(ctx.tick):return
         if ctx.cycle<=self.last_cleared_cycle:raise InvariantViolation('stock auction repeated')
         self.reports={p:[] for p in self.reports}
+        # 03 C33: a successful S03 on the issuer's capital suspends its next auction once.
+        suspended={p for p in sorted(self.s.initial.known) if self.s.cyber.take_auction_suspension(p)}
         for cid,company in self.s.initial.companies.items():
-            if not company.listed:continue
+            if not company.listed or company.issuer in suspended:continue
             previous=self.exchange.prices[cid]
             band=(100,2*self.references[cid]) if self.listed_cycle[cid]==ctx.cycle else (max(1,ceil(previous*Q(4,5))),max(1,floor(previous*Q(6,5))))
             prior=dict(self.exchange.orders)
