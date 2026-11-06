@@ -172,7 +172,7 @@ C03、C05、C09、C13、C14、C22、C23、C29、C31、C32 已确认有实现。
 ## P2：比赛交付
 
 - **参考策略：** 没有能走正式协议的参考池。`designs/rift_era/prototype/` 的 bot 基于原型模拟器，不能直接用。
-- **批次评分：** `evaluation.py` 的 `Batch.write_new`、`shadow_key`、`ResourceBudget.concurrency` 没有运行器调用。需要实现 64 seed、影子基准和 `INVALID_EVALUATION`。
+- **批次评分：** `evaluation.py` 的 `Batch.write_new`、`shadow_key`、`ResourceBudget.concurrency` 没有运行器调用。需要实现 64 seed、影子基准和 `INVALID_EVALUATION`。 2026-11-06：`engine/batch_runner.py` 已实现批次记账（逐局 fsync 日志、可续跑、影子局、宿主/裁判/参考故障整批作废、64 局座位分取均值并保持区间）。仍缺：把 `run_match` 接到 strategy-match 与 Super 参考策略（参考对手未开源），以及在多核机器上实际跑。
 - **题库接入：** 按 [INTEGRATION.md](INTEGRATION.md) 交付目录、`score.py` 和导出脚本，最后的注册由仓库作者在私有环境完成。
 - **计分校准：** V 梯度目标已定：
   - 混坐 64 seed 的平均 V 满足 `Super > Advanced > Medium`，相邻两档的 95% 置信区间不重叠。

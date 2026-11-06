@@ -447,3 +447,11 @@ P8 发布缓存后读取不重新探测；测控失联时只报告失联，不�
 - `Vready` 的 `supply_ratio`：编队本周期食、水累计「实拨 / 需求」取两者较小值，需求为零记 1。不在编队中的单位记 1。
 - 未做：`supply_ratio` 中的「实际补给连通标志」；`connected` 仍按控制区邻接近似，没有按授权、未损毁的补给路径与替代指挥 Hub 判定；`chokepoint_phi` 仍为 0（没有保留逐区回执路径流量）。
 - 测试：`tests/test_full_match.py::ControlInputsTests`。
+
+## batch_v1：64 seed 批次、影子基准与 INVALID_EVALUATION（2026-11-06）
+
+- `BatchRunner(batch, journal, run_match)`。每个 seed 跑两局：`player`（选手坐 `seat = k mod 8`，其余七席为 Super）与 `shadow`（同 seed、八席 Super）。`run_match` 由宿主提供，返回 `finalize_match` 报告。
+- 日志为追加式 JSON 行，每行 fsync；首行写批次 ID，换批次的日志拒绝复用。重启后跳过已完成的局。
+- 选手故障在局内托管为空命令，不进入这里。`run_match` 抛出的任何异常都按裁判、参考策略或宿主故障处理：写入 `INVALID_EVALUATION`，整批作废，不丢 seed、不重算均值，续跑也不再执行。
+- 计分：每个 seed 用 `seat_score(V_player[seat], V_shadow[seat])`，64 局均值。下界向下取整、上界向上取整，保持区间。任一局轨迹不满 2,880 周期时不给分（`incomplete`）。全部报告 `full_rules_accepted` 才标 `certified`。
+- 测试：`tests/test_batch_runner.py`。
