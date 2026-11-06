@@ -36,12 +36,18 @@ class LongLot:
     book_ru_mU: Q
 
 
+
+class _FeeDiscounts:
+    """Picklable view of state.fx.fee_discounts (checkpoints pickle the state)."""
+    def __init__(self,state):self.state=state
+    def __call__(self,p):return self.state.fx.fee_discounts.get(p,Q(0))
+
 class StockMarket:
     def __init__(self,state):
         self.s=state;self.shares=Inventory()
         from .equity_finance import EquityFinance
         self.finance=EquityFinance(state)
-        self.exchange=StockExchange(self.shares,state.initial.cash,discounts=lambda p:state.fx.fee_discounts.get(p,Q(0)))
+        self.exchange=StockExchange(self.shares,state.initial.cash,discounts=_FeeDiscounts(state))
         for cid,company in state.initial.companies.items():
             self.shares.initialize(self.account(company.issuer,cid,'strategic'),510000000)
             self.shares.initialize(self.account(company.issuer,cid,'unissued'),490000000)

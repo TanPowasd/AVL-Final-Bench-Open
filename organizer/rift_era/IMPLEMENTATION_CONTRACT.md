@@ -455,3 +455,12 @@ P8 发布缓存后读取不重新探测；测控失联时只报告失联，不�
 - 选手故障在局内托管为空命令，不进入这里。`run_match` 抛出的任何异常都按裁判、参考策略或宿主故障处理：写入 `INVALID_EVALUATION`，整批作废，不丢 seed、不重算均值，续跑也不再执行。
 - 计分：每个 seed 用 `seat_score(V_player[seat], V_shadow[seat])`，64 局均值。下界向下取整、上界向上取整，保持区间。任一局轨迹不满 2,880 周期时不给分（`incomplete`）。全部报告 `full_rules_accepted` 才标 `certified`。
 - 测试：`tests/test_batch_runner.py`。
+
+## checkpoint_v1：长局分段续跑（2026-11-06，开发用）
+
+- `engine/checkpoint.py`：在 Tick 边界把整个 state pickle 到磁盘（临时文件 + fsync + rename）。头部记录 tick、total_ticks、规则哈希、地图 seed 与版本、状态指纹和正文 SHA-256。
+- 续跑时用 `full_match(..., resume_state=state)` 重新装配：Economy 与命令处理器绑定到读回的 state，不重新初始化，也不新建 national_power/active_scale。读取时校验规则哈希、正文摘要和状态指纹，任一不符即拒绝。
+- CLI：`python3 -m organizer.rift_era match --checkpoint F [--checkpoint-every N] [--budget-s S] [--resume]`。超出墙钟预算时先写检查点，再以退出码 3 结束；带 `--resume` 再次运行即可接着跑。
+- 为了能 pickle，把常驻状态里的 lambda 换成模块级工厂或可调用类（`national_power`、`active_scale`、`industry_activity`、`stock_market` 的手续费折扣），取值不变，空局哈希一致。
+- 检查点只供开发与批次主机使用，不是回放，也不进入评分。正式记录仍以回放为准。
+- 验证：跨两个周期末续跑，结果与不中断的运行逐位一致（`tests/test_checkpoint.py`）；CLI 30 Tick 分两段跑，最终状态哈希与一次跑完相同。

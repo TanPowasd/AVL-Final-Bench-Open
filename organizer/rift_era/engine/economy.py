@@ -1303,20 +1303,24 @@ def opening_economy(catalog, initial, *, total_ticks: int = 150, debug: bool = T
 
 
 def full_match(catalog, initial, *, total_ticks: int = 28_800, debug: bool = False,
-               commerce: bool = True) -> Kernel:
+               commerce: bool = True, resume_state=None) -> Kernel:
     """P0-1: the complete game (28,800 ticks by default) with P0-2 national power.
 
     Same systems as the opening; adds the per-cycle five-pillar collector as the
     final SETTLEMENT system. `finalize_match` turns the finished kernel into V.
+    `resume_state` (checkpoint.py) reuses a saved state instead of a new one.
     """
-    return _assemble(catalog, initial, total_ticks=total_ticks, debug=debug, commerce=commerce, scoring=True)
+    return _assemble(catalog, initial, total_ticks=total_ticks, debug=debug, commerce=commerce, scoring=True,
+                     resume_state=resume_state)
 
 
-def _assemble(catalog, initial, *, total_ticks: int, debug: bool, commerce: bool, scoring: bool) -> Kernel:
+def _assemble(catalog, initial, *, total_ticks: int, debug: bool, commerce: bool, scoring: bool,
+              resume_state=None) -> Kernel:
     from .research_continuity import settle_research_continuity
-    state = OperatingWorld(catalog, initial)
+    state = OperatingWorld(catalog, initial) if resume_state is None else resume_state
     economy = Economy(state)
-    economy.initialize_yields()
+    if resume_state is None:
+        economy.initialize_yields()
     from .commands import EngineCommands
     commands = EngineCommands(state)
     def process_commands(state, ctx):
@@ -1437,8 +1441,9 @@ def _assemble(catalog, initial, *, total_ticks: int, debug: bool, commerce: bool
     if scoring:
         from .national_power import NationalPower
         from .active_scale import ActiveScale
-        state.national_power = NationalPower(state)
-        state.active_scale = ActiveScale(state)
+        if resume_state is None:
+            state.national_power = NationalPower(state)
+            state.active_scale = ActiveScale(state)
         settlement = tuple(s.id for s in systems if s.phase == Phase.SETTLEMENT)
         systems += (System('active_scale_clock', Phase.COMMANDS, lambda state, ctx: state.active_scale.begin_tick(ctx)),
                     System('active_scale', Phase.SETTLEMENT, lambda state, ctx: state.active_scale.advance(ctx),

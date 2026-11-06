@@ -6,6 +6,7 @@ supplied_field_depots) have no business receipt yet and meter zero, which only
 lowers a node toward its .15 floor. national_power reads the cycle-end values.
 """
 from collections import defaultdict
+from fractions import Fraction
 
 from .errors import InvariantViolation
 from .numeric import Q
@@ -35,8 +36,8 @@ class ActiveScale:
         self.values={};self.licensed={}
 
     def _reset(self,cycle):
-        self.cycle=cycle;self.recipes=defaultdict(lambda:Q(0));self.lines=defaultdict(lambda:Q(0))
-        self.systems=defaultdict(int);self.compute=defaultdict(lambda:Q(0));self.formations=defaultdict(int);self.heat=set()
+        self.cycle=cycle;self.recipes=defaultdict(Fraction);self.lines=defaultdict(Fraction)
+        self.systems=defaultdict(int);self.compute=defaultdict(Fraction);self.formations=defaultdict(int);self.heat=set()
 
     def advance(self,ctx):
         if ctx.tick<=self.last_tick:raise InvariantViolation('technology usage metered twice')

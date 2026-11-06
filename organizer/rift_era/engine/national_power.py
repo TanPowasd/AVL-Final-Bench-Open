@@ -37,6 +37,23 @@ COVERAGE = {
 }
 
 
+# Module-level factories keep the state picklable for checkpoints.
+def _int_table():
+    return defaultdict(int)
+
+
+def _fraction_pair():
+    return [Q(0), Q(0)]
+
+
+def _supply_table():
+    return defaultdict(_fraction_pair)
+
+
+def _pair():
+    return [0, 0]
+
+
 def _ratio(value, total):
     return Q(value, total) if total else Q(0)
 
@@ -48,9 +65,9 @@ class NationalPower:
         self.trajectories = {p: Trajectory() for p in self.nations}
         self.pillars = {p: [] for p in self.nations}          # one Pillars row per cycle
         self.shortage = {p: deque(maxlen=20) for p in self.nations}
-        self.extracted = defaultdict(lambda: defaultdict(int))  # region -> good -> mU this cycle
-        self.supply = defaultdict(lambda: defaultdict(lambda: [Q(0), Q(0)]))  # formation -> good -> [got, need]
-        self.line_power = defaultdict(lambda: [0, 0])  # line -> [received, needed] over running ticks this cycle
+        self.extracted = defaultdict(_int_table)  # region -> good -> mU this cycle
+        self.supply = defaultdict(_supply_table)  # formation -> good -> [got, need]
+        self.line_power = defaultdict(_pair)  # line -> [received, needed] over running ticks this cycle
         self.initial_cash_book = {p: state.initial.cash.owner_book(p) for p in self.nations}
         self.default_cycles = {p: [] for p in self.nations}
         self.last_tick = -1

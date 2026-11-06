@@ -70,6 +70,10 @@ def main() -> int:
     full.add_argument('--map', choices=MAPS, default='atlas')
     full.add_argument('--audit-every-phase', action='store_true')
     full.add_argument('--progress', type=int, default=0, help='print elapsed time every N ticks to stderr')
+    full.add_argument('--checkpoint', type=Path, help='write a resumable checkpoint here (development, not a replay)')
+    full.add_argument('--checkpoint-every', type=int, default=500, help='ticks between checkpoints')
+    full.add_argument('--resume', action='store_true', help='continue from --checkpoint if it exists')
+    full.add_argument('--budget-s', type=float, default=0, help='stop after this many wall seconds, checkpoint, exit 3')
     strategy_match = commands.add_parser('strategy-match', help='drive eight sandboxed submissions through a full_match; no formal score')
     strategy_match.add_argument('--submissions', nargs=8, type=Path, required=True)
     strategy_match.add_argument('--cgroup', type=Path, required=True)
@@ -132,16 +136,35 @@ def main() -> int:
             import sys, time
             from .engine.economy import full_match
             from .engine.match import finalize_match
+            from .engine import checkpoint
             catalog = Catalog()
             map_world = match_world(args.seed, args.map)
-            game = full_match(catalog, initialize(catalog, map_world), total_ticks=args.ticks,
-                              debug=args.audit_every_phase, commerce=True)
+            if args.resume and args.checkpoint and args.checkpoint.exists():
+                head = checkpoint.read_header(args.checkpoint)
+                if head['world_seed'] != args.seed or head['map_version'] != map_world.generator_version:
+                    raise InfrastructureFault('checkpoint belongs to another seed or map')
+                game, _ = checkpoint.resume(args.checkpoint, catalog, total_ticks=args.ticks,
+                                            debug=args.audit_every_phase)
+            else:
+                game = full_match(catalog, initialize(catalog, map_world), total_ticks=args.ticks,
+                                  debug=args.audit_every_phase, commerce=True)
+            def save():
+                checkpoint.save(game, args.checkpoint, rules_hash=catalog.fingerprint, world_seed=args.seed,
+                                map_version=map_world.generator_version)
             start = time.monotonic()
             while game.tick < game.clock.total_ticks:
                 game.step()
                 if args.progress and game.tick % args.progress == 0:
                     print(json.dumps({'tick': game.tick, 'elapsed_s': round(time.monotonic() - start, 1)}),
                           file=sys.stderr, flush=True)
+                if args.checkpoint and game.tick % args.checkpoint_every == 0:
+                    save()
+                if args.budget_s and time.monotonic() - start >= args.budget_s and game.tick < game.clock.total_ticks:
+                    if not args.checkpoint:
+                        raise InfrastructureFault('--budget-s needs --checkpoint')
+                    save()
+                    print(json.dumps({'paused_at_tick': game.tick, 'checkpoint': str(args.checkpoint)}))
+                    return 3
             report = finalize_match(game) | {'seed': args.seed, 'map_version': map_world.generator_version,
                 'map_attempt': map_world.attempt, 'ticks': game.tick, 'official': False,
                 'state_hash': fingerprint(game.state.snapshot()), 'wall_seconds': round(time.monotonic() - start, 1)}
