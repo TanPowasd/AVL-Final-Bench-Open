@@ -409,6 +409,11 @@ P8 发布缓存后读取不重新探测；测控失联时只报告失联，不�
 
 - E12（部分）：已知 E12 时，电力线路允许穿越海洋格（单段 ≤60 格），海洋格不要求控制权，造价另加 superconductor×40；穿越海洋的线路线损封顶 8%。"跨国电力合同按实际潮流自动结算"仍阻塞（同 C28）。
 
+## megaproject_v1（2026-11-06，L12 巨构工程，部分）
+
+- 跨海峡大桥/海底隧道：`logistics/build_corridor` 的 road 或 rail 路径可以穿越 ≤8 个海洋格，需 L12；海洋格不要求主权。造价在普通陆路/铁路材料之上另加 structure_module×40 + steel×80 + cement×120 + metamaterial×4，全部在起点 Hub 预锁（不远程扣首都）；工期取 max(普通工期, 120 周期)。建成后该走廊容量为 800 标准载重/周期（800,000 mU），并记入 `megaprojects`。
+- 未做：同一桥体同时兼容陆路和铁路（目前按所建 mode 只开一种）、桥上同容量高压线、人工岛（新增 Hub 需要改动冻结地图结构）。工地作为军事目标沿用现有资产损伤规则，没有额外加权。
+
 ## equity_stake_v1（2026-11-06，F04 主权基金）
 
 - 指令：`diplomacy/propose_contract`，`clause_type: 4`，`params: {mode: "stake", asset_id, share_mU, price_ru_mU}`。03 的九类合同没有给 F04 单独类型，这里挂在 4 joint_venture 下用 `mode: "stake"` 区分，需作者确认。
