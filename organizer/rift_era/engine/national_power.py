@@ -49,7 +49,6 @@ class NationalPower:
         self.pillars = {p: [] for p in self.nations}          # one Pillars row per cycle
         self.shortage = {p: deque(maxlen=20) for p in self.nations}
         self.extracted = defaultdict(lambda: defaultdict(int))  # region -> good -> mU this cycle
-        self.combat_ticks = defaultdict(int)                  # region -> ticks this cycle
         self.initial_cash_book = {p: state.initial.cash.owner_book(p) for p in self.nations}
         self.default_cycles = {p: [] for p in self.nations}
         self.last_tick = -1
@@ -65,8 +64,6 @@ class NationalPower:
         if ctx.tick <= self.last_tick:
             raise InvariantViolation('national power metered twice')
         self.last_tick = ctx.tick
-        for region in self.s.battles.combat_regions:
-            self.combat_ticks[region] += 1
         if not ctx.clock.is_cycle_end(ctx.tick):
             return
         if ctx.cycle != self.cycle:
@@ -77,7 +74,6 @@ class NationalPower:
             if ctx.cycle < 2880:
                 self.trajectories[p].commit(ctx.cycle, row.total)
         self.extracted.clear()
-        self.combat_ticks.clear()
         self.cycle += 1
 
     # -- pillars --------------------------------------------------------------------
@@ -106,7 +102,7 @@ class NationalPower:
                 hold_cycles=hold, food=sat.get('food', Q(0)), synthetic_share=s.consumption.synthetic_share(hub, cycle),
                 consumer_goods=sat.get('consumer_goods', Q(0)), medicine=sat.get('medicine', Q(0)),
                 advanced_medicine=sat.get('medical_supplies', Q(0)), water=sat.get('water', Q(0)),
-                electricity=sat.get('electricity', Q(0)), combat=Q(min(10, self.combat_ticks.get(region, 0)), 10),
+                electricity=sat.get('electricity', Q(0)), combat=s.battles.combat_share(region, cycle),
                 blockade=s.blockades.region_share(region, p), pollution=pollution, remediation=remedied)
             shortage_num += population.total_mU * (1 - min(Q(1), sat.get('food', Q(0)), sat.get('electricity', Q(0))))
             shortage_den += population.total_mU
@@ -251,7 +247,6 @@ class NationalPower:
                             for p, rows in self.pillars.items()},
                 'shortage': {p: list(v) for p, v in self.shortage.items()},
                 'extracted': {r: dict(v) for r, v in sorted(self.extracted.items())},
-                'combat_ticks': dict(sorted(self.combat_ticks.items())),
                 'trajectory': {p: {'cycles': t.cycles, 'era_sums': list(t.era_sums), 'last40': list(t.last40)}
                                for p, t in self.trajectories.items()}}
 

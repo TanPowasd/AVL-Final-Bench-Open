@@ -73,7 +73,23 @@ class StockMarket:
         base=max(Q(100),multiplier*100*state.industry_activity.mean20(cid)/1000000)
         blackout=max(Q(7,10),1-Q(1,2)*state.industry_activity.shortage5(cid))
         crisis=Q(4,5) if state.macro.crisis_until_cycle[company.issuer]>cycle else Q(1)
-        return max(1,round(base*blackout*crisis))
+        return max(1,round(base*blackout*crisis*self.reserve_life_factor(cid)))
+
+    def reserve_life_factor(self,cid):
+        """10 C24: mining value x max(.3, min(1, L/200)^.5), L = finite reserves / mean20 extraction (cycles)."""
+        state=self.s;company=state.initial.companies[cid]
+        if company.sector!='mining':return Q(1)
+        owner=company.issuer
+        finite={state.mine_deposit[mid] for mid,mine in state.initial.mines.items()
+                if mine.owner==owner and mid in state.mine_deposit and mine.good not in ('water','biomass')}
+        remaining=sum(state.deposits[d].remaining_mU for d in finite if d in state.deposits and not state.deposits[d].renewable)
+        rows=list(state.history[owner])[-20:]
+        extracted=sum(sum(q for g,q in row.extracted.items() if g not in ('water','biomass')) for row in rows)
+        if not extracted:return Q(1)
+        life=Q(remaining*20,extracted)
+        if life>=200:return Q(1)
+        from .scoring import sqrt_q
+        return max(Q(3,10),sqrt_q(life/200))
 
     def vwap20(self,cid):
         history=self.turnover[cid]

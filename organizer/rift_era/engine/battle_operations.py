@@ -21,6 +21,7 @@ class Battles:
         self.loss_cycles = {}
         self.destroyed_cycles = {}
         self.combat_regions = set()
+        self.combat_cycle = {}
         # 03 bombard: one support shock per target region and one credit
         # penalty per attacker, each at most once per cycle.
         self.bombard_cycle = -1
@@ -130,7 +131,8 @@ class Battles:
             for fid in (a,b):
                 for uid in state.formations.rows[fid].unit_ids:terrain_override[uid]=terrain
         combatants = self.combatants()
-        result = resolve(state.catalog,state.initial.diplomacy,combatants,contacts,supplies,
+        boosted = self.drone_boost()
+        result = resolve(state.catalog,state.initial.diplomacy,{**combatants,**boosted} if boosted else combatants,contacts,supplies,
                          {rid:r.terrain for rid,r in state.initial.map.regions.items()},moving=moving,terrain_by_unit=terrain_override,inactive=state.refits.inactive_units(),target_only=frozenset(state.deception.rows))
         self.apply_bombard(ctx, result, combatants)
         consumed = {}
@@ -209,7 +211,57 @@ class Battles:
         for owner,value in destroyed.items():
             state.cycles[owner].destroyed_value += value
         self.combat_regions = set(result.combat_regions)
+        # 07 Combat_r: actual combat ticks per region in the current cycle (C25, Qsec).
+        if self.combat_cycle.get('cycle') != ctx.cycle:
+            self.combat_cycle = {'cycle': ctx.cycle, 'ticks': {}} if self.combat_regions else {}
+        for region in sorted(self.combat_regions):
+            ticks = self.combat_cycle['ticks']
+            ticks[region] = ticks.get(region, 0) + 1
         self.last_result = result
+
+    DRONES = frozenset({'ground_drone', 'air_drone', 'swarm'})
+
+    def drone_boost(self):
+        """10 C19: in-network drone/swarm units with AI09 and allotted cyber compute fire x(1+min(.15,.004*Cap*s)).
+
+        Returns adjusted copies for this tick's pure combat resolution only;
+        the units' stored tech multipliers are never changed.
+        """
+        state = self.s
+        result = {}
+        for formation in state.formations.rows.values():
+            owner = formation.owner
+            if (formation.hub is None or 'AI09' not in state.research[owner].known
+                    or state.ai.suspended_until[owner] > state.ai_deployment.cycle):
+                continue
+            drones = [uid for uid in formation.unit_ids if state.initial.units[uid].unit_type in self.DRONES]
+            if not drones:
+                continue
+            strength = state.ai_deployment.previous_strength(owner, formation.hub, 'cyber', 10000)
+            factor = 1 + min(Q(15, 100), Q(4, 1000) * strength)
+            if factor == 1:
+                continue
+            for uid in drones:
+                unit = state.initial.units[uid]
+                result[uid] = replace(unit, tech_multiplier=unit.tech_multiplier * factor)
+        return result
+
+    def combat_share(self, region, cycle):
+        """Combat_r this cycle: actual combat ticks in the region / 10, capped at 1."""
+        if self.combat_cycle.get('cycle') != cycle:
+            return Q(0)
+        return min(Q(1), Q(self.combat_cycle['ticks'].get(region, 0), 10))
+
+    def war_zone_outage(self, owner, hub, cycle):
+        """10 C25: outage x (1 + 2(1 - Qsec)) in a region with actual combat or an effective blockade."""
+        state = self.s
+        region = state.initial.map.hubs[hub].region
+        combat = self.combat_share(region, cycle)
+        blockade = state.blockades.region_share(region, owner) if state.blockades.effective else Q(0)
+        if not combat and not blockade:
+            return Q(1)
+        security = max(Q(0), 1 - Q(2, 5) * combat - Q(3, 10) * blockade)
+        return 1 + 2 * (1 - security)
 
     def apply_bombard(self, ctx, result, combatants):
         """03: an actual bombard shot hits its target region's support -300 mU and the attacker's credit -0.05."""
@@ -238,4 +290,4 @@ class Battles:
                 'unit_formations':self.unit_formations,'load_hubs':self.load_hubs,'power_demands':self.power_demands,'power_context':self.power_context,'locks':[[uid,good,lock,source] for (uid,good),(lock,source) in sorted(self.locks.items())],
                 'last_result':self.last_result,'loss_cycles':{str(c):v for c,v in self.loss_cycles.items()},
                 'destroyed_cycles':{str(c):v for c,v in self.destroyed_cycles.items()},
-                'combat_regions':self.combat_regions}
+                'combat_regions':self.combat_regions,**({'combat_cycle':self.combat_cycle} if self.combat_cycle else {})}

@@ -787,7 +787,8 @@ class Economy:
             if not line.recipe.inputs:
                 supply_ratio = plant.spec.maximum
             debt = max(initial.assets[lid].maintenance_debt, initial.assets[lid.rsplit('/line', 1)[0]].maintenance_debt)
-            power_operations.calendar(plant, debt, ctx, outage_multiplier=state.ai_deployment.grid_multiplier(line.owner,line.hub))
+            power_operations.calendar(plant, debt, ctx, outage_multiplier=state.ai_deployment.grid_multiplier(line.owner,line.hub)
+                                     * state.battles.war_zone_outage(line.owner, line.hub, ctx.cycle))
             scram_paid = False
             if plant.mode == PlantMode.SCRAM and plant.timer <= 1:
                 parts = {'precision_parts': 2000, 'pure_chemicals': 1000}
