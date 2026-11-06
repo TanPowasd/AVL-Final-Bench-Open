@@ -511,3 +511,8 @@ P8 发布缓存后读取不重新探测；测控失联时只报告失联，不�
 - 每周期的顺序：先到货，再生产，再发下一趟。
 - 未做，需作者确认：04 写的「每次往返占用 orbital 槽位 1 周期」（03 没有这条，这里没有占位）；04 研究公式里 N11 平台对 N11/N12/I12/E12 研究 +15%；轨道产出不计入 industry_activity 的 VA。20 载重按「每个方向各 20」理解。
 - 测试：`tests/test_orbital_platform.py`（N11 校验、只许 P081/P087、上行—生产 ×1.5—下行三个周期、无运载器不运、到期销毁）。
+
+## round6 场景验收中发现并修复（2026-11-06）
+
+- 行动损耗汇总漏项：宣战等零物料敌对政策事件（`relations.action_cycles`，每次 0.001）和禁运/出口管制拒绝（`export_controls.action_cycles`）原先没有计入 `national_power.industry` 的 ACTION_LOSS。现已计入（round6 `zero_material_hostility`）。
+- cyber_compute_v1（03 S03）：已知 AI09 且本国首都通信网上一个算力周期的有效 cyber 算力扣除本周期已用后仍 ≥10 单位时，S03 系列改为消耗 cyber_suite×1 + 10 单位有效 cyber 算力（行动损耗按 `compute` 权重计，不扣 computing_equipment）；否则仍走基础替代 cyber_suite×1 + computing_equipment×1。替代路线的「10 B4 电」仍未计量。round6 `cyber_credit_floor` 的 Loss=240.0308 依此通过。

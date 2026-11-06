@@ -178,7 +178,11 @@ class NationalPower:
                    + self._cycle_table(s.deception.action_cycles, cycle, p) + self._cycle_table(s.climate.action_cycles, cycle, p)
                    + self._cycle_table(s.blockades.action_cycles, cycle, p)
                    + self._cycle_table(s.hypersonics.action_cycles, cycle, p)
-                   + self._cycle_table(s.cyber.action_cycles, cycle, p))
+                   + self._cycle_table(s.cyber.action_cycles, cycle, p)
+                   # 07 ACTION_LOSS also covers zero-material hostile policy events
+                   # (declarations, embargo/export denials) at 0.001 each.
+                   + self._cycle_table(s.relations.action_cycles, cycle, p)
+                   + self._cycle_table(s.export_controls.action_cycles, cycle, p))
         transit = s.consumption.receipt_mean20(p, 'transit')
         return industrial_pillar(va, destroyed, actions, transit, self.nfa_mU(p, cycle) / 1000)
 

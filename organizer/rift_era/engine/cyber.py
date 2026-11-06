@@ -37,7 +37,7 @@ from .command_schema import fields
 from .determinism import digest, uniform
 from .errors import RuleViolation
 from .ledger import Account
-from .numeric import Q, ceil, clip
+from .numeric import Q, ceil, clip, floor
 from .protocol import PreparedCommand
 from .provenance import Use
 from .scoring import action_loss
@@ -56,6 +56,11 @@ class CyberOp:
     hub: str
     kind: str
     cycle: int
+    compute_mU: int = 0   # S03 run on effective cyber compute (AI09) instead of computing_equipment
+
+
+S03_COMPUTE_MU = 10000
+S03_COMPUTE_COST = {'cyber_suite': 1000}
 
 
 class Cyber:
@@ -69,6 +74,7 @@ class Cyber:
         self.action_cycles = {}
         self.recent = {}
         self.pending = []
+        self.compute_used = {}        # (owner, cycle) -> cyber compute mU spent on S03 this cycle
 
     def level(self, nation):
         catalog = self.s.catalog
@@ -90,6 +96,8 @@ class Cyber:
         for op in self.pending:
             p, s04 = self.probability(op.owner, op.target, op.hub)
             cost = S08_COST if op.kind == 'S08_paralyze' else S03_COST
+            if op.compute_mU:
+                cost = dict(S03_COMPUTE_COST, compute=op.compute_mU)
             losses = self.action_cycles.setdefault(ctx.cycle, {})
             losses[op.owner] = losses.get(op.owner, Q(0)) + action_loss(cost, state.catalog.weights)
             if op.kind == 'S08_paralyze':
@@ -161,6 +169,23 @@ class Cyber:
             return True
         return False
 
+    def cyber_compute_free(self, owner, cycle):
+        """03 S03 (cyber_compute_v1): effective cyber compute of the owner's capital
+        network in the last finished compute cycle (needs AI09), less what S03
+        operations already used this cycle."""
+        state = self.s
+        if 'AI09' not in state.research[owner].known or state.ai.suspended_until[owner] > cycle:
+            return 0
+        deployment = state.ai_deployment
+        capital = f'{owner}-h0'
+        components = state.systems.communication_components(owner)
+        total = Q(0)
+        for (p, source, task), (quantity, _) in deployment.previous_tasks.items():
+            if p == owner and task == 'cyber' and (source == capital or source in components
+                                                   and components.get(capital) == components[source]):
+                total += quantity
+        return max(0, floor(total) - self.compute_used.get((owner, cycle), 0))
+
     def visible(self, owner):
         return {'recent': list(self.recent.get(owner, ()))}
 
@@ -168,11 +193,11 @@ class Cyber:
         return {'cooldown': self.cooldown, 's08_next': self.s08_next, 'finance_next': self.finance_next,
                 'suspended_auctions': self.suspended_auctions, 'coercion': self.coercion,
                 'action_cycles': {str(c): v for c, v in self.action_cycles.items()}, 'recent': self.recent,
-                'pending': self.pending}
+                'pending': self.pending, **({'compute_used': self.compute_used} if self.compute_used else {})}
 
     def empty(self):
         return not any((self.cooldown, self.s08_next, self.finance_next, self.suspended_auctions, self.coercion,
-                        self.action_cycles, self.recent, self.pending))
+                        self.action_cycles, self.recent, self.pending, self.compute_used))
 
 
 class CyberCommands:
@@ -211,13 +236,17 @@ class CyberCommands:
                                              for c in state.compute.centers.values()):
             raise RuleViolation('ERR_SITE_INCOMPATIBLE', 'no target data centre at this hub')
         cost = S08_COST if kind == 'S08_paralyze' else S03_COST
+        compute = 0
+        if kind != 'S08_paralyze' and book.cyber_compute_free(owner, ctx.cycle) >= S03_COMPUTE_MU:
+            cost, compute = S03_COMPUTE_COST, S03_COMPUTE_MU   # 03: cyber_suite 1 + 10 effective cyber compute
         capital = f'{owner}-h0'
         inv = state.initial.inventory
         for good, quantity in cost.items():
             if inv.balance(Account(owner, capital, 'available', good)) < quantity:
                 raise RuleViolation('ERR_INSUFFICIENT_STOCK')
         command_id = str(int(order['id']))
-        op = CyberOp('cyber:' + digest(owner, command_id).hex()[:24], command_id, owner, target, hub, kind, ctx.cycle)
+        op = CyberOp('cyber:' + digest(owner, command_id).hex()[:24], command_id, owner, target, hub, kind, ctx.cycle,
+                     compute_mU=compute)
 
         def commit():
             inv.transform({Account(owner, capital, 'available', g): q for g, q in cost.items()}, {},
@@ -226,6 +255,9 @@ class CyberCommands:
                 book.s08_next[owner] = ctx.cycle + 40
             else:
                 book.cooldown[f'{owner}|{hub}'] = ctx.cycle + 10
+            if compute:
+                book.compute_used = {k: v for k, v in book.compute_used.items() if k[1] >= ctx.cycle}
+                book.compute_used[owner, ctx.cycle] = book.compute_used.get((owner, ctx.cycle), 0) + compute
             book.pending.append(op)
 
         return PreparedCommand(commit)
