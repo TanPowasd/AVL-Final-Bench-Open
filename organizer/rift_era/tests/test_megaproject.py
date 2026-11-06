@@ -51,6 +51,17 @@ class MegaprojectTests(unittest.TestCase):
             self.assertEqual(row['kind'], 'L12_bridge')
             self.assertEqual(state.cargo.corridors[eid].capacity_mU_cycle, 800000)
             self.assertEqual(state.cargo.corridors[eid].mode, 'rail')
+            # Road deck on the same structure, same span and capacity.
+            twin = state.cargo.corridors[row['twin']]
+            self.assertEqual((twin.mode, twin.capacity_mU_cycle), ('road', 800000))
+            self.assertEqual(state.cargo.paths[row['twin']], state.cargo.paths[eid])
+            self.assertEqual(state.cargo.road_assets[row['twin']], state.cargo.road_assets[eid])
+            # High-voltage line over the bridge rides the bridge asset.
+            line = state.utilities.links[row['power_line']]
+            self.assertEqual((line.mode, line.level, line.asset_id), ('power', 2, job.target))
+            self.assertIn(row['power_line'], {e.id for e in state.utilities.dispatch_edges()})
+            state.asset_lifecycle.damage(job.target, 1000, event_id='test_strike')
+            self.assertNotIn(row['power_line'], {e.id for e in state.utilities.dispatch_edges()})
         finally:
             object.__setattr__(world, 'terrain_cells', original)
 

@@ -117,7 +117,23 @@ class CorridorCommands:
             'rail': 320000, 'river': 180000, 'sea': 240000, 'air': 60000}[data['mode']])
         if data.get('megaproject') == 'L12_bridge':
             ops.corridors[eid].capacity_mU_cycle = 800000  # L12: 800 standard loads per cycle
-            state.megaprojects[eid] = {'kind': 'L12_bridge', 'owner': job.owner, 'asset': job.target}
+            # 03 L12 (megaproject_v1): the structure carries road and rail at
+            # once and a high-voltage line of the same span. The twin deck and
+            # the line are separate edges on the same asset, so damage to the
+            # structure takes all three down together.
+            other = 'rail' if data['mode'] == 'road' else 'road'
+            twin = f'{eid}~{other}'
+            ops.corridors[twin] = Corridor(twin, data['a'], data['b'], len(data['cells']) - 1, 800000)
+            ops.corridors[twin].mode = other
+            ops.levels[twin] = 1
+            ops.paths[twin] = data['cells']
+            ops.road_assets[twin] = job.target
+            from .utility_network import UtilityLink
+            line = f'{eid}~power'
+            state.utilities.links[line] = UtilityLink(line, job.owner, data['a'], data['b'], 'power', 2,
+                                                      tuple(data['cells']), job.target)
+            state.megaprojects[eid] = {'kind': 'L12_bridge', 'owner': job.owner, 'asset': job.target,
+                                       'twin': twin, 'power_line': line}
         if data['mode'] in ('sea', 'air'):
             # One commissioned terminal at each endpoint is required. The
             # work order paid both facilities' materials above; no free route
