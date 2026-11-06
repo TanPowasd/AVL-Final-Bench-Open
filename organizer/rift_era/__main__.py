@@ -1,6 +1,7 @@
 """Organizer development CLI. Never emits a provisional formal game score."""
 
 import argparse
+import hashlib
 from contextlib import ExitStack
 import json
 from pathlib import Path
@@ -81,6 +82,16 @@ def main() -> int:
     strategy_match.add_argument('--seed', type=int, default=1000)
     strategy_match.add_argument('--ticks', type=int, default=28_800)
     strategy_match.add_argument('--map', choices=MAPS, default='atlas')
+    batch = commands.add_parser('batch', help='run (or resume) a 64-seed batch: player and shadow games, INVALID_EVALUATION on reference/judge/host faults; no formal score')
+    batch.add_argument('--manifest', type=Path, required=True, help='batch manifest; created with fresh CSPRNG seeds if missing')
+    batch.add_argument('--journal', type=Path, required=True)
+    batch.add_argument('--submission', type=Path, required=True)
+    batch.add_argument('--reference', type=Path, required=True, help='reference strategy archive used for every non-submission seat')
+    batch.add_argument('--cgroup', type=Path, required=True)
+    batch.add_argument('--replay-dir', type=Path, required=True)
+    batch.add_argument('--ticks', type=int, default=28_800)
+    batch.add_argument('--limit', type=int, help='games to run in this invocation')
+    batch.add_argument('--map', choices=MAPS, default='atlas')
     match_replay = commands.add_parser('replay-strategy-opening', help='re-execute a development strategy replay and compare all tick hashes')
     match_replay.add_argument('path', type=Path)
     demo = commands.add_parser('scenario', help='run the integrated supply-chain development fixture')
@@ -196,6 +207,40 @@ def main() -> int:
                     replay=args.replay, manifest={'profile': 'full_match_development', 'rules_hash': catalog.fingerprint,
                         'map_version': map_world.generator_version, 'map_attempt': map_world.attempt})
                 print(canonical(driver.run()).decode('utf-8'))
+            return 0
+        if args.command == 'batch':
+            from contextlib import contextmanager
+            from dataclasses import asdict
+            from .engine.archive import extracted_submission
+            from .engine.batch_host import match_runner
+            from .engine.batch_runner import BatchRunner
+            from .engine.determinism import engine_source_fingerprint as engine_hash
+            from .engine.evaluation import Batch
+            from .engine.ipc import StrategySession
+            from .engine.sandbox import Sandbox, runtime_mounts
+            launcher = Sandbox(args.cgroup)
+            launcher.preflight()
+            launcher.mounts = runtime_mounts()
+            catalog = Catalog()
+            if not args.manifest.exists():
+                Batch.create(rules_hash=catalog.fingerprint, engine_hash=engine_hash(),
+                             reference_hash=hashlib.sha256(args.reference.read_bytes()).hexdigest(),
+                             runtime_hash=runtime_fingerprint(), resource_plan_hash='development').write_new(args.manifest)
+            plan = Batch.read(args.manifest)
+            if plan.rules_hash != catalog.fingerprint or plan.engine_hash != engine_hash():
+                raise InfrastructureFault('batch manifest belongs to another engine or rules version')
+
+            def seat_from(archive):
+                @contextmanager
+                def factory(owner, seed, role):
+                    with extracted_submission(archive) as submission:
+                        with StrategySession.launch(launcher, submission) as session:
+                            yield session
+                return factory
+            runner = BatchRunner(plan, args.journal, match_runner(submission=seat_from(args.submission),
+                reference=seat_from(args.reference), replay_dir=args.replay_dir, ticks=args.ticks,
+                map_kind=args.map, catalog=catalog))
+            print(canonical(asdict(runner.run(limit=args.limit))).decode('utf-8'))
             return 0
         if args.command == 'replay-strategy-opening':
             from .engine.driver import replay_decisions
