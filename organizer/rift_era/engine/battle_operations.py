@@ -13,6 +13,22 @@ from .nonland_navigation import base_online
 from .support_events import shock_region_support
 
 
+
+def relay_supply_hubs(state, formation, tick):
+    """04 G12 (joint_relay_v1): with the joint doctrine online, a formation whose
+    own Hub cannot supply it switches to the owner's other online bases in the
+    same region (sorted ids). Physical stock only; no remote capital draw."""
+    owner = formation.owner
+    research = state.research.get(owner)
+    if formation.hub is None or research is None or 'G12' not in research.known:
+        return ()
+    if not state.battles.joint_doctrine_online(owner, tick):
+        return ()
+    world = state.initial.map
+    region = world.hubs[formation.hub].region
+    return tuple(h for h in sorted(hid for hid, hub in world.hubs.items() if hub.region == region)
+                 if h != formation.hub and base_online(state, owner, h, formation.domain))
+
 class Battles:
     def __init__(self, state):
         self.s = state

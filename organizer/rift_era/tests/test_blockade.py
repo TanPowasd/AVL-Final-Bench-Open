@@ -75,9 +75,50 @@ class BlockadeTests(unittest.TestCase):
         self.assertEqual(edge.blocked.get('n1', 0), 0)
 
 
-if __name__ == '__main__':
-    unittest.main()
+    def until_decision(self, game):
+        while not game.clock.is_decision(game.tick):
+            game.step()
 
+    def test_g12_relays_the_blockade_task(self):
+        game, state, formation, edge = self.setup_game()
+        game.step({'n0': [{'id': '5', 'kind': 'military', 'op': 'deploy_formation', 'hub_id': 'n0-h0',
+                           'domain': 'Land', 'units': {'motorized': 1}}]})
+        self.until_decision(game)
+        heir = next(f for f in sorted(state.formations.rows.values(), key=lambda f: f.id)
+                    if f.owner == 'n0' and f.id.startswith('formation:') and f.id != formation.id)
+        self.until_decision(game)
+        game.step({'n0': [self.order(7, formation, edge)]})
+        game.step()
+        self.assertGreater(edge.blocked.get('n1', 0), 0)
+        # Test placement: the holder leaves the endpoint (bypassing a march).
+        away = next(h for h in sorted(state.initial.map.hubs) if h.startswith('n0-') and h not in (edge.a, edge.b))
+        formation.hub, formation.region = away, state.initial.map.hubs[away].region
+        state.movement.positions.pop(formation.id, None)
+        game.step()
+        self.assertEqual(edge.blocked.get('n1', 0), 0)   # without G12 the task lapses
+        self.assertIn(formation.id, state.blockades.plans)
+        state.research['n0'].known.add('G12')
+        game.step()
+        self.assertNotIn(formation.id, state.blockades.plans)
+        self.assertEqual(state.blockades.plans[heir.id].command_id, '7')
+        self.assertEqual(state.blockades.recent['n0'][-1]['status'], 'RELAYED')
+        self.assertGreater(edge.blocked.get('n1', 0), 0)
+        # Cancelling by the original command id still ends the relayed task.
+        self.until_decision(game)
+        game.step({'n0': [{'id': '8', 'kind': 'cancel', 'op': 'cancel_by_id', 'target_id': '7'}]})
+        self.assertNotIn(heir.id, state.blockades.plans)
+        state.audit()
+
+    def test_g12_relay_supply_hubs_only_same_region_online_bases(self):
+        from organizer.rift_era.engine.battle_operations import relay_supply_hubs
+        game, state, formation, edge = self.setup_game()
+        self.assertEqual(relay_supply_hubs(state, formation, game.tick), ())
+        state.research['n0'].known.add('G12')
+        hubs = relay_supply_hubs(state, formation, game.tick)
+        region = state.initial.map.hubs[formation.hub].region
+        self.assertNotIn(formation.hub, hubs)
+        self.assertTrue(all(state.initial.map.hubs[h].region == region for h in hubs))
+        self.assertEqual(list(hubs), sorted(hubs))
 
 class AclDenialShareTests(unittest.TestCase):
     """03 s7.3: Blockade_r uses B = max(ACL denial flag, b) per in-edge."""
@@ -101,3 +142,7 @@ class AclDenialShareTests(unittest.TestCase):
         first.blocked['n0'] = Q(1, 3)                      # max, never a sum
         self.assertEqual(state.blockades.region_share(region, 'n0'), expected)
         self.assertEqual(state.blockades.region_share(region, 'n2'), 0)
+
+
+if __name__ == '__main__':
+    unittest.main()

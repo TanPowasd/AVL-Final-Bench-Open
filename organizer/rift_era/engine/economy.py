@@ -367,6 +367,8 @@ class Economy:
                 from .nonland_navigation import base_online
                 if base_online(state,owner,formation.hub,formation.domain):
                     sources.append(Account(owner,formation.hub,'available',g))
+                from .battle_operations import relay_supply_hubs
+                sources.extend(Account(owner,h,'available',g) for h in relay_supply_hubs(state,formation,ctx.tick))
                 taken[g]=0
                 for source in sources:
                     qty=min(needed-taken[g],self.inventory.balance(source))

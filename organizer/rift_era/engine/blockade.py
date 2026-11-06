@@ -110,6 +110,7 @@ class Blockades:
         for row in self.interdictions:
             self._interdict(row, fired, ctx)
         self.interdictions = []
+        self._relay(ctx)
         attack = defaultdict(lambda: Q(0))
         blockers = defaultdict(set)
         for fid in sorted(self.plans):
@@ -155,6 +156,38 @@ class Blockades:
         for (eid, target), b in effective.items():
             state.cargo.corridors[eid].blocked[target] = b
         self.effective = effective
+
+    def _usable(self, formation, edge):
+        state = self.s
+        return (formation is not None and not formation.refitting and _position_ok(edge, formation)
+                and not state.movement.planned(formation.id) and formation.id not in state.movement.retreating)
+
+    def _relay(self, ctx):
+        """04 G12 (joint_relay_v1): with the joint doctrine online, a blockade task
+        whose formation can no longer hold the edge passes to another own formation
+        already standing at an endpoint in a fitting domain and holding no task."""
+        state = self.s
+        for fid in sorted(self.plans):
+            plan = self.plans[fid]
+            edge = state.cargo.corridors.get(plan.edge_id)
+            formation = state.formations.rows.get(fid)
+            research = state.research.get(plan.owner)
+            if edge is None or research is None or 'G12' not in research.known:
+                continue
+            if formation is not None and formation.owner == plan.owner and self._usable(formation, edge):
+                continue
+            if not state.battles.joint_doctrine_online(plan.owner, ctx.tick):
+                continue
+            heir = next((f for _, f in sorted(state.formations.rows.items())
+                         if f.owner == plan.owner and f.id not in self.plans and f.task != 'escort'
+                         and self._usable(f, edge)), None)
+            if heir is None:
+                continue
+            del self.plans[fid]
+            self.plans[heir.id] = BlockadePlan(plan.owner, plan.command_id, heir.id, plan.edge_id, plan.targets)
+            self.recent.setdefault(plan.owner, []).append({'command_id': plan.command_id, 'tick': ctx.tick,
+                'status': 'RELAYED', 'from_formation': fid, 'to_formation': heir.id})
+            self.recent[plan.owner] = self.recent[plan.owner][-32:]
 
     # -- in-transit interdiction (03 section 7 item 5) ---------------------------
     def shipment_edge(self, shipment):
@@ -249,10 +282,12 @@ class Blockades:
                 need[good] += units(quantity)
         taken = {}
         for good, amount in sorted(need.items()):
-            onboard = Account(formation.owner, formation.id, 'available', good)
-            hub = Account(formation.owner, formation.hub, 'available', good)
-            source = onboard if inv.balance(onboard) >= amount else hub
-            if inv.balance(source) < amount:
+            from .battle_operations import relay_supply_hubs
+            candidates = [Account(formation.owner, formation.id, 'available', good),
+                          Account(formation.owner, formation.hub, 'available', good)]
+            candidates += [Account(formation.owner, h, 'available', good) for h in relay_supply_hubs(state, formation, ctx.tick)]
+            source = next((a for a in candidates if inv.balance(a) >= amount), None)
+            if source is None:
                 return None
             taken[source] = amount
         if taken:
