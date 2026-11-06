@@ -100,6 +100,7 @@ class Research:
         self.focus: dict[str, str] = {}
         self.security: dict[str, str] = {}
         self.licenses: dict[str, bool] = {}  # source blockade, not an additional technology unlock
+        self.backups: dict[str, str] = {}  # R08: primary research Hub -> backup Hub
 
     def set_focus(self, line_id: str, tech_id: str | None, *, licensed: bool = False,
                   open_spillover: bool = False, stolen: bool = False, source_blockade: bool = False) -> None:

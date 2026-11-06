@@ -176,7 +176,7 @@ class Contracts:
 
     def count(self,party):
         active_dmz=sum(party in z.parties and self.tick<z.end_tick for z in self.dmz)
-        return (active_dmz+sum(party in (r.proposal.proposer,r.proposal.counterparty) and r.status not in ('EXPIRED','DEFAULTED') for r in self.swaps.rows.values())+self.loans.count(party)+self.joint_ventures.count(party)+sum(party in t.parties for t in self.defense)+sum(party in t.parties for t in self.embargoes)+sum(party in (p.proposer,p.counterparty) for p in self.proposals.values())+
+        return (active_dmz+sum(party in (r.proposal.proposer,r.proposal.counterparty) and r.status not in ('EXPIRED','DEFAULTED','TERMINATED') for r in self.swaps.rows.values())+self.loans.count(party)+self.joint_ventures.count(party)+sum(party in t.parties for t in self.defense)+sum(party in t.parties for t in self.embargoes)+sum(party in (p.proposer,p.counterparty) for p in self.proposals.values())+
                 sum(party in t.parties for t in self.intelligence)+sum(party in (t.grantor,t.grantee) for t in self.transit))
 
     def publish(self):
@@ -390,16 +390,19 @@ class Contracts:
             proposals.append({'id':aliases[p.id],'proposer':p.proposer,'counterparty':p.counterparty,
                 'clause_type':6 if peace else 8 if intel else 3 if transit else 9 if embargo else 7 if defense else 1 if swap else 2 if loan else 4 if jv else 5,'duration_cycles':p.duration_cycles,'expires_cycle':p.expires_cycle,
                 'params':params,**({} if peace or intel or transit or embargo or defense or swap or loan or jv else {'source_blockade_at_offer':p.source_blockade})})
-        return {'proposals':proposals,'licenses_received':{tech:dict(record) for tech,record in self.licenses[owner].items()},
+        from .contract_termination import contract_id
+        from .determinism import primitive
+        return {'proposals':proposals,'licenses_received':{tech:{'contract_id':f'license:{owner}:{tech}',**record} for tech,record in self.licenses[owner].items()},
+                'licenses_granted':[{'contract_id':f'license:{p}:{tech}','licensee':p,**record} for p,rows in sorted(self.licenses.items()) for tech,record in sorted(rows.items()) if record['licensor']==owner],
                 'dmz':[z for z in self.dmz if owner in z.parties],
                 'joint_ventures':self.joint_ventures.visible(owner),
                 'loans':self.loans.visible(owner),
                 'periodic_swaps':self.swaps.visible(owner),
-                'defense_pacts':[t for t in self.defense if owner in t.parties],
+                'defense_pacts':[{'contract_id':contract_id('defense',t),**primitive(t)} for t in self.defense if owner in t.parties],
                 'defense_obligations':[o for o in self.defense_obligations if owner in (o.ally,o.defender)],
-                'joint_embargoes':[t for t in self.embargoes if owner in t.parties],
-                'transit_rights':[t for t in self.transit if owner in (t.grantor,t.grantee)],
-                'intel_sharing':[t for t in self.intelligence if owner in t.parties], 'recent':[dict(row) for row in self.recent[owner]]}
+                'joint_embargoes':[{'contract_id':contract_id('embargo',t),**primitive(t)} for t in self.embargoes if owner in t.parties],
+                'transit_rights':[{'contract_id':contract_id('transit',t),**primitive(t)} for t in self.transit if owner in (t.grantor,t.grantee)],
+                'intel_sharing':[{'contract_id':contract_id('intel',t),**primitive(t)} for t in self.intelligence if owner in t.parties], 'recent':[dict(row) for row in self.recent[owner]]}
 
     def audit(self):
         self.loans.audit();self.joint_ventures.audit()
@@ -414,7 +417,7 @@ class Contracts:
         for venture in self.joint_ventures.rows.values():
             counts[venture.proposal.proposer]+=1;counts[venture.proposal.counterparty]+=1
         for swap in self.swaps.rows.values():
-            if swap.status not in ('EXPIRED','DEFAULTED'):
+            if swap.status not in ('EXPIRED','DEFAULTED','TERMINATED'):
                 counts[swap.proposal.proposer]+=1;counts[swap.proposal.counterparty]+=1
         for z in self.dmz:
             if self.tick<z.end_tick:
@@ -441,12 +444,15 @@ class Contracts:
 
 
 class ContractCommands:
-    OPERATIONS=frozenset({('diplomacy','propose_contract'),('diplomacy','accept_contract'),('diplomacy','reject_contract'),('diplomacy','military_aid'),('diplomacy','leave_joint_venture')})
+    OPERATIONS=frozenset({('diplomacy','propose_contract'),('diplomacy','accept_contract'),('diplomacy','reject_contract'),('diplomacy','military_aid'),('diplomacy','leave_joint_venture'),('diplomacy','terminate_contract')})
     def __init__(self,state):self.state=state
 
     def prepare(self,owner,order,ctx):
         state=self.state;book=state.contracts
         if order['op']=='military_aid':return self.military_aid(owner,order,ctx)
+        if order['op']=='terminate_contract':
+            from .contract_termination import prepare_termination
+            return prepare_termination(state,owner,order,ctx)
         if order['op']=='leave_joint_venture':
             fields(order,{'venture_id':str})
             row=book.joint_ventures.rows.get(order['venture_id'])

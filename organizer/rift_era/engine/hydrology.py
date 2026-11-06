@@ -35,14 +35,27 @@ class Hydrology:
         if len(distance) != len(world.regions):
             raise InvariantViolation('land drainage is disconnected from the ocean')
         self.downstream = {}
-        for rid, region in world.regions.items():
-            if region.terrain == 'ocean':
-                continue
-            choices = [n for n in region.adjacent if distance[n] < distance[rid]]
-            # Multiple outlets are a fixed split, never duplicate full outflow.
-            chosen = sorted(choices, key=lambda n: digest(world.seed, 'river_outlet', world.attempt, rid, n))[:2]
-            self.downstream[rid] = tuple(chosen)
-        self.order = tuple(sorted(self.downstream, key=lambda rid: (-distance[rid], rid)))
+        atlas_rivers = getattr(world, 'river_downstream', None)
+        if atlas_rivers:
+            # world_atlas_v1 carries its own validated descending river DAG
+            # (one outlet per land region, strictly lower elevation), so
+            # upstream-first order is simply descending elevation.
+            for rid, region in world.regions.items():
+                if region.terrain == 'ocean':
+                    continue
+                if rid not in atlas_rivers:
+                    raise InvariantViolation('atlas land region has no river outlet')
+                self.downstream[rid] = tuple(atlas_rivers[rid])
+            self.order = tuple(sorted(self.downstream, key=lambda rid: (-world.regions[rid].elevation, rid)))
+        else:
+            for rid, region in world.regions.items():
+                if region.terrain == 'ocean':
+                    continue
+                choices = [n for n in region.adjacent if distance[n] < distance[rid]]
+                # Multiple outlets are a fixed split, never duplicate full outflow.
+                chosen = sorted(choices, key=lambda n: digest(world.seed, 'river_outlet', world.attempt, rid, n))[:2]
+                self.downstream[rid] = tuple(chosen)
+            self.order = tuple(sorted(self.downstream, key=lambda rid: (-distance[rid], rid)))
         self.baseline = {}
         incoming = defaultdict(int)
         natural = units(state.endowments['local_natural_water_per_cycle'])
@@ -94,9 +107,11 @@ class Hydrology:
             season = Q(round((.8 + .2 * math.sin(2 * math.pi * ctx.cycle / 240)) * 1000), 1000)
             for rid in self.order:
                 self.rain[rid] = rain_step(ctx.seed, world.attempt, ctx.cycle, rid, self.rain[rid], state.global_emissions_mU)
-                self.natural_cycle_mU[rid] = floor(units(state.endowments['local_natural_water_per_cycle']) * season * self.rain[rid])
+                self.natural_cycle_mU[rid] = floor(units(state.endowments['local_natural_water_per_cycle']) * season
+                                                   * self.rain[rid] * state.climate.multiplier(rid))
             for hub in state.rain:
-                state.rain[hub] = self.rain.get(world.hubs[hub].region, Q(0))
+                region = world.hubs[hub].region
+                state.rain[hub] = self.rain.get(region, Q(0)) * state.climate.multiplier(region)
                 state.water_used_mU[hub] = 0
         returns = defaultdict(int)
         for hub, allocated in self.last_allocated.items():

@@ -51,6 +51,8 @@ class StockMarket:
         self.close_history={cid:deque(maxlen=2) for cid in state.initial.companies}
         self.turnover={cid:deque(maxlen=20) for cid in state.initial.companies}
         self.external_issues={cid:[] for cid in state.initial.companies}
+        self.offerings={}       # 06 C30: company -> [[cycle, shares]] of secondary offerings
+        self.escrow_targets={}  # company -> facility ids its CapexEscrow may fund
         self.long_lots={};self.position_rounding_steps=0
         self.npc_plans={};self.signals={p:{} for p in state.initial.known}
         self.reports={p:[] for p in state.initial.known}
@@ -222,8 +224,10 @@ class StockMarket:
         if not ctx.clock.is_cycle_end(ctx.tick):return
         if ctx.cycle<=self.last_cleared_cycle:raise InvariantViolation('stock auction repeated')
         self.reports={p:[] for p in self.reports}
+        # 03 C33: a successful S03 on the issuer's capital suspends its next auction once.
+        suspended={p for p in sorted(self.s.initial.known) if self.s.cyber.take_auction_suspension(p)}
         for cid,company in self.s.initial.companies.items():
-            if not company.listed:continue
+            if not company.listed or company.issuer in suspended:continue
             previous=self.exchange.prices[cid]
             band=(100,2*self.references[cid]) if self.listed_cycle[cid]==ctx.cycle else (max(1,ceil(previous*Q(4,5))),max(1,floor(previous*Q(6,5))))
             prior=dict(self.exchange.orders)
@@ -297,13 +301,46 @@ class StockMarket:
                 'pending':self.pending,'issue_orders':self.issue_orders,'listed_cycle':self.listed_cycle,
                 'close_history':{c:list(rows) for c,rows in self.close_history.items()},
                 'turnover':{c:list(rows) for c,rows in self.turnover.items()},'external_issues':self.external_issues,
+                **({'offerings':self.offerings,'escrow_targets':self.escrow_targets} if self.offerings else {}),
                 'long_lots':[[*key,lot] for key,lot in sorted(self.long_lots.items())],
                 'position_rounding_steps':self.position_rounding_steps,'npc_plans':[[*k,v] for k,v in sorted(self.npc_plans.items())],
                 'signals':self.signals,'reports':self.reports,'last_cycle':self.last_cycle,'last_cleared_cycle':self.last_cleared_cycle}
 
 
 class StockCommands:
-    OPERATIONS=frozenset({('finance','ipo'),('finance','stock_order')})
+    def secondary(self,owner,order,ctx,company,command_id):
+        """06 C30 finance/secondary_offering (secondary_offering_v1)."""
+        state=self.state;market=state.stock_market;cid=company.id
+        fields(order,{'company':str,'qty':int,'min_price_mU':int,'target_facilities':list})
+        if company.issuer!=owner:raise RuleViolation('ERR_NO_PERMISSION')
+        if 'F01' not in state.research[owner].known:raise RuleViolation('ERR_TECH_LOCKED')
+        if not company.listed:raise RuleViolation('ERR_NO_PERMISSION','company has not completed its IPO')
+        qty,targets=order['qty'],order['target_facilities']
+        if (not 1<=qty<=100000 or order['min_price_mU']<=0 or not targets or len(set(targets))!=len(targets)
+                or any(type(t) is not str for t in targets)):raise RuleViolation('ERR_SCHEMA')
+        from .economy_state import SECTOR
+        for fid in targets:
+            facility=state.initial.facilities.get(fid)
+            if facility is None or facility.owner!=owner or SECTOR.get(facility.kind)!=company.sector:
+                raise RuleViolation('ERR_SITE_INCOMPATIBLE','targets must be own facilities of the same industry')
+        recent=sum(q for c,q in market.offerings.get(cid,()) if c>ctx.cycle-100)
+        if recent+qty>100000:raise RuleViolation('ERR_CAPACITY_EXCEEDED','at most 100,000 shares per 100 cycles')
+        external=sum(row.shares for row in market.external_issues[cid])
+        resting=sum(o.remaining_mU//1000 for oid,o in market.exchange.orders.items() if oid in market.issue_orders and o.venue==cid)
+        if external+resting+qty>490000:raise RuleViolation('ERR_CAPACITY_EXCEEDED','external holdings would exceed 490,000 shares')
+        escrow=CashAccount(owner,'capex_escrow:'+cid,company.issuer)
+        order_row=market._order(owner,cid,'sell',qty,order['min_price_mU'],command_id,ctx.tick,
+            ctx.clock.total_ticks,source='unissued',proceeds=escrow)
+        prepared=market.exchange.prepare_issue(order_row,tick=ctx.tick)
+        def commit():
+            prepared.commit();market.issue_orders[order_row.id]='secondary'
+            market.offerings.setdefault(cid,[]).append([ctx.cycle,qty])
+            market.escrow_targets.setdefault(cid,[])
+            for fid in targets:
+                if fid not in market.escrow_targets[cid]:market.escrow_targets[cid].append(fid)
+        return PreparedCommand(commit)
+
+    OPERATIONS=frozenset({('finance','ipo'),('finance','stock_order'),('finance','secondary_offering')})
     def __init__(self,state):self.state=state
 
     def prepare(self,owner,order,ctx):
@@ -312,6 +349,8 @@ class StockCommands:
         if company is None:raise RuleViolation('ERR_NO_VISIBLE_TARGET')
         if state.active_order_count(owner)>=state.catalog.runtime['limits']['active_orders_per_nation']:raise RuleViolation('ERR_ENTITY_CAP_EXCEEDED')
         command_id=str(int(order['id']))
+        if order['op']=='secondary_offering':
+            return self.secondary(owner,order,ctx,company,command_id)
         if order['op']=='ipo':
             fields(order,{'company':str,'qty':int,'min_price_mU':int})
             if company.issuer!=owner:raise RuleViolation('ERR_NO_PERMISSION')

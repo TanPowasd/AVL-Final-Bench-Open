@@ -292,3 +292,90 @@ P8 发布缓存后读取不重新探测；测控失联时只报告失联，不�
 - **占领重置。** `advance_control` 改变控制国时，该分区所有国家枢纽人口的支持度设为权威行的 280/550 mU，`red_streak` 清零。
 - **bombard（03）。** 本 tick 有实际射击、射手姿态为 `bombard` 时，目标单位所在分区的支持度（权威行、该区国家枢纽人口和城邦人口）直接 `−300 mU`，不进 `clip(−45,+25)`，每区每周期一次；射手所属国信用 `−0.05`（下限 0.10），每国每周期一次。目标是诱饵时按诱饵所在分区计。
 - **观测一致。** 每周期结算后，权威行 `support_mU` 写为该分区国家枢纽人口的加权平均，`controlled_regions` 看到的就是实际值。
+
+
+## research_backup_v1（2026-11-05）
+
+- `research/set_backup_hub {primary_hub, backup_hub}`：需 R08；两个枢纽都由本国控制且不同；主枢纽有本国实验室；备份枢纽有在线的 `research_backup` 公共系统（R08，`computing_equipment×1 + communication_equipment×1`，按 `install_system` 建造）。
+- 实验室"损毁或沦陷"按每周期末判定一次：实验室线不存在、资产健康为 0，或其枢纽不再由线的所有者控制。
+- 无有效备份：该焦点项目未结理论点保留 30%（损失 70%），验证进度清零。有效备份（备份枢纽仍受控且系统在线）：理论点保留 90%，验证进度保留 75%。
+- 结算后清除该实验室的焦点与保密档位，验证作业停止；同一次损失只结算一次。玩家需在备份城重新 `set_focus`/`validate_project` 继续（"无缝切换"按保留进度实现，不自动迁移实验室线）。
+- 设定口径：理论已完成的项目不再扣理论点。
+
+
+## contract_termination_v1（2026-11-05）
+
+- 合同 ID 对双方公开（观测里各条约带 `contract_id`）：`defense:a:b:start`、`intel:a:b:start`、`embargo:a:b:start:target`、`transit:grantor:grantee:start:corridors`、周期互换用其提案 ID、许可为 `license:licensee:tech`（双方都看得到，授权方在 `licenses_granted`）。
+- 可终止：1 周期互换（状态改 TERMINATED，本 tick 正在交割时拒绝）、3 过境权、5 许可（只删记录，已获得的理论减免不追回）、7 防务、8 情报共享、9 联合禁运。立即生效。
+- 不可终止（返回 ERR_NO_PERMISSION）：2 主权贷款（按 02 还款或违约结束）、4 合资（用 `leave_joint_venture`）、6 停战/DMZ（结束停战即 `declare_war`，已有 −.35）。
+- 归责：防务 −.25（同"拒防务"），其余 −.15（同"普通断供"），每份合同只扣一次，信用夹在 [.1, 1]。
+- 免责谓词（引擎原本没有合同自带的免责条款，本口径据 03 §5 设定，需作者确认）：条约已到期；互换处于 SUSPENDED 且对方在 `blocked_by`（对方先违约）；与对方处于 WAR 且终止方不是该战争的侵略方。
+
+
+## conditional_plan_v1（2026-11-05）
+
+- 注册：需 C10；`hub_id` 由本国控制，且有本国未损毁的产线装了 `ai_core` 附件；每国最多 32 条；`cooldown_ticks` ≥ 决策窗口长度（5）；`action` 是不带 `id` 的普通命令体，不能是 `conditional_plan` 或 `cancel_by_id`。注册是持久命令，可用 `cancel/cancel_by_id` 撤销。
+- 判定：每个决策窗口第一个 tick 的 P1、在所有席位命令之前，读上一窗口结束时的状态；按（国家，命令 ID）顺序。主机枢纽失控、ai_core 线损毁或被 S03/S08 冻结时跳过，不补追。
+- 指标：`market_price` = 该枢纽 `spot:<hub>:<ref_id>` 场所价格（mU，尚无场所则不触发）；`grid_price` = 该枢纽最近电价 ×1000（RU mU）；`hub_stock` = 本国在该枢纽 `available` 的 `ref_id` 库存（mU）。
+- 执行：走普通命令校验与提交；被拒绝也算本窗口一次执行（记录 `last_result`），冷却从这次算起。生成命令的 ID 为 `10^30 × 执行序号 + 计划 ID`，不与席位 ID 冲突。
+- 观测：计划列表在 `governance.conditional_plans`。
+
+
+## climate_v1（2026-11-05）
+
+- `governance/climate_intervention {target_region, mode}`：需 V08；从下一周期起持续 60 周期；同一国家上一轮结束后 120 周期才能再发（运行中或冷却中返回 ERR_CAPACITY_EXCEEDED）。
+- 投入：每周期初从首都 `available` 扣 `remediation_agent` 2 单位；电力为首都 B3 负荷 `climate:<国家>`，上一周期实收 ≥10 单位才算供足。任一项不足，该周期不生效、不补时间。
+- 效果：目标区降水与风/光系数 ±15%，下风向 3 区反向 ∓15%；多国叠加每区截断在 [−25%, +25%]。降水乘到自然来水和作物降水因子；风/光乘到实际天气，天气 AR(1) 状态保留原值。
+- 地图没有 `wind_dir`，本口径按自西向东（同行、列 +1..+3）取下风向，需作者确认。
+- `diplomacy/grant_climate_consent {target_nation, region_ids, duration_cycles}`：只能授权本国控制的区域；持久命令，`cancel_by_id` 撤销后从下一周期起失效。
+- 受影响区域（目标 + 下风向）中有他国控制且无有效授权的区域即为敌对干预：首个生效周期扣发起国信用 .10（每轮一次），投入记 ACTION_LOSS 并计入 07 行动损耗；否则投入记为环保实投（REMEDIATION）。
+
+
+## blockade_v1（2026-11-05）
+
+- `military/blockade {formation_id, edge_id, target_nations[1..8]}`：持久计划，每编队一条边（同编队新单替换旧单，`cancel_by_id` 结束）。陆军须在 road/rail 边端点枢纽；Sea-Surface/Sea-Sub 须在 sea/river 边端点枢纽；Air 不能封锁。下单时所有目标须为 WAR，之后不再交战的目标自动跳过。
+- P4（战斗之后）判定：编队在端点、本 tick 未射击未移动（共享行动预算）、未改装，且每个单位本 tick 实际取得完整 `combat_tick` 补给（先编队随行库存，后所在枢纽库存）才有效。补给按 ACTION_LOSS 消耗，每编队每 tick 一次行动损耗事件。身处端点即视为对该边有观测（q_edge ≥ .2）。
+- A = 有效封锁编队的火力（陆路取 `ground`、水路取 `sea` 通道，乘 HP 比例与乘员比例），同阵营先合火力；D = 目标国及与封锁方交战国、执行 `escort` 任务且位于该边端点的编队火力。b = `blockade_fraction(A, D)`。
+- 结果在 P4 末写入 `corridor.blocked[target]`，作用于下一 tick 的 P2/P3 入边容量；没有有效封锁的边 B=0。中立国不受影响。
+- 07 的 Blockade_r：受害国在某区的值 = 该区所有入边（端点在该区）按完好额定容量加权的 B 均值；已接入国力的 Qsec。
+- 未做：港口 ACL 拒入标志与 b 取最大（ACL 现由 `access_tier` 单独限制）。
+- 截击 `military/interdict {formation_id, shipment_track_id}`：可见轨迹 = 本国编队位于该运输当前枢纽或其所在边的端点（视为 q ≥ .2）；轨迹 ID 为 `track:` + 哈希，不暴露运输 ID，列在观测 `blockades.shipment_tracks`。下单时货主与承运人都须为 WAR。在本 tick P4（战斗之后、封锁判定之前）结算：编队本 tick 已射击则无剩余预算；须取得完整 `combat_tick` 补给（ACTION_LOSS）；用掉后该编队本 tick 不再计入封锁。d = min(.25, A/(100+E))，E 为货主、承运人或与截击方交战国在该处执行 escort 的火力。可分货物损失 floor(q·d)（DESTRUCTION，按目录值记入货主损毁损失）；不可分货物不减量；运具 health −floor(d·1000)，归零则运输 STRANDED。未做：残骸仓（运具归零时货物落到边端点）。结果在观测 `blockades.interdictions`。
+
+
+## fx_short_v1（2026-11-05）
+
+- `finance/fx_short {currency, amount_mU}`：需 F03；币种为任一国家货币（不能是 RU）。从世界池 `world/pool/<q>` 真实借出 q 币，并在本 tick 的 FX 批次卖成 RU（两腿真实交易，未成交部分退回借款人 `reserves/<q>`）。同时从 RU 储备锁 50% 抵押（amount×e_q/2）到 `fx_short_collateral:<q>`。全部未平 q 空头合计不超过本周期初该池 q 余额的 25%，超出返回 ERR_CAPACITY_EXCEEDED。
+- ShortDebt[p,q]：每周期初按 max(0, i_q+2)/10000 计息（i_q 为发行国政策利率，单位 %），以 q 资本化；RU 账面按计息当周期汇率增加。计入国力 NFA 的负债项。
+- `finance/fx_cover {currency, amount_mU}`：用 RU 储备在本 tick FX 批次买入至多 amount 的 q；批次之后把实际买到的 q 还给世界池，按比例注销债务与账面、释放同比例抵押；多买的 q 与未用 RU 退回储备。只注销负债不还币的做法不存在。
+- 未做：抵押率逐期盯市与强平（02 只写了初始 50%，作者如需维持保证金规则请补）。
+
+
+## forward_v1（2026-11-05）
+
+- 签约：提议方发 `forward_contract`，可选字段 `side`（默认 "buy"，或 "sell"）表示提议方方向（06 没有方向字段，需作者确认）。对方在交割周期前发送条款相同、方向相反、counterparty 为提议方的同名命令即签署。双方都需 F03；交割周期须为提议当周期 +10/+20/+50；签署时双方各从 RU 储备锁名义价值（strike×qty）20% 到 `forward_margin:<id>`。提议方可 `cancel_by_id` 撤回未签提议。
+- 盯市：交割前每周期初所需保证金 = 20%×qty×spot，spot 为交割枢纽现货参考价折 RU（从未成交则 10×w_cat）。不足从储备补；补后仍低于 10% 即终止，该方实际保证金付给对方（不重复没收），扣信用 .15。交割前不支付盈亏。
+- 交割（交割周期初）：卖方交付 min(qty, 交割枢纽可用库存)，买方按 strike 支付其能负担的部分（先保证金后储备），货款同一笔 DVP。各方短缺按 1.2×spot×短缺量罚给对方，先保证金后储备，余额记为对对方的应付款。剩余保证金退回储备。
+
+
+## secondary_offering_v1（2026-11-05）
+
+- `finance/secondary_offering {company, qty, min_price_mU, target_facilities}`：需 F01，只能由发行国对已完成 IPO 的本国公司发起；每 100 周期累计 ≤100,000 股；外部持股（已发行外部批次 + 尚在挂单的发行单 + 本单）≤490,000 股；总股本保持 1,000,000（从未发行国有股卖出，与 IPO 同一发行通道）。
+- 目标设施须为本国、与公司同一行业（`SECTOR`）的现有设施。
+- 募资进入 `capex_escrow:<company>`（发行国本币），不回国库。以目标设施为对象的工程（工单 target 或 payload.facility 为目标设施）在开工时若专户有余额即绑定该专户：该工单的现金、材料采购与退款都走专户，其余工程照常走国库。
+- 未做：专户余额不足时的部分付款拆分（当前绑定后欠款按工程通常的等待/欠付处理）。
+
+
+## hypersonic_v1（2026-11-06）
+
+- `military/hypersonic_strike {origin_hub, target_id, missile_qty 1..20}`：需 N10；发射枢纽由本国控制且有足量 `hypersonic_missile`；目标为他国设施 ID 或走廊 ID，其所在区距发射区 ≤8 跳，且本国对目标枢纽格的静态观测 q ≥ .5（用传感器对一个不发射的地面信号计算）；须与目标所有者（走廊为运营方）处于 WAR。
+- P1 锁弹，本 tick P4 发射并按 ACTION_LOSS 消耗，下一 tick P4 抵达。
+- 拦截只用 G11：目标区内防守方或其交战盟友的存活 `energy_weapon` 单位，每单位每周期至多拦一枚，命中率 .6。03 规定的 5 电 B0 预约未建模（需作者确认）。
+- 未被拦截的每枚：S1–S3 设施按种子哈希顺序毁掉一条存活产线（经资产生命周期按剩余健康全额扣，账面损失记入所有者损毁）；更高外壳或走廊损 25% 最大耐久。结果在观测 `hypersonic`。
+
+
+## cyber_v1（2026-11-06）
+
+- 命令：`intelligence/cyber_op {target_nation, target_hub, op_kind}`（S03_infiltrate、S03_steal_tech、S08_paralyze）与 `intelligence/steal_model {target_nation, target_hub}`。目标枢纽须由目标国控制。P1 扣材料（ACTION_LOSS），P4 用种子抽签结算。
+- S03 系列：需 S03；材料 cyber_suite×1 + computing_equipment×1（基础行动替代），取自本国首都可用库存；"10 有效网络算力 / 10 B4 电"未计量（需作者确认）。同一发起国对同一目标枢纽冷却 10 周期。成功率 clip(.6+.08·(L攻−L守)−.4·I[S04], .05, .9)，L 取已知 S01–S08 最高阶（AI 网络强度暂未计入）；I[S04] 为目标在该枢纽有在线反情报系统。归因率 .25（有 S04 时 .65），归因扣信用 .05（E85），并告知目标国。
+- 成功效果：渗透——该枢纽技术为 C06/C10/E07/L07/L11 的公共系统与 C10 条件计划冻结 ceil(5p) 个窗口（重复只刷新不叠加）；若目标是对方首都，还暂停对方下一次证券竞价一次（C33），每目标 40 周期至多一次。窃密——对目标在该枢纽研究中、非 classified、阶最高的一项科技，给发起国一次性理论成本 −20%（新建项目，或给已在研项目重算目标）。窃模——目标在该枢纽须有数据中心；复制目标最优模型，gamma .7（模型槽 <16 时）。
+- S08 瘫痪：需 S08；cyber_suite×2 + ew_module×1 + computing_equipment×2；每发起国 40 周期一次；必归因：信用 −.1，对城邦记 coercion 事件（+.15 持续 20 周期），目标枢纽条件计划冻结 5 tick。
