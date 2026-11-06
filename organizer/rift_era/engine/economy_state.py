@@ -300,6 +300,8 @@ class OperatingWorld:
         self.hypersonics = Hypersonics(self)
         from .cyber import Cyber
         self.cyber = Cyber(self)
+        from .import_parity import ImportParity
+        self.import_parity = ImportParity(self)
         self.storage = EnergyStorage(self)
         self.macro = Macroeconomy(self)
         self.cargo = CargoOperations(self)
@@ -448,7 +450,12 @@ class OperatingWorld:
         # Freeze quotes at P1. P5 cannot retroactively increase an invoice whose
         # cash was already reserved for P3/P6/P7 earlier in this tick.
         quote = self.frame.prices.get(f'spot:{hub}:{good}') if hub is not None else None
-        return Q(quote, 1000) if quote is not None else 10 * self.catalog.weights[good]
+        price = Q(quote, 1000) if quote is not None else 10 * self.catalog.weights[good]
+        if hub is not None and self.import_parity.cycles:
+            parity = self.import_parity.floor(good, hub)  # 10 C06/C07
+            if parity is not None and parity > price:
+                return parity
+        return price
 
     def wage_cost(self, owner: str, workers: dict[str, int]) -> Fraction:
         return sum((q * WAGES[skill] * self.wage_indices[owner] for skill, q in workers.items()), Q(0))
@@ -568,7 +575,8 @@ class OperatingWorld:
                 **({'fx_shorts': self.fx_shorts.snapshot()} if not self.fx_shorts.empty() else {}),
                 **({'forwards': self.forwards.snapshot()} if not self.forwards.empty() else {}),
                 **({'hypersonics': self.hypersonics.snapshot()} if not self.hypersonics.empty() else {}),
-                **({'cyber': self.cyber.snapshot()} if not self.cyber.empty() else {})}
+                **({'cyber': self.cyber.snapshot()} if not self.cyber.empty() else {}),
+                **({'import_parity': self.import_parity.snapshot()} if self.import_parity.cycles else {})}
 
     def audit(self) -> None:
         self.initial.audit()

@@ -75,6 +75,21 @@ class CouplingTests(unittest.TestCase):
         self.assertEqual(vision.fusion_narrowing('n0'), Q(1, 5))     # capped at 20%
         del state.systems.instances['fx']
 
+    def test_c06_c07_import_parity_floors_net_imports_only(self):
+        state = self.game().state
+        parity = state.import_parity
+        base = state.price('chip', 'n0-h0')
+        state.rates['n0'] = Q(1, 2)                  # n0's currency halves against RU
+        parity.record('chip', 'n0', 'n1', Q(5000))   # n0 imported chips in cycle 0
+        self.assertEqual(state.price('chip', 'n0-h0'), base)          # current cycle not yet counted
+        state.completed_cycles = 1
+        floor = 10 * self.catalog.weights['chip'] * 2 * Q(1002, 1000)
+        self.assertEqual(state.price('chip', 'n0-h0'), max(base, floor))
+        self.assertEqual(state.price('chip', 'n1-h0'), state.price('chip', 'n1-h0'))
+        self.assertFalse(parity.net_importer('n1', 'chip'))           # the exporter gets no floor
+        state.completed_cycles = 7
+        self.assertFalse(parity.net_importer('n0', 'chip'))           # outside the 5-cycle window
+
 
 if __name__ == '__main__':
     unittest.main()
