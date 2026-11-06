@@ -19,6 +19,15 @@ from .protocol import PreparedCommand
 from .provenance import Use
 
 
+
+def coastal_hub(state, hub_id):
+    """A hub on the coast: listed by the atlas, or its region borders an ocean region."""
+    world = state.initial.map
+    if hub_id in world.coastal_hubs:
+        return True
+    region = world.regions[world.hubs[hub_id].region]
+    return any(world.regions[r].terrain == 'ocean' for r in region.adjacent)
+
 class IndustryCommands:
     OPERATIONS = frozenset(('industry', op) for op in (
         'build_facility', 'build_mine', 'warehouse_expand', 'upgrade_facility',
@@ -301,6 +310,8 @@ class IndustryCommands:
         self._tech(owner, row['requires_all'])
         if row['facility'] != facility.kind and facility.kind != 'public' or row['grade'] > state.catalog.profiles[facility.profile]['recipe_grade']:
             raise RuleViolation('ERR_SITE_INCOMPATIBLE')
+        if rid == 'P106' and not coastal_hub(state, line.hub):
+            raise RuleViolation('ERR_SITE_INCOMPATIBLE', 'desalination must be on the coast')  # 04 V03
         eligible = row['facility'] in state.catalog.tables['industry']['mode_eligible_facilities']
         if not eligible and mode != 'general':
             raise RuleViolation('ERR_SITE_INCOMPATIBLE')
