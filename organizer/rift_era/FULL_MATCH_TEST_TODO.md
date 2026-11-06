@@ -38,29 +38,29 @@ python3 -m unittest discover -s organizer/rift_era/tests -v
 
 逐项保留场景 ID，在真实引擎中执行其规定的初始化、动作和断言：
 
-- [ ] `barrage_no_gains`
-- [ ] `cyber_credit_floor`
-- [ ] `patrol_loop`
-- [ ] `zero_material_hostility`
-- [ ] `repair_single_count`
-- [ ] `relations_and_neutrality`
-- [ ] `blockade_food_substitution`
-- [ ] `damage_power_and_repair`
-- [ ] `energy_substitution`
-- [ ] `fx_revaluation_invariance`
-- [ ] `transit_formula`
-- [ ] `healthy_relocation`
-- [ ] `cpu_budget`
-- [ ] `world_pool_pressure`
-- [ ] `batch_consistency`
+- [ ] `barrage_no_gains` — BLOCKED_BY_IMPLEMENTATION：火力只打单位，炮击不能以设施为目标，"可反复修复的假目标设施"无法构造；敌方单位作目标一周期内就被打光，20 周期稳态不成立
+- [x] `cyber_credit_floor` — PASS（`tests/test_round6_scenarios.py`，2026-11-06，full_match 装配）
+- [x] `patrol_loop` — PASS（`tests/test_round6_scenarios.py`，2026-11-06，full_match 装配）
+- [x] `zero_material_hostility` — PASS（`tests/test_round6_scenarios.py`，2026-11-06，full_match 装配）
+- [x] `repair_single_count` — PASS（`tests/test_round6_scenarios.py`，2026-11-06，full_match 装配）
+- [x] `relations_and_neutrality` — PASS（`tests/test_round6_scenarios.py`，2026-11-06，full_match 装配）
+- [ ] `blockade_food_substitution` — 未完成：需 B 按最低价逐期买食物的常驻计划与 rolling20 Phi 实测，夹具较大，下一批做
+- [x] `damage_power_and_repair` — PASS（`tests/test_round6_scenarios.py`，2026-11-06，full_match 装配）
+- [ ] `energy_substitution` — 未完成：需双线路电力择价与政策事件计数，夹具较大，下一批做
+- [x] `fx_revaluation_invariance` — PASS（`tests/test_round6_scenarios.py`，2026-11-06，full_match 装配）
+- [ ] `transit_formula` — PARTIAL：公式在 `tests/test_rules.py::test_transit_formula_and_fixed_credit` 用引擎 ReceiptBook 验证；真实地图上凑不出 D0=8 的两承运人路径，端到端未做
+- [x] `healthy_relocation` — PASS（`tests/test_round6_scenarios.py`，2026-11-06，full_match 装配）
+- [x] `cpu_budget` — PASS（`tests/test_round6_scenarios.py`，2026-11-06，full_match 装配）
+- [ ] `world_pool_pressure` — BLOCKED_BY_IMPLEMENTATION：引擎没有"向世界池买卖库存货（每国每货 40 单位/周期，10·w RU）"的通道，06 接口也没写用哪个命令，需作者定义
+- [x] `batch_consistency` — PASS（`tests/test_round6_scenarios.py`，2026-11-06，full_match 装配）
 
-`S1_salvage`、`split_labs` 是算术检查：保留其回归结果，但不得用它们代替上述端到端通过证据。场景有意提供的初始条件属于测试夹具；运行期间不得额外补钱、补库存或补运力使断言通过。
+`S1_salvage`、`split_labs` 是算术检查（`tests/test_rules.py` 已有回归）：保留其回归结果，但不得用它们代替上述端到端通过证据。场景有意提供的初始条件属于测试夹具；运行期间不得额外补钱、补库存或补运力使断言通过。
 
 ## C. 确定性、回放与信息边界
 
-- [ ] 同规则、同种子、同席位、同命令流重复运行，逐 Tick/阶段状态哈希一致；检查实体输入顺序和 Python 哈希种子变化。
+- [ ] 同规则、同种子、同席位、同命令流重复运行，逐 Tick/阶段状态哈希一致；检查实体输入顺序和 Python 哈希种子变化。 — PARTIAL：PYTHONHASHSEED=0 与 12345 两个进程 30 Tick 哈希链一致（`tests/test_full_match_determinism.py`）；整局未跑
 - [ ] 对完整回放进行**重新执行**并比对，不只校验文件哈希链。缺终止记录、混用规则/源码/运行时版本时拒绝回放。
-- [ ] 评分查询执行 0/1/100 次不改变世界、统计窗口或最终结果。
+- [ ] 评分查询执行 0/1/100 次不改变世界、统计窗口或最终结果。 — PARTIAL：`tests/test_full_match_determinism.py` 在 full_match 前 30 Tick 逐 Tick 状态哈希一致（2026-11-06）；整局未跑
 - [ ] 参考策略与选手使用相同过滤观测，不读取真值、seed、对手代码或裁判回放；改变不可见真值不应改变冻结观测的版本、长度、删除事件和错误回执。
 - [ ] 验证长局中的失联/销毁区分、轨迹老化、周期全量快照及增量自愈；不通过截断字段满足快照限制。
 
