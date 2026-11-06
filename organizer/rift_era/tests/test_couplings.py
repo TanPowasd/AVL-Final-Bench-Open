@@ -233,3 +233,50 @@ class CouplingTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class DesalinationBrineTests(unittest.TestCase):
+    """05 P106: brine cuts biomass regeneration 10% in the plant's region and adjacent sea."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.catalog, cls.world = Catalog(), generate_candidate(1000)
+
+    def regrowth(self, brine):
+        from dataclasses import replace
+        from organizer.rift_era.engine.ledger import Account
+        game = opening_economy(self.catalog, initialize(self.catalog, self.world), total_ticks=20, commerce=True, debug=False)
+        state = game.state
+        game.step()
+        mid = next(m for m, d in state.deposits.items() if d.good == 'biomass'
+                   and (state.resource_sites.get(m) or state.initial.mines.get(m)).owner == 'n0')
+        account = Account(*state.resource_sources[mid], 'biomass')
+        inv = state.initial.inventory
+        inv.transform({account: inv.balance(account) // 2}, {}, reason='test_draw')
+        grown = []
+        real = inv.transform
+        def spy(remove, add, reason=None, **kw):
+            if reason == 'biomass_regeneration' and account in add:
+                grown.append(add[account])
+            return real(remove, add, reason=reason, **kw)
+        inv.transform = spy
+        while game.tick < 10:
+            game.step()
+        if brine:  # the last finished cycle ran a P106 line at the site's hub
+            lid = next(l for l, line in state.initial.lines.items()
+                       if line.owner == 'n0' and line.hub == (state.resource_sites.get(mid) or state.initial.mines.get(mid)).hub)
+            state.initial.lines[lid].recipe = replace(state.initial.lines[lid].recipe, id='P106')
+            state.history['n0'][-1].line_batches[lid] = 100
+        game.step()
+        inv.transform = real
+        return grown[0], state, mid
+
+    def test_brine_cuts_regrowth_by_a_tenth(self):
+        base, _, _ = self.regrowth(False)
+        cut, state, mid = self.regrowth(True)
+        self.assertGreater(base, 0)
+        self.assertLess(cut, base)
+        self.assertLessEqual(abs(cut - base * Q(9, 10)), 1)
+        from organizer.rift_era.engine.economy import Economy
+        regions = Economy._brine_regions(state)
+        self.assertTrue(Economy._brine_hit(state, mid, regions))

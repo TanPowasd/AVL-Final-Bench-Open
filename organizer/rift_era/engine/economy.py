@@ -564,6 +564,7 @@ class Economy:
             state.wind_mU[region.id], state.cloud_mU[region.id], state.sun_mU[region.id] = wind, cloud, sun
         self._track_v07(state, ctx)
         if ctx.tick % 10 == 0:
+            brine = self._brine_regions(state)
             for mid, deposit in state.deposits.items():
                 if deposit.good == 'biomass':
                     account = Account(*state.resource_sources[mid], deposit.good)
@@ -572,6 +573,8 @@ class Economy:
                     rate = Q(4 if ratio < Q(2, 5) else 8, 100)
                     if ratio < Q(2, 5) and self._v07_restored(state, mid, ctx):
                         rate = Q(6, 100)  # V07: the degraded rate recovers half way to .08
+                    if brine and self._brine_hit(state, mid, brine):
+                        rate = rate * Q(9, 10)  # 05 P106: brine discharge, -10% regeneration
                     growth = floor(rate * stock * (1 - ratio))
                     self.inventory.transform({}, {account: growth}, reason='biomass_regeneration',
                                              origins={account: Origin('nature', state.resource_sites[mid].hub)})
@@ -606,6 +609,29 @@ class Economy:
             stock = state.initial.inventory.balance(Account(*state.resource_sources[mid], deposit.good))
             if mid not in state.v07_last_extracted or stock < deposit.remaining_mU:
                 state.v07_last_extracted[mid] = ctx.tick
+
+    @staticmethod
+    def _brine_regions(state) -> frozenset:
+        """05 P106 (desalination_brine_v1): regions whose biomass regeneration is
+        cut 10% because a P106 line produced there in the last finished cycle: the
+        plant's own coastal region and the ocean regions adjacent to it."""
+        world = state.initial.map
+        hit = set()
+        for owner, rows in state.history.items():
+            if not rows:
+                continue
+            for lid, batch in rows[-1].line_batches.items():
+                line = state.initial.lines.get(lid)
+                if batch > 0 and line is not None and line.recipe.id == 'P106':
+                    region = world.hubs[line.hub].region
+                    hit.add(region)
+                    hit.update(r for r in world.regions[region].adjacent if world.regions[r].terrain == 'ocean')
+        return frozenset(hit)
+
+    @staticmethod
+    def _brine_hit(state, mid, regions) -> bool:
+        site = state.resource_sites.get(mid) or state.initial.mines.get(mid)
+        return site is not None and state.initial.map.hubs[site.hub].region in regions
 
     @staticmethod
     def _v07_restored(state, mid, ctx) -> bool:
