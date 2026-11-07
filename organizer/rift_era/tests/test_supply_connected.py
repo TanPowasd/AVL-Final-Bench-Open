@@ -91,6 +91,38 @@ class SupplyConnectedTests(unittest.TestCase):
         self.assertIn(self.map.hubs[hub].region, connected)
         self.assertNotIn(capital, connected)
 
+    # -- supply_flag_v1: 07 Vready supply_ratio = min(food/water ratio, supply flag) --
+    def unit(self):
+        return next(u for uid, u in sorted(self.s.initial.units.items()) if u.owner == P)
+
+    def test_supply_reach_extends_connected_regions(self):
+        reach = self.power.supply_reach(P)
+        self.assertLessEqual(self.power.connected_regions(P), reach)
+        self.assertIn(self.map.hubs[f'{P}-h0'].region, reach)
+
+    def test_unit_outside_supply_reach_loses_readiness(self):
+        region = self.target()
+        unit = self.unit()
+        unit.region = region
+        supplied = self.power.readiness(P)
+        self.cut(region, lambda edge: setattr(edge, 'health_mU', 0))
+        self.assertNotIn(region, self.power.supply_reach(P))
+        self.assertLess(self.power.readiness(P), supplied)
+        unit.region = self.map.hubs[f'{P}-h0'].region  # back on the network: the flag returns
+        self.assertEqual(self.power.readiness(P), supplied)
+
+    def test_foreign_region_on_a_supply_path_keeps_the_flag(self):
+        controlled = {r for r, row in self.s.authority.regions.items() if (row.controller or row.sovereign) == P}
+        foreign = sorted(self.power.supply_reach(P) - controlled)
+        if not foreign:
+            self.skipTest('seed 1000 gives P no authorized path into a foreign region')
+        unit = self.unit()
+        home = unit.region
+        base = self.power.readiness(P)
+        unit.region = foreign[0]
+        self.assertEqual(self.power.readiness(P), base)
+        unit.region = home
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -447,7 +447,7 @@ P8 发布缓存后读取不重新探测；测控失联时只报告失联，不�
 
 - `powered_slots`：本周期有正产出的产线，且运行 Tick 内累计「实收电 / 按批次所需电」≥ 0.8 才计。所需电与 `industry_activity.use_power` 同口径（`required_power × 批次 × 模式系数`）。
 - `Vready` 的 `supply_ratio`：编队本周期食、水累计「实拨 / 需求」取两者较小值，需求为零记 1。不在编队中的单位记 1。
-- 未做：`supply_ratio` 中的「实际补给连通标志」；`connected` 已改为补给路径判定（见 supply_connected_v1）。`chokepoint_phi` 已实现（见下文 chokepoint_phi_v1）。
+- `supply_ratio` 中的「实际补给连通标志」已实现（见 supply_flag_v1）；`connected` 已改为补给路径判定（见 supply_connected_v1）。`chokepoint_phi` 已实现（见下文 chokepoint_phi_v1）。
 - 测试：`tests/test_full_match.py::ControlInputsTests`。
 
 ## batch_v1：64 seed 批次、影子基准与 INVALID_EVALUATION（2026-11-06）
@@ -548,3 +548,13 @@ P8 发布缓存后读取不重新探测；测控失联时只报告失联，不�
 - 到达的分区：已到达 Hub 所在的分区，加上已用走廊格子经过的分区，再与 p 当前实控分区取交集。没有 Hub、也没有可用走廊经过的分区不连通。
 - 待作者确认："未损毁"取 health>0 还是满血；授权层级取 1 还是 2；替代 Hub 的通信设备是否只认已安装系统。
 - 测试：`tests/test_supply_connected.py`（5 项）。
+
+## supply_flag_v1（07 Vready「实际补给连通标志」）
+
+- `supply_ratio = min(本期食水实拨/需求, 标志)`。标志为 0 或 1：单位所在分区属于 `supply_reach(p)` 记 1，否则记 0，该单位不计战备。
+- `supply_reach(p)` 与 supply_connected_v1 同一搜索（同样的根、同样的走廊可用条件），但**不与 p 实控分区取交集**：经授权、未损毁路径到达的外国分区或海域也算连通，远征单位只要补给线通就保留战备。`connected_regions(p) = supply_reach(p) ∩ p 实控分区`。
+- 不在编队中的单位食水比仍记 1，但同样要乘标志。
+- 空局 12 Tick 哈希与基线一致（全部单位都在本国连通分区内）。
+- 待作者确认：远征分区是否也应要求实控；单位按自身 `region` 判定（编队移动时取单位所在分区）。
+- 测试：`tests/test_supply_connected.py` 新增 3 项（共 8 项）。
+

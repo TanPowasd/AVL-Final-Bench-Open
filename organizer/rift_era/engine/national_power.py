@@ -32,7 +32,7 @@ COVERAGE = {
     'control.powered_slots': 'lines with a positive batch in the cycle whose received/needed power over running ticks >= .8',
     'control.chokepoint_phi': 'min(100, mean20 catalog value of terminal receipts whose loop-erased path crosses the region: hubs on the path plus the cells of the corridor matching each leg)',
     'control.kinfra_alpha_maint': '1 for assets that are not maintenance_offline, else 0',
-    'control.readiness': 'sum over own units of hp_ratio*crew_ratio*installed catalog value*(.5+.5*morale)*(1-.4*fatigue)*supply_ratio; supply_ratio = min over food/water of cycle supplied/needed, the supply-connection flag is not applied',
+    'control.readiness': 'sum over own units of hp_ratio*crew_ratio*installed catalog value*(.5+.5*morale)*(1-.4*fatigue)*supply_ratio; supply_ratio = min(food/water cycle supplied/needed, supply flag); flag 0 when the unit region is outside supply_reach (supply_flag_v1)',
     'technology.active_scale': 'active_scale.py meters, cycle-end values; online_offshore_mines, active_automated_routes, supplied_field_depots meter zero (no receipt yet)',
     'sustainability.unrest': 'population of controlled national hubs with support_mU < 300',
     'sustainability.shortage': '1 - min(food, electricity) satisfaction, population weighted, per cycle',
@@ -215,17 +215,23 @@ class NationalPower:
         return roots
 
     def connected_regions(self, p):
+        return self.supply_reach(p) & {rid for rid, row in self.s.authority.regions.items()
+                                       if (row.controller or row.sovereign) == p}
+
+    def supply_reach(self, p):
         """07 U_ctrl connection (supply_connected_v1): a region p currently
         controls is connected when an authorized, undestroyed supply path joins
         it to a command Hub. Paths run over cargo corridors with health > 0 that
         CargoOperations.permitted lets p use (ACL tier, blockade < 1, an explicit
         right on foreign endpoints, online terminals for sea/air). A region is
         reached through a Hub in it or the cells of a usable corridor crossing it.
-        No command Hub, nothing is connected."""
+        No command Hub, nothing is connected.
+
+        supply_reach (supply_flag_v1) is the same search without the
+        intersection with p's controlled regions: every region an authorized,
+        undestroyed path from a command Hub reaches, own or foreign."""
         s = self.s
         world = s.initial.map
-        controlled = {rid for rid, row in s.authority.regions.items()
-                      if (row.controller or row.sovereign) == p}
         roots = self.command_hubs(p)
         if not roots:
             return set()
@@ -254,12 +260,13 @@ class NationalPower:
         for eid in used:
             for cell in cargo.paths.get(eid, ()):
                 reached.add(palette[world.region_cells[cell]])
-        return reached & controlled
+        return reached
 
     def control(self, p):
         s = self.s
         world, catalog = s.initial.map, s.catalog
-        connected = self.connected_regions(p)
+        reach = self.supply_reach(p)
+        connected = reach & {rid for rid, row in s.authority.regions.items() if (row.controller or row.sovereign) == p}
         metric = s.history[p][-1] if s.history[p] else None
         batches = metric.line_batches if metric else {}
         slots = defaultdict(int)
@@ -284,6 +291,16 @@ class NationalPower:
                 book += share * sum((Q(q, 1000000) * catalog.weights[g] for g, q in asset.book_nmU.items()), Q(0))
         satellites = sum(1 for sat in s.orbit.satellites.values() if sat.owner == p)
         population = sum(pop.total_mU for hub, pop in s.initial.populations.items() if world.hubs[hub].owner == p)
+        readiness = self.readiness(p, reach)
+        return control_pillar(sigma, book, satellites, population, sum(slots.values()), readiness)
+
+    def readiness(self, p, reach=None):
+        """07 Vready summed over p's units; supply_ratio = min(food/water ratio, supply flag),
+        the flag being 0 for a unit whose region is outside supply_reach (supply_flag_v1)."""
+        s = self.s
+        catalog = s.catalog
+        if reach is None:
+            reach = self.supply_reach(p)
         readiness = Q(0)
         unit_formation = {uid: fid for fid, f in s.formations.rows.items() for uid in f.unit_ids}
         for uid, unit in s.initial.units.items():
@@ -291,12 +308,14 @@ class NationalPower:
                 continue
             fid = unit_formation.get(uid)
             ratio = self.supply_ratio(fid) if fid is not None else Q(1)
+            if unit.region not in reach:  # 07 Vready: min(food/water ratio, actual supply-connection flag)
+                ratio = Q(0)
             spec = catalog.units[unit.unit_type]
             installed = sum((Q(q) * catalog.weights[g] for g, q in spec['installed'].items()), Q(0))
             hp, crew = Q(spec['hp']) * 1000, Q(spec['crew']) * 1000
             readiness += (min(Q(1), unit.hp_mU / hp) * min(Q(1), unit.crew_mU / crew) * installed
                           * (Q(1, 2) + Q(1, 2) * unit.morale) * (1 - Q(2, 5) * unit.fatigue) * ratio)
-        return control_pillar(sigma, book, satellites, population, sum(slots.values()), readiness)
+        return readiness
 
     def technology(self, p):
         s = self.s
