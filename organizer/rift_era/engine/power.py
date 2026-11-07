@@ -186,6 +186,7 @@ class PowerEdge:
     survival: Fraction
     owner: str
     toll: Fraction = Q(1, 100)
+    denied: frozenset = frozenset()  # power_acl_v1: owners of supplies that may not use this line
 
     def __post_init__(self):
         if self.capacity_mU < 0 or not 0 < self.survival <= 1 or self.toll < 0 or self.a == self.b:
@@ -264,8 +265,13 @@ class Dispatch:
 
 
 def dispatch_reference(seed: int, tick: int, supplies: tuple[Supply, ...], loads: tuple[Load, ...],
-             edges: tuple[PowerEdge, ...]) -> Dispatch:
-    """Executable oracle for the specified 1mU sequence, never floating flow."""
+             edges: tuple[PowerEdge, ...], *, fast_local: bool = False) -> Dispatch:
+    """Executable oracle for the specified 1mU sequence, never floating flow.
+
+    fast_local (grid_fast_v1) replaces only each group's local phase by the
+    batched same-hub service of the edge-free fast path; hubs do not share local
+    sources, and that path matches this oracle (test_operating_economy, and
+    test_power_fast against the full oracle with lines)."""
     if len({s.id for s in supplies}) != len(supplies) or len({l.id for l in loads}) != len(loads) or len({e.id for e in edges}) != len(edges):
         raise ValueError("duplicate grid ID")
     if any(s.quantity_mU < 0 or s.ask_ru < 0 for s in supplies) or any(
@@ -308,7 +314,7 @@ def dispatch_reference(seed: int, tick: int, supplies: tuple[Supply, ...], loads
             if local:
                 continue
             for dest, edge in graph.get(hub, ()):
-                if dest in visited or edge_left[edge.id] == 0:
+                if dest in visited or edge_left[edge.id] == 0 or sources[sid].owner in edge.denied:
                     continue
                 next_path = path + (edge.id,)
                 next_cost = (cost + edge.toll) / edge.survival
@@ -345,11 +351,51 @@ def dispatch_reference(seed: int, tick: int, supplies: tuple[Supply, ...], loads
         for band in bands:
             group = [l for l in ranked if band is None or l.limit_ru == band]
             for local in (True, False):
+                if local and fast_local:
+                    for hub in sorted({l.hub for l in group}):
+                        hub_loads = [l for l in group if l.hub == hub]
+                        hub_sources = sorted((sources[sid] for sid in sources
+                                              if sources[sid].hub == hub and source_left[sid] > 0),
+                                             key=lambda x: (x.ask_ru, digest(seed, 'power_path', tick, x.id), x.id))
+                        for source in hub_sources:
+                            eligible = [l for l in hub_loads if l.limit_ru >= source.ask_ru]
+                            caps = {l.id: l.local_capacity(source.ask_ru, received[l.id], spent[l.id]) for l in eligible}
+                            allocation = fair_service(source_left[source.id], {l.id: l.demand_mU for l in eligible},
+                                received, caps, key=(seed, 'power_load', tick, rank))
+                            iterations += 1
+                            for lid, amount in sorted(allocation.items()):
+                                if not amount:
+                                    continue
+                                price = amount * source.ask_ru
+                                source_left[source.id] -= amount
+                                received[lid] += amount
+                                spent[lid] += price
+                                key = (source.id, lid, ())
+                                previous = receipt_map.get(key)
+                                receipt_map[key] = (PowerReceipt(source.id, lid, previous.sent_mU + amount,
+                                    previous.received_mU + amount, (), previous.source_payment_ru_mU + price, ())
+                                    if previous else PowerReceipt(source.id, lid, amount, amount, (), price, ()))
+                    continue
                 frozen = set()
                 while True:
                     active = [l for l in group if l.id not in frozen and received[l.id] < l.demand_mU]
                     if not active:
                         break
+                    if fast_local and not local and all(l.user_cap_ru is None for l in active):
+                        plans = {}
+                        for l in active:
+                            choice = candidate(l, False)
+                            if choice is None:
+                                frozen.add(l.id)     # no option can heal: the oracle freezes it when selected
+                            else:
+                                plans[l.id] = (l, choice[0], choice[1].source)
+                        iterations += 1
+                        if plans and _group_batch(seed, tick, rank, plans, sources, edge_map, source_left,
+                                                  edge_left, received, spent, receipt_map):
+                            continue
+                        active = [l for l in group if l.id not in frozen and received[l.id] < l.demand_mU]
+                        if not active:
+                            break
                     load = min(active, key=lambda l: (Q(received[l.id], l.demand_mU),
                                                       digest(seed, "power_load", tick, rank, l.id), l.id))
                     choice = candidate(load, local)
@@ -376,10 +422,122 @@ def dispatch_reference(seed: int, tick: int, supplies: tuple[Supply, ...], loads
                     source_left, edge_left, iterations)
 
 
+def _chain(path, edge_map, n):
+    """Cumulative flow entering each edge (path order) and the source's sent
+    quantity for n mU received at the load: the oracle's ceil chain."""
+    flows = []
+    for eid in reversed(path):
+        n = ceil(Q(n) / edge_map[eid].survival)
+        flows.append(n)
+    flows.reverse()
+    return n, flows
+
+
+def _group_batch(seed, tick, rank, plans, sources, edge_map, source_left, edge_left,
+                 received, spent, receipt_map) -> int:
+    """grid_fast_v1: commit at once the longest prefix of the oracle's 1 mU
+    sequence over which every active load keeps its current (source, path).
+
+    Callers pass only loads without a user price cap, each with the option the
+    oracle would pick now. Options ordered before it failed for reasons that
+    cannot heal while resources only shrink, its spent only rises and other
+    receipts do not change, so the oracle keeps choosing it while it passes.
+    Selection follows smallest received/demand with hash ties, which is exactly
+    fair_service's prefix. The prefix is cut where any load would hit its own
+    budget, cost-ratio or demand bound, or where the shared stock or line
+    capacity would not cover the whole prefix (then every shorter prefix fits).
+    Returns the number of 1 mU steps committed.
+    """
+    rows = {}
+    for lid, (load, path, sid) in plans.items():
+        source = sources[sid]
+        previous = receipt_map.get((sid, lid, path))
+        base = previous.received_mU if previous else 0
+        tolls = [edge_map[e].toll for e in path]
+
+        def state(r, path=path, tolls=tolls, source=source):
+            sent, flows = _chain(path, edge_map, r)
+            return sent, flows, sent * source.ask_ru + sum((t * q for t, q in zip(tolls, flows)), Q(0))
+        sent0, flows0, cost0 = state(base) if base else (0, [0] * len(path), Q(0))
+        room = load.demand_mU - received[lid]
+        lo, hi = 0, room                                   # budget is monotone in the step count
+        while lo < hi:
+            mid = (lo + hi + 1) // 2
+            if spent[lid] + state(base + mid)[2] - cost0 <= load.budget_ru_mU:
+                lo = mid
+            else:
+                hi = mid - 1
+        cap = lo
+        unit, slack, product, ceils = Q(0), Q(0), Q(1), 0
+        for eid, t in zip(reversed(path), reversed(tolls)):
+            product *= edge_map[eid].survival
+            ceils += 1
+            unit += t / product
+            slack += t * ceils / product
+        unit += source.ask_ru / product
+        slack += source.ask_ru * ceils / product
+        gap = load.limit_ru - unit
+        safe_from = ceil(slack / gap) if gap > 0 else None
+        for step in range(1, cap + 1):                     # per-step C(r) <= limit*r, explicit until safe
+            r = base + step
+            if safe_from is not None and r >= safe_from:
+                break
+            if state(r)[2] > load.limit_ru * r:
+                cap = step - 1
+                break
+        rows[lid] = (load, path, sid, base, state, sent0, flows0, cost0, cap)
+    total = sum(row[0].demand_mU - received[lid] for lid, row in rows.items())
+    key = (seed, 'power_load', tick, rank)
+
+    def allocation(steps):
+        return fair_service(steps, {lid: row[0].demand_mU for lid, row in rows.items()}, received,
+                            {lid: row[0].demand_mU - received[lid] for lid, row in rows.items()}, key=key)
+
+    def fits(steps):
+        share = allocation(steps)
+        use_source, use_edge = {}, {}
+        for lid, amount in share.items():
+            load, path, sid, base, state, sent0, flows0, cost0, cap = rows[lid]
+            if amount > cap:
+                return False
+            if not amount:
+                continue
+            sent, flows, _ = state(base + amount)
+            use_source[sid] = use_source.get(sid, 0) + sent - sent0
+            for e, q, q0 in zip(path, flows, flows0):
+                use_edge[e] = use_edge.get(e, 0) + q - q0
+        return (all(q <= source_left[s] for s, q in use_source.items())
+                and all(q <= edge_left[e] for e, q in use_edge.items()))
+
+    lo, hi = 0, total
+    while lo < hi:
+        mid = (lo + hi + 1) // 2
+        if fits(mid):
+            lo = mid
+        else:
+            hi = mid - 1
+    if not lo:
+        return 0
+    for lid, amount in sorted(allocation(lo).items()):
+        if not amount:
+            continue
+        load, path, sid, base, state, sent0, flows0, cost0 = rows[lid][:8]
+        sent, flows, cost = state(base + amount)
+        source_left[sid] -= sent - sent0
+        for e, q, q0 in zip(path, flows, flows0):
+            edge_left[e] -= q - q0
+        spent[lid] += cost - cost0
+        received[lid] += amount
+        ask = sources[sid].ask_ru
+        receipt_map[(sid, lid, path)] = PowerReceipt(sid, lid, sent, base + amount, tuple(zip(path, flows)),
+            sent * ask, tuple((edge_map[e].owner, edge_map[e].toll * q) for e, q in zip(path, flows)))
+    return lo
+
+
 def dispatch(seed: int, tick: int, supplies: tuple[Supply, ...], loads: tuple[Load, ...],
              edges: tuple[PowerEdge, ...]) -> Dispatch:
     if edges:
-        return dispatch_reference(seed, tick, supplies, loads, edges)
+        return dispatch_reference(seed, tick, supplies, loads, edges, fast_local=True)
     if len({s.id for s in supplies}) != len(supplies) or len({l.id for l in loads}) != len(loads):
         raise ValueError('duplicate grid ID')
     if any(s.quantity_mU < 0 or s.ask_ru < 0 for s in supplies) or any(

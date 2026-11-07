@@ -125,6 +125,7 @@ class Macroeconomy:
                 raise InvariantViolation('market clearing is missing its actual cash-flow attribution')
             for buyer, seller, amount in clearing.cash_flows:
                 self.trade(buyer, seller, amount * rate)
+                state.import_parity.record(venue.good, buyer, seller, amount * rate)
 
     def bank_lock(self, owner, currency):
         return CashAccount(owner, f'central_bank:{currency}', currency)

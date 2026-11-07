@@ -322,13 +322,23 @@ class CashLedger:
                 raise RuleViolation('ERR_INSUFFICIENT_CASH', source.currency)
             if not total:
                 continue
-            exact = old.book_ru_mU * total * CASH_BOOK_SCALE / old.native_mU
-            outgoing = round(exact)
+            # outgoing = round(book * total * scale / native), done in integers:
+            # Fraction.__round__ is round-half-even, reproduced exactly here.
+            book = old.book_ru_mU
+            num = book.numerator * total * CASH_BOOK_SCALE
+            den = book.denominator * old.native_mU
+            outgoing, remainder = divmod(num, den)
+            if remainder * 2 > den or (remainder * 2 == den and outgoing % 2 == 1):
+                outgoing += 1
+            inexact = remainder != 0
             # Coalesce by actual cash destination: changing command IDs or
             # splitting one payment cannot win additional cost-basis crumbs.
             targets = sorted(destinations, key=lambda a: ('', '', '') if a is None else (a.owner, a.name, a.currency))
-            allocation = split_payment(outgoing, {str(i): Q(destinations[a]) for i, a in enumerate(targets)},
-                key=('cash_book_v1', source.owner, source.name, source.currency))
+            if len(targets) == 1:
+                allocation = {'0': outgoing}  # split_payment of one positive weight
+            else:
+                allocation = split_payment(outgoing, {str(i): Q(destinations[a]) for i, a in enumerate(targets)},
+                    key=('cash_book_v1', source.owner, source.name, source.currency))
             books[source] -= Q(outgoing, CASH_BOOK_SCALE)
             for i, destination in enumerate(targets):
                 movements.append(CashBookMovement(source,destination,destinations[destination],Q(allocation[str(i)],CASH_BOOK_SCALE)))
@@ -336,7 +346,7 @@ class CashLedger:
                     books[destination] += Q(allocation[str(i)], CASH_BOOK_SCALE)
             # Conservative L1 bound relative to exact proportional arithmetic:
             # <= 2 / scale per destination. Full one-leg moves are exact.
-            rounding_steps += len(targets) if len(targets) > 1 or exact != outgoing else 0
+            rounding_steps += len(targets) if len(targets) > 1 or inexact else 0
         balances = self._prepare(debits, credits, books)
         return CashTransferPlan(self, self._revision, tuple(balances.items()), rounding_steps,tuple(movements))
 

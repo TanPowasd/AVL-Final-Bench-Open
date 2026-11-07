@@ -36,12 +36,18 @@ class LongLot:
     book_ru_mU: Q
 
 
+
+class _FeeDiscounts:
+    """Picklable view of state.fx.fee_discounts (checkpoints pickle the state)."""
+    def __init__(self,state):self.state=state
+    def __call__(self,p):return self.state.fx.fee_discounts.get(p,Q(0))
+
 class StockMarket:
     def __init__(self,state):
         self.s=state;self.shares=Inventory()
         from .equity_finance import EquityFinance
         self.finance=EquityFinance(state)
-        self.exchange=StockExchange(self.shares,state.initial.cash,discounts=lambda p:state.fx.fee_discounts.get(p,Q(0)))
+        self.exchange=StockExchange(self.shares,state.initial.cash,discounts=_FeeDiscounts(state))
         for cid,company in state.initial.companies.items():
             self.shares.initialize(self.account(company.issuer,cid,'strategic'),510000000)
             self.shares.initialize(self.account(company.issuer,cid,'unissued'),490000000)
@@ -51,6 +57,8 @@ class StockMarket:
         self.close_history={cid:deque(maxlen=2) for cid in state.initial.companies}
         self.turnover={cid:deque(maxlen=20) for cid in state.initial.companies}
         self.external_issues={cid:[] for cid in state.initial.companies}
+        self.offerings={}       # 06 C30: company -> [[cycle, shares]] of secondary offerings
+        self.escrow_targets={}  # company -> facility ids its CapexEscrow may fund
         self.long_lots={};self.position_rounding_steps=0
         self.npc_plans={};self.signals={p:{} for p in state.initial.known}
         self.reports={p:[] for p in state.initial.known}
@@ -71,7 +79,23 @@ class StockMarket:
         base=max(Q(100),multiplier*100*state.industry_activity.mean20(cid)/1000000)
         blackout=max(Q(7,10),1-Q(1,2)*state.industry_activity.shortage5(cid))
         crisis=Q(4,5) if state.macro.crisis_until_cycle[company.issuer]>cycle else Q(1)
-        return max(1,round(base*blackout*crisis))
+        return max(1,round(base*blackout*crisis*self.reserve_life_factor(cid)))
+
+    def reserve_life_factor(self,cid):
+        """10 C24: mining value x max(.3, min(1, L/200)^.5), L = finite reserves / mean20 extraction (cycles)."""
+        state=self.s;company=state.initial.companies[cid]
+        if company.sector!='mining':return Q(1)
+        owner=company.issuer
+        finite={state.mine_deposit[mid] for mid,mine in state.initial.mines.items()
+                if mine.owner==owner and mid in state.mine_deposit and mine.good not in ('water','biomass')}
+        remaining=sum(state.deposits[d].remaining_mU for d in finite if d in state.deposits and not state.deposits[d].renewable)
+        rows=list(state.history[owner])[-20:]
+        extracted=sum(sum(q for g,q in row.extracted.items() if g not in ('water','biomass')) for row in rows)
+        if not extracted:return Q(1)
+        life=Q(remaining*20,extracted)
+        if life>=200:return Q(1)
+        from .scoring import sqrt_q
+        return max(Q(3,10),sqrt_q(life/200))
 
     def vwap20(self,cid):
         history=self.turnover[cid]
@@ -222,8 +246,10 @@ class StockMarket:
         if not ctx.clock.is_cycle_end(ctx.tick):return
         if ctx.cycle<=self.last_cleared_cycle:raise InvariantViolation('stock auction repeated')
         self.reports={p:[] for p in self.reports}
+        # 03 C33: a successful S03 on the issuer's capital suspends its next auction once.
+        suspended={p for p in sorted(self.s.initial.known) if self.s.cyber.take_auction_suspension(p)}
         for cid,company in self.s.initial.companies.items():
-            if not company.listed:continue
+            if not company.listed or company.issuer in suspended:continue
             previous=self.exchange.prices[cid]
             band=(100,2*self.references[cid]) if self.listed_cycle[cid]==ctx.cycle else (max(1,ceil(previous*Q(4,5))),max(1,floor(previous*Q(6,5))))
             prior=dict(self.exchange.orders)
@@ -297,13 +323,46 @@ class StockMarket:
                 'pending':self.pending,'issue_orders':self.issue_orders,'listed_cycle':self.listed_cycle,
                 'close_history':{c:list(rows) for c,rows in self.close_history.items()},
                 'turnover':{c:list(rows) for c,rows in self.turnover.items()},'external_issues':self.external_issues,
+                **({'offerings':self.offerings,'escrow_targets':self.escrow_targets} if self.offerings else {}),
                 'long_lots':[[*key,lot] for key,lot in sorted(self.long_lots.items())],
                 'position_rounding_steps':self.position_rounding_steps,'npc_plans':[[*k,v] for k,v in sorted(self.npc_plans.items())],
                 'signals':self.signals,'reports':self.reports,'last_cycle':self.last_cycle,'last_cleared_cycle':self.last_cleared_cycle}
 
 
 class StockCommands:
-    OPERATIONS=frozenset({('finance','ipo'),('finance','stock_order')})
+    def secondary(self,owner,order,ctx,company,command_id):
+        """06 C30 finance/secondary_offering (secondary_offering_v1)."""
+        state=self.state;market=state.stock_market;cid=company.id
+        fields(order,{'company':str,'qty':int,'min_price_mU':int,'target_facilities':list})
+        if company.issuer!=owner:raise RuleViolation('ERR_NO_PERMISSION')
+        if 'F01' not in state.research[owner].known:raise RuleViolation('ERR_TECH_LOCKED')
+        if not company.listed:raise RuleViolation('ERR_NO_PERMISSION','company has not completed its IPO')
+        qty,targets=order['qty'],order['target_facilities']
+        if (not 1<=qty<=100000 or order['min_price_mU']<=0 or not targets or len(set(targets))!=len(targets)
+                or any(type(t) is not str for t in targets)):raise RuleViolation('ERR_SCHEMA')
+        from .economy_state import SECTOR
+        for fid in targets:
+            facility=state.initial.facilities.get(fid)
+            if facility is None or facility.owner!=owner or SECTOR.get(facility.kind)!=company.sector:
+                raise RuleViolation('ERR_SITE_INCOMPATIBLE','targets must be own facilities of the same industry')
+        recent=sum(q for c,q in market.offerings.get(cid,()) if c>ctx.cycle-100)
+        if recent+qty>100000:raise RuleViolation('ERR_CAPACITY_EXCEEDED','at most 100,000 shares per 100 cycles')
+        external=sum(row.shares for row in market.external_issues[cid])
+        resting=sum(o.remaining_mU//1000 for oid,o in market.exchange.orders.items() if oid in market.issue_orders and o.venue==cid)
+        if external+resting+qty>490000:raise RuleViolation('ERR_CAPACITY_EXCEEDED','external holdings would exceed 490,000 shares')
+        escrow=CashAccount(owner,'capex_escrow:'+cid,company.issuer)
+        order_row=market._order(owner,cid,'sell',qty,order['min_price_mU'],command_id,ctx.tick,
+            ctx.clock.total_ticks,source='unissued',proceeds=escrow)
+        prepared=market.exchange.prepare_issue(order_row,tick=ctx.tick)
+        def commit():
+            prepared.commit();market.issue_orders[order_row.id]='secondary'
+            market.offerings.setdefault(cid,[]).append([ctx.cycle,qty])
+            market.escrow_targets.setdefault(cid,[])
+            for fid in targets:
+                if fid not in market.escrow_targets[cid]:market.escrow_targets[cid].append(fid)
+        return PreparedCommand(commit)
+
+    OPERATIONS=frozenset({('finance','ipo'),('finance','stock_order'),('finance','secondary_offering')})
     def __init__(self,state):self.state=state
 
     def prepare(self,owner,order,ctx):
@@ -312,6 +371,8 @@ class StockCommands:
         if company is None:raise RuleViolation('ERR_NO_VISIBLE_TARGET')
         if state.active_order_count(owner)>=state.catalog.runtime['limits']['active_orders_per_nation']:raise RuleViolation('ERR_ENTITY_CAP_EXCEEDED')
         command_id=str(int(order['id']))
+        if order['op']=='secondary_offering':
+            return self.secondary(owner,order,ctx,company,command_id)
         if order['op']=='ipo':
             fields(order,{'company':str,'qty':int,'min_price_mU':int})
             if company.issuer!=owner:raise RuleViolation('ERR_NO_PERMISSION')

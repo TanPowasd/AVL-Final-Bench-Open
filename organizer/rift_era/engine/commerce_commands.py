@@ -119,7 +119,7 @@ class CommerceCommands:
             bilateral=True, offer_id=offer_id)
         return exchange.prepare_order(buyer, tick=ctx.tick)
 
-    def commands(self, state, ctx, *, prepare=None,pool_payments=None,on_pool_cleared=None) -> None:
+    def commands(self, state, ctx, *, prepare=None,before_orders=None,pool_payments=None,on_pool_cleared=None) -> None:
         state.spot.expire(ctx.tick)
         if not ctx.clock.is_decision(ctx.tick):
             state.relations.settle(ctx)
@@ -138,6 +138,8 @@ class CommerceCommands:
         # Namespace order is explicit and deterministic. A later domain arbiter
         # batches contested world-pool/physical claims; these local commands do
         # not create or silently consume a shared NPC cash pool.
+        if before_orders is not None:
+            before_orders()
         for owner in sorted(state.command_streams):
             state.command_streams[owner].process(list(ctx.orders.get(owner, ())),
                 lambda order, owner=owner: (prepare or self.prepare)(owner, order, ctx))

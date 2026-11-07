@@ -398,7 +398,7 @@ class CityStateEconomy:
                 rate = Q(units(row['output']), ctx.clock.cycle_ticks) * work * power * efficiency
                 requests[sid] = min(remaining, floor(rate + site.output_remainder))
                 site.output_remainder = rate + site.output_remainder - floor(rate + site.output_remainder)
-            free = max(0, self.s.initial.warehouse_mU[city.hub] - self.s.warehouse_load()[city.hub])
+            free = max(0, self.s.initial.warehouse_mU[city.hub] - self.s.warehouse_load_at(city.hub))
             # Different mineral cargo weights compete for the same warehouse.
             total = sum((q * self.s.cargo_weights[self.sites[sid].good] for sid, q in requests.items()), Q(0))
             scale = min(Q(1), Q(free) / total) if total else Q(1)

@@ -15,6 +15,7 @@ from .diplomacy import AcceptedPeace, Relation
 from .periodic_contracts import PeriodicContracts,SwapProposal
 from .sovereign_loans import SovereignLoans,LoanProposal
 from .joint_ventures import JointVentures,JointVentureProposal
+from .equity_stakes import StakeProposal, params as stake_params
 
 
 @dataclass(frozen=True)
@@ -176,7 +177,7 @@ class Contracts:
 
     def count(self,party):
         active_dmz=sum(party in z.parties and self.tick<z.end_tick for z in self.dmz)
-        return (active_dmz+sum(party in (r.proposal.proposer,r.proposal.counterparty) and r.status not in ('EXPIRED','DEFAULTED') for r in self.swaps.rows.values())+self.loans.count(party)+self.joint_ventures.count(party)+sum(party in t.parties for t in self.defense)+sum(party in t.parties for t in self.embargoes)+sum(party in (p.proposer,p.counterparty) for p in self.proposals.values())+
+        return (active_dmz+sum(party in (r.proposal.proposer,r.proposal.counterparty) and r.status not in ('EXPIRED','DEFAULTED','TERMINATED') for r in self.swaps.rows.values())+self.loans.count(party)+self.joint_ventures.count(party)+sum(party in t.parties for t in self.defense)+sum(party in t.parties for t in self.embargoes)+sum(party in (p.proposer,p.counterparty) for p in self.proposals.values())+
                 sum(party in t.parties for t in self.intelligence)+sum(party in (t.grantor,t.grantee) for t in self.transit))
 
     def publish(self):
@@ -211,8 +212,8 @@ class Contracts:
         for owner in (proposal.proposer,proposal.counterparty):
             alias=self.aliases[owner].get(proposal.id)
             self.recent[owner].append({'proposal_id':alias,'counterparty':proposal.counterparty if owner==proposal.proposer else proposal.proposer,
-                                      'clause_type':6 if isinstance(proposal,PeaceProposal) else 8 if isinstance(proposal,IntelligenceProposal) else 3 if isinstance(proposal,TransitProposal) else 9 if isinstance(proposal,EmbargoProposal) else 7 if isinstance(proposal,DefenseProposal) else 1 if isinstance(proposal,SwapProposal) else 2 if isinstance(proposal,LoanProposal) else 4 if isinstance(proposal,JointVentureProposal) else 5,'status':status,
-                                      **({'mode':proposal.mode} if isinstance(proposal,PeaceProposal) else {} if isinstance(proposal,(IntelligenceProposal,TransitProposal,EmbargoProposal,DefenseProposal,SwapProposal,LoanProposal,JointVentureProposal)) else {'tech_id':proposal.tech})})
+                                      'clause_type':6 if isinstance(proposal,PeaceProposal) else 8 if isinstance(proposal,IntelligenceProposal) else 3 if isinstance(proposal,TransitProposal) else 9 if isinstance(proposal,EmbargoProposal) else 7 if isinstance(proposal,DefenseProposal) else 1 if isinstance(proposal,SwapProposal) else 2 if isinstance(proposal,LoanProposal) else 4 if isinstance(proposal,(JointVentureProposal,StakeProposal)) else 5,'status':status,
+                                      **({'mode':proposal.mode} if isinstance(proposal,PeaceProposal) else {'mode':'stake'} if isinstance(proposal,StakeProposal) else {} if isinstance(proposal,(IntelligenceProposal,TransitProposal,EmbargoProposal,DefenseProposal,SwapProposal,LoanProposal,JointVentureProposal)) else {'tech_id':proposal.tech})})
             self.recent[owner]=self.recent[owner][-256:]
 
     def settle(self,ctx):
@@ -377,8 +378,8 @@ class Contracts:
         aliases=self.aliases[owner];proposals=[]
         for p in self.proposals.values():
             if p.id not in aliases:continue
-            peace=isinstance(p,PeaceProposal);intel=isinstance(p,IntelligenceProposal);transit=isinstance(p,TransitProposal);embargo=isinstance(p,EmbargoProposal);defense=isinstance(p,DefenseProposal);swap=isinstance(p,SwapProposal);loan=isinstance(p,LoanProposal);jv=isinstance(p,JointVentureProposal)
-            params=({'hub_id':p.hub,'profile_id':p.profile,'recipe_id':p.recipe,'shares_mU':list(p.shares),'inputs':list(p.inputs),'mode':p.mode,**({'tech_id':p.tech} if p.tech else {})} if jv else
+            peace=isinstance(p,PeaceProposal);intel=isinstance(p,IntelligenceProposal);transit=isinstance(p,TransitProposal);embargo=isinstance(p,EmbargoProposal);defense=isinstance(p,DefenseProposal);swap=isinstance(p,SwapProposal);loan=isinstance(p,LoanProposal);jv=isinstance(p,JointVentureProposal);stake=isinstance(p,StakeProposal)
+            params=(stake_params(p) if stake else {'hub_id':p.hub,'profile_id':p.profile,'recipe_id':p.recipe,'shares_mU':list(p.shares),'inputs':list(p.inputs),'mode':p.mode,**({'tech_id':p.tech} if p.tech else {})} if jv else
                     {'currency':p.currency,'principal_mU':p.principal_mU,'annual_rate_bp':p.annual_rate_bp,'due_cycle':p.due_cycle,'collateral':[{'asset_id':a,'shares_mU':q} for a,q in p.collateral]} if loan else
                     {'hub_a':p.hub_a,'hub_b':p.hub_b,'good_a':p.good_a,'good_b':p.good_b,'qty_a_mU':p.quantity_a,'qty_b_mU':p.quantity_b,'period_cycles':p.period_cycles,**({'currency':p.cash_currency,'amount_mU':p.cash_amount,'cash_side':p.cash_side} if p.cash_side else {})} if swap else
                     {'response_cycles':2,'min_aid_ru_mU':50000} if defense else
@@ -388,18 +389,21 @@ class Contracts:
                     {'mode':p.mode,'region_ids':list(p.regions),'withdraw_cycles':p.withdraw_cycles} if peace else
                     {'tech_id':p.tech,'fee_ru_mU':p.fee_ru_mU})
             proposals.append({'id':aliases[p.id],'proposer':p.proposer,'counterparty':p.counterparty,
-                'clause_type':6 if peace else 8 if intel else 3 if transit else 9 if embargo else 7 if defense else 1 if swap else 2 if loan else 4 if jv else 5,'duration_cycles':p.duration_cycles,'expires_cycle':p.expires_cycle,
-                'params':params,**({} if peace or intel or transit or embargo or defense or swap or loan or jv else {'source_blockade_at_offer':p.source_blockade})})
-        return {'proposals':proposals,'licenses_received':{tech:dict(record) for tech,record in self.licenses[owner].items()},
+                'clause_type':6 if peace else 8 if intel else 3 if transit else 9 if embargo else 7 if defense else 1 if swap else 2 if loan else 4 if jv or stake else 5,'duration_cycles':p.duration_cycles,'expires_cycle':p.expires_cycle,
+                'params':params,**({} if peace or intel or transit or embargo or defense or swap or loan or jv or stake else {'source_blockade_at_offer':p.source_blockade})})
+        from .contract_termination import contract_id
+        from .determinism import primitive
+        return {'proposals':proposals,'licenses_received':{tech:{'contract_id':f'license:{owner}:{tech}',**record} for tech,record in self.licenses[owner].items()},
+                'licenses_granted':[{'contract_id':f'license:{p}:{tech}','licensee':p,**record} for p,rows in sorted(self.licenses.items()) for tech,record in sorted(rows.items()) if record['licensor']==owner],
                 'dmz':[z for z in self.dmz if owner in z.parties],
                 'joint_ventures':self.joint_ventures.visible(owner),
                 'loans':self.loans.visible(owner),
                 'periodic_swaps':self.swaps.visible(owner),
-                'defense_pacts':[t for t in self.defense if owner in t.parties],
+                'defense_pacts':[{'contract_id':contract_id('defense',t),**primitive(t)} for t in self.defense if owner in t.parties],
                 'defense_obligations':[o for o in self.defense_obligations if owner in (o.ally,o.defender)],
-                'joint_embargoes':[t for t in self.embargoes if owner in t.parties],
-                'transit_rights':[t for t in self.transit if owner in (t.grantor,t.grantee)],
-                'intel_sharing':[t for t in self.intelligence if owner in t.parties], 'recent':[dict(row) for row in self.recent[owner]]}
+                'joint_embargoes':[{'contract_id':contract_id('embargo',t),**primitive(t)} for t in self.embargoes if owner in t.parties],
+                'transit_rights':[{'contract_id':contract_id('transit',t),**primitive(t)} for t in self.transit if owner in (t.grantor,t.grantee)],
+                'intel_sharing':[{'contract_id':contract_id('intel',t),**primitive(t)} for t in self.intelligence if owner in t.parties], 'recent':[dict(row) for row in self.recent[owner]]}
 
     def audit(self):
         self.loans.audit();self.joint_ventures.audit()
@@ -414,7 +418,7 @@ class Contracts:
         for venture in self.joint_ventures.rows.values():
             counts[venture.proposal.proposer]+=1;counts[venture.proposal.counterparty]+=1
         for swap in self.swaps.rows.values():
-            if swap.status not in ('EXPIRED','DEFAULTED'):
+            if swap.status not in ('EXPIRED','DEFAULTED','TERMINATED'):
                 counts[swap.proposal.proposer]+=1;counts[swap.proposal.counterparty]+=1
         for z in self.dmz:
             if self.tick<z.end_tick:
@@ -441,12 +445,15 @@ class Contracts:
 
 
 class ContractCommands:
-    OPERATIONS=frozenset({('diplomacy','propose_contract'),('diplomacy','accept_contract'),('diplomacy','reject_contract'),('diplomacy','military_aid'),('diplomacy','leave_joint_venture')})
+    OPERATIONS=frozenset({('diplomacy','propose_contract'),('diplomacy','accept_contract'),('diplomacy','reject_contract'),('diplomacy','military_aid'),('diplomacy','leave_joint_venture'),('diplomacy','terminate_contract')})
     def __init__(self,state):self.state=state
 
     def prepare(self,owner,order,ctx):
         state=self.state;book=state.contracts
         if order['op']=='military_aid':return self.military_aid(owner,order,ctx)
+        if order['op']=='terminate_contract':
+            from .contract_termination import prepare_termination
+            return prepare_termination(state,owner,order,ctx)
         if order['op']=='leave_joint_venture':
             fields(order,{'venture_id':str})
             row=book.joint_ventures.rows.get(order['venture_id'])
@@ -462,6 +469,9 @@ class ContractCommands:
             if order['clause_type']==7:return self.defense_offer(owner,order,ctx)
             if order['clause_type']==1:return book.swaps.offer(owner,order,ctx)
             if order['clause_type']==2:return book.loans.offer(owner,order,ctx)
+            if order['clause_type']==4 and params.get('mode')=='stake':
+                from .equity_stakes import offer as stake_offer
+                return stake_offer(state,owner,order,ctx)
             if order['clause_type']==4:return book.joint_ventures.offer(owner,order,ctx)
             if (order['clause_type']!=5 or not 10<=order['duration_cycles']<=720 or
                     set(params)!={'tech_id','fee_ru_mU'} or type(params['tech_id']) is not str or
@@ -491,6 +501,9 @@ class ContractCommands:
             return PreparedCommand(reject)
         if not isinstance(proposal,PeaceProposal) and (book.embargo_blocks(owner,proposal.proposer) or book.embargo_blocks(proposal.proposer,owner)):
             raise RuleViolation('ERR_NO_PERMISSION','joint embargo bars new bilateral contracts')
+        if isinstance(proposal,StakeProposal):
+            from .equity_stakes import prepare_accept as stake_accept
+            return stake_accept(state,proposal,ctx)
         if isinstance(proposal,JointVentureProposal):return book.joint_ventures.prepare_accept(proposal,ctx)
         if isinstance(proposal,LoanProposal):return book.loans.prepare_accept(proposal,ctx)
         if isinstance(proposal,SwapProposal):return book.swaps.prepare_accept(proposal,ctx)

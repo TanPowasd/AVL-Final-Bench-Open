@@ -25,7 +25,10 @@ python3 -m unittest discover -s organizer/rift_era/tests -v
 
 ## A. 完整单局与守恒
 
-- [ ] 实际执行到 Tick 28,799，完成 **28,800 Tick / 5,760 决策窗口 / 2,880 工业周期 / 四个 720 周期纪元**；不得提前截断、复制帧或外推后半局。
+- [x] 实际执行到 Tick 28,799，完成 **28,800 Tick / 5,760 决策窗口 / 2,880 工业周期 / 四个 720 周期纪元**；不得提前截断、复制帧或外推后半局。
+  - 2026-11-07（7f9f194，seed 1000，atlas，空局无指令）：`match --checkpoint --resume --budget-s 900` 分 17 段续跑，2026-11-06 20:3x 起至 2026-11-07 02:16（CST）跑完 28,800 Tick / 2,880 周期，各段 exit 3（预算到点存档）、末段 exit 0，run.log 无异常。`complete_trajectory=true`，最终 state_hash `6ab7cc14939ecbadcf84c8a07d68d8f59b0348df434415bfae72e3c90eda2bd3`。
+  - 结果（8 国几乎一致）：mean_U 2.92–2.99，末周期 U 0.75–0.78，V −0.24～−0.27。末周期支柱：control 4.04，industry −0.10～−0.25，population / technology / international 均为 0。
+  - **发现：空局 8 国人口全部崩溃**。每国人口 194,000 mU → 249 mU（只剩首都），首都 support_mU=0、red_streak=2769（约从第 110 周期起一直红）。末 40 周期家庭消费 food/water/electricity/medicine 全为 0，sink_debt 累积（n0 food 36,540、water 59,512）。此前 1,618 Tick 探测只看到城邦饥荒、国家 Hub 仍在增长；长局下国家 Hub 也断供。需作者判断：空局是否应有自动维持的基础食物/水/电生产，还是"无指令即崩溃"符合设计。
 - [ ] 核对每 Tick 的 P1–P8 次序、周期结算次数、持续计划时序，以及期末处理不额外增发收入或免除未偿债务。
 - [ ] 检查所有币种的初始供给、显式发行及余额守恒；库存、锁仓、在途、信用、在制品不重复计数，生产与资金来源均可追溯。
 - [ ] 核对历史 RU 成本细网格的 `basis_rounding_steps` / `basis_error_bound_mU`，对照高精度账检查实际误差与 NFA/评分精度；禁止用实时汇率重估旧现金或发行负债。
@@ -38,29 +41,29 @@ python3 -m unittest discover -s organizer/rift_era/tests -v
 
 逐项保留场景 ID，在真实引擎中执行其规定的初始化、动作和断言：
 
-- [ ] `barrage_no_gains`
-- [ ] `cyber_credit_floor`
-- [ ] `patrol_loop`
-- [ ] `zero_material_hostility`
-- [ ] `repair_single_count`
-- [ ] `relations_and_neutrality`
-- [ ] `blockade_food_substitution`
-- [ ] `damage_power_and_repair`
-- [ ] `energy_substitution`
-- [ ] `fx_revaluation_invariance`
-- [ ] `transit_formula`
-- [ ] `healthy_relocation`
-- [ ] `cpu_budget`
-- [ ] `world_pool_pressure`
-- [ ] `batch_consistency`
+- [ ] `barrage_no_gains` — BLOCKED_BY_IMPLEMENTATION：火力只打单位，炮击不能以设施为目标，"可反复修复的假目标设施"无法构造；敌方单位作目标一周期内就被打光，20 周期稳态不成立
+- [x] `cyber_credit_floor` — PASS（`tests/test_round6_scenarios.py`，2026-11-06，full_match 装配）
+- [x] `patrol_loop` — PASS（`tests/test_round6_scenarios.py`，2026-11-06，full_match 装配）
+- [x] `zero_material_hostility` — PASS（`tests/test_round6_scenarios.py`，2026-11-06，full_match 装配）
+- [x] `repair_single_count` — PASS（`tests/test_round6_scenarios.py`，2026-11-06，full_match 装配）
+- [x] `relations_and_neutrality` — PASS（`tests/test_round6_scenarios.py`，2026-11-06，full_match 装配）
+- [x] `blockade_food_substitution` — PASS（2026-11-06，分通道）：C 经 A 的边 eC 送食物给 B（city-33 缩放到 200 人），A 对 C 设 tier 0 后 C 的发运被拒，B 改吃 A 经 eA 的食物；A 每周期出口回执 45.78、C 的 Phi 流量消失、政策损耗每 tick 0.001 均由引擎读出，再按引擎支柱权重组合出下界 .365365 与 era3 .00371177。未跑满 rolling20 的 40 周期，下界的 30.5 爬坡按公式算
+- [x] `damage_power_and_repair` — PASS（`tests/test_round6_scenarios.py`，2026-11-06，full_match 装配）
+- [x] `energy_substitution` — PASS（2026-11-06，分通道）：新增 power_acl_v1，`corridor_policy` 可对输电线拒入外国电源；夹具两条 A 控制线路（存活率 .9985/.985 由引擎算出），电网 oracle 显示拒入前 B 买 C 的电、拒入后改买 A 的 3.94（A 发 4）；A 过网费增量 .00054（1 mU 步进误差 <1e-5）；断线对照同样改道；本周期 10 次政策事件。价值、VA、出口、Phi、NFA 各项按引擎权重核对，净下界 .066489
+- [x] `fx_revaluation_invariance` — PASS（`tests/test_round6_scenarios.py`，2026-11-06，full_match 装配）
+- [ ] `transit_formula` — PARTIAL：公式在 `tests/test_rules.py::test_transit_formula_and_fixed_credit` 用引擎 ReceiptBook 验证；真实地图上凑不出 D0=8 的两承运人路径，端到端未做
+- [x] `healthy_relocation` — PASS（`tests/test_round6_scenarios.py`，2026-11-06，full_match 装配）
+- [x] `cpu_budget` — PASS（`tests/test_round6_scenarios.py`，2026-11-06，full_match 装配）
+- [ ] `world_pool_pressure` — BLOCKED_BY_IMPLEMENTATION：引擎没有"向世界池买卖库存货（每国每货 40 单位/周期，10·w RU）"的通道，06 接口也没写用哪个命令，需作者定义
+- [x] `batch_consistency` — PASS（`tests/test_round6_scenarios.py`，2026-11-06，full_match 装配）
 
-`S1_salvage`、`split_labs` 是算术检查：保留其回归结果，但不得用它们代替上述端到端通过证据。场景有意提供的初始条件属于测试夹具；运行期间不得额外补钱、补库存或补运力使断言通过。
+`S1_salvage`、`split_labs` 是算术检查（`tests/test_rules.py` 已有回归）：保留其回归结果，但不得用它们代替上述端到端通过证据。场景有意提供的初始条件属于测试夹具；运行期间不得额外补钱、补库存或补运力使断言通过。
 
 ## C. 确定性、回放与信息边界
 
-- [ ] 同规则、同种子、同席位、同命令流重复运行，逐 Tick/阶段状态哈希一致；检查实体输入顺序和 Python 哈希种子变化。
+- [ ] 同规则、同种子、同席位、同命令流重复运行，逐 Tick/阶段状态哈希一致；检查实体输入顺序和 Python 哈希种子变化。 — PARTIAL：PYTHONHASHSEED=0 与 12345 两个进程 30 Tick 哈希链一致（`tests/test_full_match_determinism.py`）；整局未跑
 - [ ] 对完整回放进行**重新执行**并比对，不只校验文件哈希链。缺终止记录、混用规则/源码/运行时版本时拒绝回放。
-- [ ] 评分查询执行 0/1/100 次不改变世界、统计窗口或最终结果。
+- [ ] 评分查询执行 0/1/100 次不改变世界、统计窗口或最终结果。 — PARTIAL：`tests/test_full_match_determinism.py` 在 full_match 前 30 Tick 逐 Tick 状态哈希一致（2026-11-06）；整局未跑
 - [ ] 参考策略与选手使用相同过滤观测，不读取真值、seed、对手代码或裁判回放；改变不可见真值不应改变冻结观测的版本、长度、删除事件和错误回执。
 - [ ] 验证长局中的失联/销毁区分、轨迹老化、周期全量快照及增量自愈；不通过截断字段满足快照限制。
 
@@ -71,7 +74,7 @@ python3 -m unittest discover -s organizer/rift_era/tests -v
 - [ ] 自参考策略得分验证为 50；逐周期采集五支柱、四纪元、终局可持续性、V、精确 R 和展示分数，按 64 局均值聚合。
 - [ ] 对照权威评分向量，满足规定的 `1e-9` 误差及严格负行动差额判定要求；不能因展示舍入把微小损耗变成零。
 - [ ] 报告不同经营/科技/贸易/军事路线与座位差异；特别记录世界池资金耗尽周期、出口品类集中度及相关路线成绩，不用单 seed 宣称平衡。
-- [ ] 参赛进程崩溃、OOM、超时等按规则托管完成剩余窗口，并按实际状态评分。裁判、参考策略或宿主故障使整批 `INVALID_EVALUATION`；保留原 manifest 重跑，不能丢弃失败 seed 后重新求均值。
+- [ ] 参赛进程崩溃、OOM、超时等按规则托管完成剩余窗口，并按实际状态评分。裁判、参考策略或宿主故障使整批 `INVALID_EVALUATION`；保留原 manifest 重跑，不能丢弃失败 seed 后重新求均值。 — PARTIAL（2026-11-06）：`tests/test_batch_host.py` 用真实 full_match（20 tick）验证：选手崩溃→托管并计分；参考崩溃、引擎不变量故障、宿主取图失败→整批 INVALID_EVALUATION，续跑不再开局；日志可续跑。OOM/超时及正式沙箱路径未测（无 bwrap）。
 
 ## E. 完整运行资源与 IPC 压力
 

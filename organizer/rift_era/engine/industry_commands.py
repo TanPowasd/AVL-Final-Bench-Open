@@ -19,6 +19,15 @@ from .protocol import PreparedCommand
 from .provenance import Use
 
 
+
+def coastal_hub(state, hub_id):
+    """A hub on the coast: listed by the atlas, or its region borders an ocean region."""
+    world = state.initial.map
+    if hub_id in world.coastal_hubs:
+        return True
+    region = world.regions[world.hubs[hub_id].region]
+    return any(world.regions[r].terrain == 'ocean' for r in region.adjacent)
+
 class IndustryCommands:
     OPERATIONS = frozenset(('industry', op) for op in (
         'build_facility', 'build_mine', 'warehouse_expand', 'upgrade_facility',
@@ -178,6 +187,8 @@ class IndustryCommands:
                 raise RuleViolation('ERR_SITE_INCOMPATIBLE')
             return self._mine(owner, str(int(order['id'])), hub, deposits[0], good, profile, ctx,
                               modular=order.get('use_modular_mU', 0))
+        if profile == 'L12_island':
+            return self._island(owner, order, site, kind, ctx)
         housing = profile == 'P110'
         if profile not in self.state.catalog.profiles and not housing:
             raise RuleViolation('ERR_SCHEMA')
@@ -210,6 +221,44 @@ class IndustryCommands:
             self.state.initial.facilities[aid] = facility
 
         return self.state.work.prepare_start(job, register)
+
+    def _set_platform(self, owner, order):
+        """03 N11: an orbital platform runs one general line of P081 or P087 (or pauses)."""
+        from .orbital_operations import ORBITAL_RECIPES
+        platform = self.state.orbit.platforms[order['line_id']]
+        if platform.owner != owner:
+            raise RuleViolation('ERR_NO_VISIBLE_TARGET')
+        if 'expected_version' in order and order['expected_version'] != platform.version:
+            raise RuleViolation('ERR_STALE_VERSION')
+        rid = order['recipe']
+        if order['mode'] != 'general' or set(order) - {'id', 'kind', 'op', 'line_id', 'recipe', 'mode', 'expected_version'}:
+            raise RuleViolation('ERR_SCHEMA')
+        if rid is not None:
+            if rid not in ORBITAL_RECIPES:
+                raise RuleViolation('ERR_SITE_INCOMPATIBLE', 'orbital platforms run P081 or P087 only')
+            self._tech(owner, self.state.catalog.recipes[rid]['requires_all'])
+        def commit():
+            platform.recipe = rid
+            platform.version += 1
+        return PreparedCommand(commit)
+
+    def _island(self, owner, order, site, kind, ctx):
+        """04/03 L12 artificial island (artificial_island_v1, see island.py)."""
+        from .island import COSTS, CYCLES, island_cell
+        if kind != 'public' or 'good' in order or 'use_modular_mU' in order:
+            raise RuleViolation('ERR_SCHEMA')
+        self._tech(owner, {'L12'})
+        if not coastal_hub(self.state, site.id):
+            raise RuleViolation('ERR_SITE_INCOMPATIBLE', 'an island needs a coastal site')
+        cell = island_cell(self.state.initial.map, site.id)
+        if any(j.kind == 'build_island' and j.payload['cell'] == cell for j in self.state.work.jobs.values()):
+            raise RuleViolation('ERR_CAPACITY_EXCEEDED', 'island already under construction there')
+        jid, aid = self._ids(owner, order)
+        asset = self._asset(aid, owner, site.id, dict(COSTS))
+        job = WorkOrder(jid, str(int(order['id'])), owner, site.id, 'build_island', aid,
+                        CYCLES * ctx.clock.cycle_ticks, dict(COSTS), 0, temporary_asset=aid,
+                        payload={'cell': cell})
+        return self.state.work.prepare_start(job, lambda: self.state.initial.assets.__setitem__(aid, asset))
 
     def mine(self, owner, order, ctx):
         fields(order, {'hub_id': str, 'deposit_id': str, 'good': str, 'level': str})
@@ -275,6 +324,8 @@ class IndustryCommands:
             {'high_temp': bool, 'gene_edited': bool, 'target_stock_mU': int, 'addons': list, 'expected_version': int})
         state = self.state
         lid, rid, mode = order['line_id'], order['recipe'], order['mode']
+        if lid in state.orbit.platforms:
+            return self._set_platform(owner, order)
         asset = self._owned_asset(owner, lid, order)
         line = state.initial.lines.get(lid)
         if line is None:
@@ -301,6 +352,8 @@ class IndustryCommands:
         self._tech(owner, row['requires_all'])
         if row['facility'] != facility.kind and facility.kind != 'public' or row['grade'] > state.catalog.profiles[facility.profile]['recipe_grade']:
             raise RuleViolation('ERR_SITE_INCOMPATIBLE')
+        if rid == 'P106' and not coastal_hub(state, line.hub):
+            raise RuleViolation('ERR_SITE_INCOMPATIBLE', 'desalination must be on the coast')  # 04 V03
         eligible = row['facility'] in state.catalog.tables['industry']['mode_eligible_facilities']
         if not eligible and mode != 'general':
             raise RuleViolation('ERR_SITE_INCOMPATIBLE')
@@ -418,6 +471,11 @@ class IndustryCommands:
 
     def complete(self, job):
         state, initial = self.state, self.state.initial
+        if job.kind == 'build_island':
+            from .island import found
+            state.asset_lifecycle.commission(job.target)
+            found(state, job)
+            return
         if job.kind == 'build_corridor':
             from .corridor_commands import CorridorCommands
             CorridorCommands.complete(state, job)

@@ -127,7 +127,7 @@ class PeriodicContracts:
         if ctx.cycle<=self.last_cycle:return
         self.last_cycle=ctx.cycle
         for row in self.rows.values():
-            if row.status in ('EXPIRED','DEFAULTED'):continue
+            if row.status in ('EXPIRED','DEFAULTED','TERMINATED'):continue
             if ctx.cycle>=row.end_cycle:row.status='EXPIRED';continue
             if ctx.cycle<row.next_cycle:continue
             p=row.proposal

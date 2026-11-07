@@ -36,6 +36,8 @@ SYSTEMS = {
     'listening': SystemSpec('S02', (('communication_equipment', 2000),)),
     'automated_terminal': SystemSpec('L07', (('automation_module', 2000), ('communication_equipment', 1000))),
     'launch_site': SystemSpec('N06', (('communication_equipment', 1000), ('computing_equipment', 1000)), profiles=('S3', 'S5')),
+    # 04 R08: off-site research backup centre (computing + communication).
+    'research_backup': SystemSpec('R08', (('computing_equipment', 1000), ('communication_equipment', 1000))),
     'big_science': SystemSpec('R09', (('computing_equipment', 2000),), 40000, 2, profiles=('S5',)),
     'closed_ecology': SystemSpec('A12', (('control_module', 2000),), 4000, 1),
     'cryptanalysis_defense': SystemSpec('C12', (('quantum_module', 1000),), 2000, 4),
@@ -103,7 +105,8 @@ class PublicSystems:
                 if any(self.state.initial.assets[h].maintenance_debt > Q(1, 5) for h in hosts):
                     system.collapse_until_tick = max(system.collapse_until_tick, ctx.tick + 3 * ctx.clock.cycle_ticks)
             system.online = bool(available and labor and system.power_received_mU >= needed_power
-                                 and ctx.tick >= system.collapse_until_tick)
+                                 and ctx.tick >= system.collapse_until_tick
+                                 and not (self.state.cyber_frozen_until and self.state.cyber.system_frozen(system, ctx.tick)))
             frame.worked[entity] = dict(workers) if system.online else {}
         self.reindex()
 

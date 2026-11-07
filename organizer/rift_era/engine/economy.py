@@ -67,6 +67,8 @@ class Economy:
             return self.s.cargo.hauls[self.s.cargo.vehicle_jobs[entity.split(':', 1)[1]]].origin
         if entity.startswith('storage:'):
             return self.s.storage.stores[entity.split(':', 1)[1]].hub
+        if entity.startswith('climate:'):
+            return entity.split(':', 1)[1] + '-h0'
         if entity in self.s.work.jobs:
             return self.s.work.jobs[entity].hub
         if entity in self.s.frame.work_context:
@@ -365,6 +367,8 @@ class Economy:
                 from .nonland_navigation import base_online
                 if base_online(state,owner,formation.hub,formation.domain):
                     sources.append(Account(owner,formation.hub,'available',g))
+                from .battle_operations import relay_supply_hubs
+                sources.extend(Account(owner,h,'available',g) for h in relay_supply_hubs(state,formation,ctx.tick))
                 taken[g]=0
                 for source in sources:
                     qty=min(needed-taken[g],self.inventory.balance(source))
@@ -544,18 +548,35 @@ class Economy:
 
     def environment(self, state: OperatingWorld, ctx: TickContext) -> None:
         from .weather import weather_step
+        climate = state.climate
+        climate.begin_cycle(ctx)
         for region in state.initial.map.regions.values():
+            previous_wind = climate.raw_wind.get(region.id, state.wind_mU.get(region.id, region.wind_mean_mU))
             wind, cloud, sun = weather_step(ctx.seed, state.initial.map.attempt, ctx.tick, region,
-                state.wind_mU.get(region.id, region.wind_mean_mU),
-                state.cloud_mU.get(region.id, region.cloud_mean_mU), state.global_emissions_mU)
+                previous_wind, state.cloud_mU.get(region.id, region.cloud_mean_mU), state.global_emissions_mU)
+            if climate.interventions:
+                factor = climate.multiplier(region.id)
+                if factor != 1:
+                    climate.raw_wind[region.id] = wind  # V08 shifts realized wind/solar, not the AR state
+                    wind, sun = round(wind * factor), round(sun * factor)
+                else:
+                    climate.raw_wind.pop(region.id, None)
+            elif climate.raw_wind:
+                climate.raw_wind.pop(region.id, None)
             state.wind_mU[region.id], state.cloud_mU[region.id], state.sun_mU[region.id] = wind, cloud, sun
+        self._track_v07(state, ctx)
         if ctx.tick % 10 == 0:
+            brine = self._brine_regions(state)
             for mid, deposit in state.deposits.items():
                 if deposit.good == 'biomass':
                     account = Account(*state.resource_sources[mid], deposit.good)
                     stock = self.inventory.balance(account)
                     ratio = Q(stock, deposit.initial_mU)
                     rate = Q(4 if ratio < Q(2, 5) else 8, 100)
+                    if ratio < Q(2, 5) and self._v07_restored(state, mid, ctx):
+                        rate = Q(6, 100)  # V07: the degraded rate recovers half way to .08
+                    if brine and self._brine_hit(state, mid, brine):
+                        rate = rate * Q(9, 10)  # 05 P106: brine discharge, -10% regeneration
                     growth = floor(rate * stock * (1 - ratio))
                     self.inventory.transform({}, {account: growth}, reason='biomass_regeneration',
                                              origins={account: Origin('nature', state.resource_sites[mid].hub)})
@@ -574,6 +595,68 @@ class Economy:
             original = state.catalog.recipes[line.recipe.id]['outputs']
             line.recipe = replace(line.recipe, outputs={g: round(units(q) * factor) for g, q in original.items()})
 
+    @staticmethod
+    def _track_v07(state, ctx) -> None:
+        """04 V07 (tech_effects_v1): track, for biomass sites whose owner knows V07,
+        the last tick the site's stock was drawn down. The closure clock starts
+        when the owner holds V07; earlier idle time does not count."""
+        for mid, deposit in state.deposits.items():
+            if deposit.good != 'biomass':
+                continue
+            site = state.resource_sites.get(mid) or state.initial.mines.get(mid)
+            research = state.research.get(site.owner) if site is not None else None
+            if research is None or 'V07' not in research.known:
+                state.v07_last_extracted.pop(mid, None)
+                continue
+            stock = state.initial.inventory.balance(Account(*state.resource_sources[mid], deposit.good))
+            if mid not in state.v07_last_extracted or stock < deposit.remaining_mU:
+                state.v07_last_extracted[mid] = ctx.tick
+
+    @staticmethod
+    def _brine_regions(state) -> frozenset:
+        """05 P106 (desalination_brine_v1): regions whose biomass regeneration is
+        cut 10% because a P106 line produced there in the last finished cycle: the
+        plant's own coastal region and the ocean regions adjacent to it."""
+        world = state.initial.map
+        hit = set()
+        for owner, rows in state.history.items():
+            if not rows:
+                continue
+            for lid, batch in rows[-1].line_batches.items():
+                line = state.initial.lines.get(lid)
+                if batch > 0 and line is not None and line.recipe.id == 'P106':
+                    region = world.hubs[line.hub].region
+                    hit.add(region)
+                    hit.update(r for r in world.regions[region].adjacent if world.regions[r].terrain == 'ocean')
+        return frozenset(hit)
+
+    @staticmethod
+    def _brine_hit(state, mid, regions) -> bool:
+        site = state.resource_sites.get(mid) or state.initial.mines.get(mid)
+        return site is not None and state.initial.map.hubs[site.hub].region in regions
+
+    @staticmethod
+    def _v07_restored(state, mid, ctx) -> bool:
+        last = state.v07_last_extracted.get(mid)
+        return last is not None and ctx.tick - last >= 120 * ctx.clock.cycle_ticks
+
+    def _material_events(self, owner: str, good: str, bucket: str) -> list:
+        """This tick's material events for (owner, good, source_bucket), in event order.
+
+        The event list only grows within a tick and is cleared by begin_tick, so
+        an index extended from the last scanned position equals a full scan.
+        """
+        book = self.inventory.materials
+        events = book.events
+        cache = getattr(self, '_event_index', None)
+        if cache is None or cache[0] != book.tick or cache[1] is not events or cache[2] > len(events):
+            cache = self._event_index = [book.tick, events, 0, defaultdict(list)]
+        index = cache[3]
+        for e in events[cache[2]:]:
+            index[e.owner, e.good, e.source_bucket].append(e)
+        cache[2] = len(events)
+        return index.get((owner, good, bucket), ())
+
     def _input_payment(self, entity: str, good: str, quantity_mU: Fraction) -> None:
         self.s.macro.input(self._owner(entity), self._hub(entity), good, quantity_mU)
         account = self.s.frame.input_locks.get(entity)
@@ -581,8 +664,8 @@ class Economy:
             return
         owner = account.owner
         bucket=('generator_credit:' if entity in self.s.initial.plants else 'input_credit:')+entity
-        events=tuple(e for e in self.inventory.materials.events if e.id not in self.s.frame.procurement_seen
-                     and e.owner==owner and e.good==good and e.source_bucket==bucket)
+        seen=self.s.frame.procurement_seen
+        events=tuple(e for e in self._material_events(owner,good,bucket) if e.id not in seen)
         if sum((e.quantity_mU for e in events),Q(0))!=quantity_mU:
             raise InvariantViolation('input payment does not match actual material draw')
         payment,recipients=prepare_purchase(self.s.payments,account,events,{good:self.s.price(good,self._hub(entity))},
@@ -650,6 +733,7 @@ class Economy:
             demands.update(state.utilities.power_demands())
             demands.update(state.storage.charge_demands())
             demands.update(state.battles.power_demands)
+            demands.update(state.climate.power_demands())
             for jid, job in state.work.jobs.items():
                 _, _, labor, power = job.due(state.work.whole)
                 demands[jid] = (job.hub, 3, power if sum(f.labor.get(jid, {}).values()) >= labor else 0)
@@ -670,6 +754,7 @@ class Economy:
         # Existing fractional fees are real obligations. Keep enough actual
         # currency behind them before admitting any new electricity purchase.
         user_requests, subsidy_requests, required_ru = {}, {}, defaultdict(int)
+        unpaid = state.payments.unpaid_by_source()  # residuals are not touched in this loop
         for entity, (_, band, demand) in demands.items():
             owner = self._owner(entity)
             limit = (state.storage.stores[entity.split(':', 1)[1]].quote_ru if entity.startswith('storage:') else
@@ -679,12 +764,12 @@ class Economy:
             f.power_contract_caps[entity] = state.power_price_caps[owner]
             user_source = state.operating_account(entity, 'RU')
             user_lock = CashAccount(owner, f'power:{entity}', 'RU')
-            need = ceil(demand * cap * state.rates[owner] + state.payments.unpaid_fraction(user_lock))
+            need = ceil(demand * cap * state.rates[owner] + unpaid.get(user_lock, Q(0)))
             user_requests[entity] = (user_source, need)
             required_ru[user_source] += need
             subsidy_source = CashAccount(owner, 'reserves', 'RU')
             subsidy_lock = CashAccount(owner, f'power_subsidy:{entity}', 'RU')
-            subsidy = ceil(demand * (limit_native - cap) * state.rates[owner] + state.payments.unpaid_fraction(subsidy_lock))
+            subsidy = ceil(demand * (limit_native - cap) * state.rates[owner] + unpaid.get(subsidy_lock, Q(0)))
             if subsidy:
                 subsidy_requests[entity] = (subsidy_source, subsidy)
                 required_ru[subsidy_source] += subsidy
@@ -705,13 +790,14 @@ class Economy:
         f.power_locks.update(self._reserve_cash(ctx, user_requests, 'power'))
         f.power_subsidy_locks.update(self._reserve_cash(ctx, subsidy_requests, 'power_subsidy'))
         loads = []
+        unpaid = state.payments.unpaid_by_source()  # refreshed after FX and reservations
         for entity, (hub, band, demand) in demands.items():
             if not demand:
                 continue
             owner = self._owner(entity)
-            user = max(Q(0), initial.cash.balance(f.power_locks[entity]).native_mU - state.payments.unpaid_fraction(f.power_locks[entity]))
+            user = max(Q(0), initial.cash.balance(f.power_locks[entity]).native_mU - unpaid.get(f.power_locks[entity], Q(0)))
             subsidy_lock = f.power_subsidy_locks.get(entity)
-            subsidy = max(Q(0), initial.cash.balance(subsidy_lock).native_mU - state.payments.unpaid_fraction(subsidy_lock)) if subsidy_lock else Q(0)
+            subsidy = max(Q(0), initial.cash.balance(subsidy_lock).native_mU - unpaid.get(subsidy_lock, Q(0))) if subsidy_lock else Q(0)
             rank = state.power_priorities[owner].index(f'B{band}') + 1 if 1 <= band <= 4 else band
             limit = (state.storage.stores[entity.split(':', 1)[1]].quote_ru if entity.startswith('storage:') else
                      state.compute.bid_ru(entity) if entity in state.compute.frame_centers else 50 * state.rates[owner])
@@ -754,7 +840,8 @@ class Economy:
             if not line.recipe.inputs:
                 supply_ratio = plant.spec.maximum
             debt = max(initial.assets[lid].maintenance_debt, initial.assets[lid.rsplit('/line', 1)[0]].maintenance_debt)
-            power_operations.calendar(plant, debt, ctx, outage_multiplier=state.ai_deployment.grid_multiplier(line.owner,line.hub))
+            power_operations.calendar(plant, debt, ctx, outage_multiplier=state.ai_deployment.grid_multiplier(line.owner,line.hub)
+                                     * state.battles.war_zone_outage(line.owner, line.hub, ctx.cycle))
             scram_paid = False
             if plant.mode == PlantMode.SCRAM and plant.timer <= 1:
                 parts = {'precision_parts': 2000, 'pure_chemicals': 1000}
@@ -949,6 +1036,8 @@ class Economy:
             demand = f.power_demands.get(lid, 0)
             power_ratio = min(Q(1), Q(f.power_received.get(lid, 0), demand)) if demand else Q(1)
             maximum = floor(maximum * power_ratio)
+            if power_ratio < 1:
+                industry_effects.scrap_molecular_on_outage(state, self.production, line)
             cash = initial.cash.balance(f.input_locks[lid]).native_mU
             caps[lid] = max_feasible(maximum, lambda x, line=line, cash=cash:
                 sum(self._input_quote(line.id,g,Q(a*x,1000),f.input_locks[line.id]) for g,a in line.recipe.inputs.items()) <= cash)
@@ -990,6 +1079,8 @@ class Economy:
                     state.water_used_mU[mine.hub] += amount
                 metric = state.cycles[mine.owner]
                 metric.extracted[mine.good] = metric.extracted.get(mine.good, 0) + amount
+                if state.national_power is not None:
+                    state.national_power.record_extraction(mine.hub, mine.good, amount)
                 state.macro.output(mine.owner, mine.hub, result.released_mU)
                 table = state.catalog.runtime['extraction'][mine.good]
                 labor_needed = ceil(units(table['labor']) * (Q(5, 4) if mine.level == 'G2' else 1) *
@@ -1002,6 +1093,8 @@ class Economy:
             line = self._line(result.line_id)
             state.industry_activity.production(line,result)
             state.ai.production(line, result)
+            if state.active_scale is not None:
+                state.active_scale.production(line, result)
             metric = state.cycles[line.owner]
             metric.line_batches[line.id] = metric.line_batches.get(line.id, 0) + result.batch_mU
             state.macro.output(line.owner, line.hub, result.released_mU)
@@ -1011,6 +1104,8 @@ class Economy:
             self._worked(line.id, labor_needed, ctx)
             power_used=ceil(required_power*Q(result.batch_mU,1000)*(mode['power_factor'] if mode else 1))
             state.industry_activity.use_power(line.id,min(f.power_received.get(line.id,0),power_used))
+            if state.national_power is not None and result.batch_mU:
+                state.national_power.record_line_power(line, min(f.power_received.get(line.id, 0), power_used), power_used)
             if result.batch_mU and industry_effects.ccs_running(state,line.id):
                 state.industry_activity.use_power('ccs:'+line.id,min(150,f.power_received.get('ccs:'+line.id,0)))
             for good, quantity in result.consumed_nmU.items():
@@ -1167,6 +1262,11 @@ class Economy:
                 'military_control': state.military_governance.visible(owner),
                 'shared_intelligence': state.intelligence_sharing.visible(owner,tick),
                 'formations': state.formations.visible(owner),
+                **state.blockades.observation(owner),
+                **({'fx_shorts': state.fx_shorts.visible(owner)} if state.fx_shorts.visible(owner) else {}),
+                **({'forwards': state.forwards.visible(owner)} if not state.forwards.empty() else {}),
+                **({'hypersonic': state.hypersonics.visible(owner)} if not state.hypersonics.empty() else {}),
+                **({'cyber': state.cyber.visible(owner)} if state.cyber.recent.get(owner) else {}),
                 'diplomacy': state.relations.visible(owner),
                 'export_controls': state.export_controls.visible(),
                 'contracts': state.contracts.visible(owner),
@@ -1215,7 +1315,8 @@ class Economy:
 
     def recognize_consumption(self, state: OperatingWorld, ctx: TickContext) -> None:
         state.consumption.advance(ctx.tick, ctx.cycle, tuple(self.inventory.materials.events),
-            weights=state.catalog.weights, shortest=state.initial_paths.distance,services=state.ai_services.scoring_events())
+            weights=state.catalog.weights, shortest=state.initial_paths.distance,services=state.ai_services.scoring_events(),
+            path_regions=state.path_regions)
         for event in state.asset_lifecycle.events:
             if event.owner in state.cycles:
                 # A cycle-end settlement has already archived its metric row.
@@ -1226,10 +1327,29 @@ class Economy:
 def opening_economy(catalog, initial, *, total_ticks: int = 150, debug: bool = True,
                     commerce: bool = False) -> Kernel:
     if total_ticks > 150:
-        raise InfrastructureFault('opening_economy_v1 covers at most 150 ticks; full-match assembly is not implemented')
-    state = OperatingWorld(catalog, initial)
+        raise InfrastructureFault('opening_economy_v1 covers at most 150 ticks; use full_match for a complete game')
+    return _assemble(catalog, initial, total_ticks=total_ticks, debug=debug, commerce=commerce, scoring=False)
+
+
+def full_match(catalog, initial, *, total_ticks: int = 28_800, debug: bool = False,
+               commerce: bool = True, resume_state=None) -> Kernel:
+    """P0-1: the complete game (28,800 ticks by default) with P0-2 national power.
+
+    Same systems as the opening; adds the per-cycle five-pillar collector as the
+    final SETTLEMENT system. `finalize_match` turns the finished kernel into V.
+    `resume_state` (checkpoint.py) reuses a saved state instead of a new one.
+    """
+    return _assemble(catalog, initial, total_ticks=total_ticks, debug=debug, commerce=commerce, scoring=True,
+                     resume_state=resume_state)
+
+
+def _assemble(catalog, initial, *, total_ticks: int, debug: bool, commerce: bool, scoring: bool,
+              resume_state=None) -> Kernel:
+    from .research_continuity import settle_research_continuity
+    state = OperatingWorld(catalog, initial) if resume_state is None else resume_state
     economy = Economy(state)
-    economy.initialize_yields()
+    if resume_state is None:
+        economy.initialize_yields()
     from .commands import EngineCommands
     commands = EngineCommands(state)
     def process_commands(state, ctx):
@@ -1260,7 +1380,10 @@ def opening_economy(catalog, initial, *, total_ticks: int = 150, debug: bool = T
                System('stock_cycle', Phase.COMMANDS, lambda state, ctx: state.stock_market.begin_tick(ctx), after=('industry_activity_clock','ai_deployment_clock')),
                System('reserve_sovereign', Phase.COMMANDS, lambda state, ctx: state.debt_funding.reserve(ctx), after=('sovereign_cycle','monetary_policy','ai_deployment_clock','domestic_policy')),
                System('reserve', Phase.COMMANDS, economy.reserve, after=('city_reservations', 'maintenance_timers', 'asset_tick', 'domestic_policy', 'storage_policy', 'monetary_policy', 'recruitment_ready','ai_services_clock','reserve_sovereign','industry_activity_clock')),
-               System('commands', Phase.COMMANDS, process_commands, after=('reserve', 'relation_expiry', 'vision_window', 'deception_expiry', 'orbital_expiry', 'contract_expiry', 'orbital_observation_window','stock_cycle')),
+               System('commands', Phase.COMMANDS, process_commands, after=('reserve', 'fx_short_cycle', 'forward_cycle', 'relation_expiry', 'vision_window', 'deception_expiry', 'orbital_expiry', 'contract_expiry', 'orbital_observation_window','stock_cycle')),
+               System('fx_short_cycle', Phase.COMMANDS, lambda state, ctx: state.fx_shorts.begin_tick(ctx), after=('material_tick',)),
+               System('forward_cycle', Phase.COMMANDS, lambda state, ctx: state.forwards.begin_tick(ctx), after=('material_tick',)),
+               System('fx_short_settle', Phase.COMMANDS, lambda state, ctx: state.fx_shorts.after_commands(ctx), after=('commands',)),
                System('contract_payments', Phase.COMMANDS, lambda state, ctx: state.contracts.settle(ctx), after=('commands',)),
                System('ai_license_payments', Phase.COMMANDS, lambda state, ctx: state.ai_licenses.settle(ctx), after=('contract_payments',)),
                System('authority_registration', Phase.COMMANDS, lambda state, ctx: state.authority.sync_assets(state.initial.assets), after=('ai_license_payments',)),
@@ -1283,6 +1406,7 @@ def opening_economy(catalog, initial, *, total_ticks: int = 150, debug: bool = T
                System('passengers', Phase.ENVIRONMENT_LOGISTICS, lambda state, ctx: state.passengers.advance(ctx), after=('cargo',)),
                System('life_replenishment', Phase.ENVIRONMENT_LOGISTICS, economy.replenish_life, after=('intermodal','passengers')),
                System('power', Phase.POWER, economy.power),
+               System('climate_power', Phase.POWER, lambda state, ctx: state.climate.meter_power(ctx), after=('power',)),
                System('electric_cargo', Phase.POWER, lambda state, ctx: state.cargo.advance_electric(ctx), after=('power',)),
                System('water_canals', Phase.POWER, lambda state, ctx: state.utilities.advance(ctx), after=('power',)),
                System('asat', Phase.COMBAT, lambda state, ctx: state.asat.advance(ctx)),
@@ -1290,6 +1414,9 @@ def opening_economy(catalog, initial, *, total_ticks: int = 150, debug: bool = T
                System('corridor_policy_events', Phase.COMBAT, lambda state, ctx: state.cargo.record_policy_events(ctx)),
                System('battle', Phase.COMBAT, lambda state, ctx: state.battles.advance(ctx)),
                System('military_control', Phase.COMBAT, lambda state, ctx: state.military_governance.advance(ctx), after=('battle',)),
+               System('blockade', Phase.COMBAT, lambda state, ctx: state.blockades.advance(ctx), after=('battle',)),
+               System('hypersonic', Phase.COMBAT, lambda state, ctx: state.hypersonics.advance(ctx), after=('battle',)),
+               System('cyber', Phase.COMBAT, lambda state, ctx: state.cyber.advance(ctx), after=('battle',)),
                System('bond_primary', Phase.MARKETS, lambda state, ctx: state.sovereign_finance.clear_primary(ctx)),
                System('ai_service_market', Phase.MARKETS, lambda state, ctx: state.ai_services.clear(ctx)),
                System('bond_secondary', Phase.MARKETS, lambda state, ctx: state.bond_market.clear(ctx), after=('bond_primary',)),
@@ -1309,6 +1436,7 @@ def opening_economy(catalog, initial, *, total_ticks: int = 150, debug: bool = T
                System('military_refits', Phase.PRODUCTION, lambda state, ctx: state.refits.advance(ctx), after=('unit_repairs',)),
                System('academy_training', Phase.PRODUCTION, lambda state, ctx: state.governance.advance_training(ctx), after=('maintenance',)),
                System('settlement', Phase.SETTLEMENT, economy.settle),
+               System('research_continuity', Phase.SETTLEMENT, settle_research_continuity, after=('settlement',)),
                System('city_settlement', Phase.SETTLEMENT, lambda state, ctx: state.city_economy.settle(ctx), after=('settlement',)),
                System('defense_obligations', Phase.SETTLEMENT, lambda state, ctx: state.contracts.defense_advance(ctx), after=('city_settlement',)),
                System('corporate_tax', Phase.SETTLEMENT, lambda state, ctx: state.corporate_finance.taxes(ctx), after=('settlement',)),
@@ -1339,5 +1467,17 @@ def opening_economy(catalog, initial, *, total_ticks: int = 150, debug: bool = T
                System('shared_intelligence', Phase.OBSERVATION, lambda state, ctx: state.intelligence_sharing.advance(ctx), after=('military_vision',)),
                System('city_views', Phase.OBSERVATION, lambda state, ctx: state.city_economy.publish(), after=('knowledge_boundary',)),
                System('observation', Phase.OBSERVATION, economy.observe, after=('shared_intelligence','city_views', 'weather_forecasts', 'contract_views','orbital_observation','ai_license_views')))
+    if scoring:
+        from .national_power import NationalPower
+        from .active_scale import ActiveScale
+        if resume_state is None:
+            state.national_power = NationalPower(state)
+            state.active_scale = ActiveScale(state)
+        settlement = tuple(s.id for s in systems if s.phase == Phase.SETTLEMENT)
+        systems += (System('active_scale_clock', Phase.COMMANDS, lambda state, ctx: state.active_scale.begin_tick(ctx)),
+                    System('active_scale', Phase.SETTLEMENT, lambda state, ctx: state.active_scale.advance(ctx),
+                           after=settlement),
+                    System('national_power', Phase.SETTLEMENT, lambda state, ctx: state.national_power.advance(ctx),
+                           after=(*settlement, 'active_scale')))
     return Kernel(initial.map.seed, state, systems, clock=ClockConfig(total_ticks=total_ticks),
                   debug=debug, fingerprint_each_tick=debug)

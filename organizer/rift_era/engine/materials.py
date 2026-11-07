@@ -66,6 +66,8 @@ def split_origins(quantity: Fraction, weights: dict[Origin, Fraction], *,
         return {next(iter(weights)): quantity}
     assigned = {o: Q(floor(quantity * q * 1000 / total), 1000) for o, q in weights.items()}
     remaining = quantity - sum(assigned.values(), Q(0))
+    if not remaining:
+        return {o: q for o, q in assigned.items() if q}
     for origin in sorted(weights, key=lambda o: digest(*key, fingerprint(o))):
         if not remaining:
             break
@@ -185,12 +187,13 @@ class MaterialBook:
                 del values['retitle']
             return fingerprint(values)
 
-        for transfer in sorted(transfers, key=lambda t: digest(self.seed, 'origin_delivery', self.tick, delivery_key(t))):
+        keys = {id(t): delivery_key(t) for t in transfers}
+        for transfer in sorted(transfers, key=lambda t: digest(self.seed, 'origin_delivery', self.tick, keys[id(t)])):
             if transfer.source == transfer.destination or not transfer.quantity:
                 continue
             source = transfer.source, transfer.origin_nation
             selected = split_origins(Q(transfer.quantity), drawn[source], capped=True,
-                key=(self.seed, 'origin_delivery_parts', self.tick, delivery_key(transfer)))
+                key=(self.seed, 'origin_delivery_parts', self.tick, keys[id(transfer)]))
             pieces = defaultdict(Fraction)
             for origin, q in selected.items():
                 pieces[origin.travel(transfer.legs)] += q
@@ -394,8 +397,17 @@ class MaterialPlan:
                 self.book._pools[account] = dict(pool)
             else:
                 self.book._pools.pop(account, None)
-        self.book._virtual.update(self.virtual)
-        self.book._virtual.intersection_update(self.book._pools)
+        # Same result as `_virtual = (_virtual | virtual) & _pools`, given the
+        # invariant _virtual <= _pools left by every commit: only accounts this
+        # plan touched can enter or leave either set.
+        live = self.book._virtual
+        pools = self.book._pools
+        for account in self.virtual:
+            if account in pools:
+                live.add(account)
+        for account in self.pools:
+            if account not in pools:
+                live.discard(account)
         for good, quantity in self.sources.items():
             self.book._sources[good] += quantity
         for good, quantity in self.sinks.items():

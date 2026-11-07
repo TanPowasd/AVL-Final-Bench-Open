@@ -11,7 +11,9 @@ from .determinism import engine_source_fingerprint, runtime_fingerprint, fingerp
 from .economy import opening_economy
 from .initialization import initialize
 from .ledger import Account
-from .world import generate_candidate
+from .errors import InfrastructureFault, InvariantViolation
+from .world import BootstrapResult, generate_candidate
+from . import world_atlas
 
 
 @dataclass(frozen=True)
@@ -31,10 +33,13 @@ class OpeningReport:
     wall_seconds: float
 
 
-def run_opening(seed: int, *, debug: bool = True) -> OpeningReport:
+def run_opening(seed: int, *, debug: bool = True, world=None) -> OpeningReport:
+    """150-tick opening on `world` (default: legacy candidate for `seed`)."""
     start = time.monotonic()
     catalog = Catalog()
-    engine = opening_economy(catalog, initialize(catalog, generate_candidate(seed)), debug=debug)
+    if world is None:
+        world = generate_candidate(seed)
+    engine = opening_economy(catalog, initialize(catalog, world), debug=debug)
     failures = set()
     minimum_food = {p: engine.state.initial.inventory.balance(Account(p, f'{p}-h0', 'available', 'food'))
                     for p in engine.state.initial.known}
@@ -70,3 +75,17 @@ def run_opening(seed: int, *, debug: bool = True) -> OpeningReport:
     return OpeningReport('opening_economy_v1', seed, 150, not failures, False, tuple(sorted(failures)),
                          countries, catalog.fingerprint, engine_source_fingerprint(), state.endowment_hash,
                          fingerprint(state.snapshot()), runtime_fingerprint(), time.monotonic() - start)
+
+
+def atlas_bootstrap(world, *, debug: bool = False) -> BootstrapResult:
+    """The world_atlas acceptance gate: a real 150-tick opening, no rescue."""
+    try:
+        report = run_opening(world.seed, debug=debug, world=world)
+    except (InfrastructureFault, InvariantViolation) as exc:  # rejects this candidate
+        return BootstrapResult(False, 0, (f'{type(exc).__name__}: {exc}',))
+    return BootstrapResult(report.passed_core_checks, report.ticks, report.failures)
+
+
+def accepted_atlas_world(seed: int, *, debug: bool = False):
+    """First world_atlas_v1 candidate for `seed` whose real opening passes."""
+    return world_atlas.generate_world(seed, lambda world: atlas_bootstrap(world, debug=debug))

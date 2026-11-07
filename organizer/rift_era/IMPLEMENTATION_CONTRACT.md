@@ -292,3 +292,269 @@ P8 发布缓存后读取不重新探测；测控失联时只报告失联，不�
 - **占领重置。** `advance_control` 改变控制国时，该分区所有国家枢纽人口的支持度设为权威行的 280/550 mU，`red_streak` 清零。
 - **bombard（03）。** 本 tick 有实际射击、射手姿态为 `bombard` 时，目标单位所在分区的支持度（权威行、该区国家枢纽人口和城邦人口）直接 `−300 mU`，不进 `clip(−45,+25)`，每区每周期一次；射手所属国信用 `−0.05`（下限 0.10），每国每周期一次。目标是诱饵时按诱饵所在分区计。
 - **观测一致。** 每周期结算后，权威行 `support_mU` 写为该分区国家枢纽人口的加权平均，`controlled_regions` 看到的就是实际值。
+
+
+## research_backup_v1（2026-11-05）
+
+- `research/set_backup_hub {primary_hub, backup_hub}`：需 R08；两个枢纽都由本国控制且不同；主枢纽有本国实验室；备份枢纽有在线的 `research_backup` 公共系统（R08，`computing_equipment×1 + communication_equipment×1`，按 `install_system` 建造）。
+- 实验室"损毁或沦陷"按每周期末判定一次：实验室线不存在、资产健康为 0，或其枢纽不再由线的所有者控制。
+- 无有效备份：该焦点项目未结理论点保留 30%（损失 70%），验证进度清零。有效备份（备份枢纽仍受控且系统在线）：理论点保留 90%，验证进度保留 75%。
+- 结算后清除该实验室的焦点与保密档位，验证作业停止；同一次损失只结算一次。玩家需在备份城重新 `set_focus`/`validate_project` 继续（"无缝切换"按保留进度实现，不自动迁移实验室线）。
+- 设定口径：理论已完成的项目不再扣理论点。
+
+
+## contract_termination_v1（2026-11-05）
+
+- 合同 ID 对双方公开（观测里各条约带 `contract_id`）：`defense:a:b:start`、`intel:a:b:start`、`embargo:a:b:start:target`、`transit:grantor:grantee:start:corridors`、周期互换用其提案 ID、许可为 `license:licensee:tech`（双方都看得到，授权方在 `licenses_granted`）。
+- 可终止：1 周期互换（状态改 TERMINATED，本 tick 正在交割时拒绝）、3 过境权、5 许可（只删记录，已获得的理论减免不追回）、7 防务、8 情报共享、9 联合禁运。立即生效。
+- 不可终止（返回 ERR_NO_PERMISSION）：2 主权贷款（按 02 还款或违约结束）、4 合资（用 `leave_joint_venture`）、6 停战/DMZ（结束停战即 `declare_war`，已有 −.35）。
+- 归责：防务 −.25（同"拒防务"），其余 −.15（同"普通断供"），每份合同只扣一次，信用夹在 [.1, 1]。
+- 免责谓词（引擎原本没有合同自带的免责条款，本口径据 03 §5 设定，需作者确认）：条约已到期；互换处于 SUSPENDED 且对方在 `blocked_by`（对方先违约）；与对方处于 WAR 且终止方不是该战争的侵略方。
+
+
+## conditional_plan_v1（2026-11-05）
+
+- 注册：需 C10；`hub_id` 由本国控制，且有本国未损毁的产线装了 `ai_core` 附件；每国最多 32 条；`cooldown_ticks` ≥ 决策窗口长度（5）；`action` 是不带 `id` 的普通命令体，不能是 `conditional_plan` 或 `cancel_by_id`。注册是持久命令，可用 `cancel/cancel_by_id` 撤销。
+- 判定：每个决策窗口第一个 tick 的 P1、在所有席位命令之前，读上一窗口结束时的状态；按（国家，命令 ID）顺序。主机枢纽失控、ai_core 线损毁或被 S03/S08 冻结时跳过，不补追。
+- 指标：`market_price` = 该枢纽 `spot:<hub>:<ref_id>` 场所价格（mU，尚无场所则不触发）；`grid_price` = 该枢纽最近电价 ×1000（RU mU）；`hub_stock` = 本国在该枢纽 `available` 的 `ref_id` 库存（mU）。
+- 执行：走普通命令校验与提交；被拒绝也算本窗口一次执行（记录 `last_result`），冷却从这次算起。生成命令的 ID 为 `10^30 × 执行序号 + 计划 ID`，不与席位 ID 冲突。
+- 观测：计划列表在 `governance.conditional_plans`。
+
+
+## climate_v1（2026-11-05）
+
+- `governance/climate_intervention {target_region, mode}`：需 V08；从下一周期起持续 60 周期；同一国家上一轮结束后 120 周期才能再发（运行中或冷却中返回 ERR_CAPACITY_EXCEEDED）。
+- 投入：每周期初从首都 `available` 扣 `remediation_agent` 2 单位；电力为首都 B3 负荷 `climate:<国家>`，上一周期实收 ≥10 单位才算供足。任一项不足，该周期不生效、不补时间。
+- 效果：目标区降水与风/光系数 ±15%，下风向 3 区反向 ∓15%；多国叠加每区截断在 [−25%, +25%]。降水乘到自然来水和作物降水因子；风/光乘到实际天气，天气 AR(1) 状态保留原值。
+- 地图没有 `wind_dir`，本口径按自西向东（同行、列 +1..+3）取下风向，需作者确认。
+- `diplomacy/grant_climate_consent {target_nation, region_ids, duration_cycles}`：只能授权本国控制的区域；持久命令，`cancel_by_id` 撤销后从下一周期起失效。
+- 受影响区域（目标 + 下风向）中有他国控制且无有效授权的区域即为敌对干预：首个生效周期扣发起国信用 .10（每轮一次），投入记 ACTION_LOSS 并计入 07 行动损耗；否则投入记为环保实投（REMEDIATION）。
+
+
+## blockade_v1（2026-11-05）
+
+- `military/blockade {formation_id, edge_id, target_nations[1..8]}`：持久计划，每编队一条边（同编队新单替换旧单，`cancel_by_id` 结束）。陆军须在 road/rail 边端点枢纽；Sea-Surface/Sea-Sub 须在 sea/river 边端点枢纽；Air 不能封锁。下单时所有目标须为 WAR，之后不再交战的目标自动跳过。
+- P4（战斗之后）判定：编队在端点、本 tick 未射击未移动（共享行动预算）、未改装，且每个单位本 tick 实际取得完整 `combat_tick` 补给（先编队随行库存，后所在枢纽库存）才有效。补给按 ACTION_LOSS 消耗，每编队每 tick 一次行动损耗事件。身处端点即视为对该边有观测（q_edge ≥ .2）。
+- A = 有效封锁编队的火力（陆路取 `ground`、水路取 `sea` 通道，乘 HP 比例与乘员比例），同阵营先合火力；D = 目标国及与封锁方交战国、执行 `escort` 任务且位于该边端点的编队火力。b = `blockade_fraction(A, D)`。
+- 结果在 P4 末写入 `corridor.blocked[target]`，作用于下一 tick 的 P2/P3 入边容量；没有有效封锁的边 B=0。中立国不受影响。
+- 07 的 Blockade_r：受害国在某区的值 = 该区所有入边（端点在该区）按完好额定容量加权的 B 均值；已接入国力的 Qsec。
+- ACL 拒入标志（2026-11-06）：07 的 Blockade_r 中每条入边取 B = max(拒入标志, b)。拒入标志仅指经营方显式设为 access_tier 0 的行；对该国没有任何通行安排的边不算拒入（与 03 §7.1 「自然不可达边不算玩家行动」一致）。通行容量方面，ACL 仍由 `access_tier` 单独限制，效果相同。
+- 截击 `military/interdict {formation_id, shipment_track_id}`：可见轨迹 = 本国编队位于该运输当前枢纽或其所在边的端点（视为 q ≥ .2）；轨迹 ID 为 `track:` + 哈希，不暴露运输 ID，列在观测 `blockades.shipment_tracks`。下单时货主与承运人都须为 WAR。在本 tick P4（战斗之后、封锁判定之前）结算：编队本 tick 已射击则无剩余预算；须取得完整 `combat_tick` 补给（ACTION_LOSS）；用掉后该编队本 tick 不再计入封锁。d = min(.25, A/(100+E))，E 为货主、承运人或与截击方交战国在该处执行 escort 的火力。可分货物损失 floor(q·d)（DESTRUCTION，按目录值记入货主损毁损失）；不可分货物不减量；运具 health −floor(d·1000)，归零则运输 STRANDED。残骸仓（2026-11-06）：运具 health 归零时，剩余货物转入原货主在 `shipment.current_hub`（当前边的出发端点）的 `outdoor` 露天堆场，按现有规则随仓容逐步转入仓库，并按露天存放衰减；攻击方得不到货物。残骸运具保持 STRANDED 并继续占用，`refuel` 不能让 health 为 0 的运具复驶。观测报告增加 `debris_mU` 与 `debris_hub`。端点取出发端而不是前方端点，需作者确认。结果在观测 `blockades.interdictions`。
+
+
+## fx_short_v1（2026-11-05）
+
+- `finance/fx_short {currency, amount_mU}`：需 F03；币种为任一国家货币（不能是 RU）。从世界池 `world/pool/<q>` 真实借出 q 币，并在本 tick 的 FX 批次卖成 RU（两腿真实交易，未成交部分退回借款人 `reserves/<q>`）。同时从 RU 储备锁 50% 抵押（amount×e_q/2）到 `fx_short_collateral:<q>`。全部未平 q 空头合计不超过本周期初该池 q 余额的 25%，超出返回 ERR_CAPACITY_EXCEEDED。
+- ShortDebt[p,q]：每周期初按 max(0, i_q+2)/10000 计息（i_q 为发行国政策利率，单位 %），以 q 资本化；RU 账面按计息当周期汇率增加。计入国力 NFA 的负债项。
+- `finance/fx_cover {currency, amount_mU}`：用 RU 储备在本 tick FX 批次买入至多 amount 的 q；批次之后把实际买到的 q 还给世界池，按比例注销债务与账面、释放同比例抵押；多买的 q 与未用 RU 退回储备。只注销负债不还币的做法不存在。
+- 未做：抵押率逐期盯市与强平（02 只写了初始 50%，作者如需维持保证金规则请补）。
+
+
+## forward_v1（2026-11-05）
+
+- 签约：提议方发 `forward_contract`，可选字段 `side`（默认 "buy"，或 "sell"）表示提议方方向（06 没有方向字段，需作者确认）。对方在交割周期前发送条款相同、方向相反、counterparty 为提议方的同名命令即签署。双方都需 F03；交割周期须为提议当周期 +10/+20/+50；签署时双方各从 RU 储备锁名义价值（strike×qty）20% 到 `forward_margin:<id>`。提议方可 `cancel_by_id` 撤回未签提议。
+- 盯市：交割前每周期初所需保证金 = 20%×qty×spot，spot 为交割枢纽现货参考价折 RU（从未成交则 10×w_cat）。不足从储备补；补后仍低于 10% 即终止，该方实际保证金付给对方（不重复没收），扣信用 .15。交割前不支付盈亏。
+- 交割（交割周期初）：卖方交付 min(qty, 交割枢纽可用库存)，买方按 strike 支付其能负担的部分（先保证金后储备），货款同一笔 DVP。各方短缺按 1.2×spot×短缺量罚给对方，先保证金后储备，余额记为对对方的应付款。剩余保证金退回储备。
+
+
+## secondary_offering_v1（2026-11-05）
+
+- `finance/secondary_offering {company, qty, min_price_mU, target_facilities}`：需 F01，只能由发行国对已完成 IPO 的本国公司发起；每 100 周期累计 ≤100,000 股；外部持股（已发行外部批次 + 尚在挂单的发行单 + 本单）≤490,000 股；总股本保持 1,000,000（从未发行国有股卖出，与 IPO 同一发行通道）。
+- 目标设施须为本国、与公司同一行业（`SECTOR`）的现有设施。
+- 募资进入 `capex_escrow:<company>`（发行国本币），不回国库。以目标设施为对象的工程（工单 target 或 payload.facility 为目标设施）在开工时若专户有余额即绑定该专户：该工单的现金、材料采购与退款都走专户，其余工程照常走国库。
+- 未做：专户余额不足时的部分付款拆分（当前绑定后欠款按工程通常的等待/欠付处理）。
+
+
+## hypersonic_v1（2026-11-06）
+
+- `military/hypersonic_strike {origin_hub, target_id, missile_qty 1..20}`：需 N10；发射枢纽由本国控制且有足量 `hypersonic_missile`；目标为他国设施 ID 或走廊 ID，其所在区距发射区 ≤8 跳，且本国对目标枢纽格的静态观测 q ≥ .5（用传感器对一个不发射的地面信号计算）；须与目标所有者（走廊为运营方）处于 WAR。
+- P1 锁弹，本 tick P4 发射并按 ACTION_LOSS 消耗，下一 tick P4 抵达。
+- 拦截只用 G11：目标区内防守方或其交战盟友的存活 `energy_weapon` 单位，每单位每周期至多拦一枚，命中率 .6。03 规定的 5 电 B0 预约未建模（需作者确认）。
+- 未被拦截的每枚：S1–S3 设施按种子哈希顺序毁掉一条存活产线（经资产生命周期按剩余健康全额扣，账面损失记入所有者损毁）；更高外壳或走廊损 25% 最大耐久。结果在观测 `hypersonic`。
+
+
+## cyber_v1（2026-11-06）
+
+- 命令：`intelligence/cyber_op {target_nation, target_hub, op_kind}`（S03_infiltrate、S03_steal_tech、S08_paralyze）与 `intelligence/steal_model {target_nation, target_hub}`。目标枢纽须由目标国控制。P1 扣材料（ACTION_LOSS），P4 用种子抽签结算。
+- S03 系列：需 S03；材料 cyber_suite×1 + computing_equipment×1（基础行动替代），取自本国首都可用库存；"10 有效网络算力 / 10 B4 电"未计量（需作者确认）。同一发起国对同一目标枢纽冷却 10 周期。成功率 clip(.6+.08·(L攻−L守)−.4·I[S04], .05, .9)，L 取已知 S01–S08 最高阶（AI 网络强度暂未计入）；I[S04] 为目标在该枢纽有在线反情报系统。归因率 .25（有 S04 时 .65），归因扣信用 .05（E85），并告知目标国。
+- 成功效果：渗透——该枢纽技术为 C06/C10/E07/L07/L11 的公共系统与 C10 条件计划冻结 ceil(5p) 个窗口（重复只刷新不叠加）；若目标是对方首都，还暂停对方下一次证券竞价一次（C33），每目标 40 周期至多一次。窃密——对目标在该枢纽研究中、非 classified、阶最高的一项科技，给发起国一次性理论成本 −20%（新建项目，或给已在研项目重算目标）。窃模——目标在该枢纽须有数据中心；复制目标最优模型，gamma .7（模型槽 <16 时）。
+- S08 瘫痪：需 S08；cyber_suite×2 + ew_module×1 + computing_equipment×2；每发起国 40 周期一次；必归因：信用 −.1，对城邦记 coercion 事件（+.15 持续 20 周期），目标枢纽条件计划冻结 5 tick。
+
+
+## couplings_v1（2026-11-06）
+
+- C24：采掘公司（sector mining）公允价 × max(.3, min(1, L/200)^.5)，L = 本国非再生在采矿床剩余储量 / 近 20 周期平均非水、非生物质采出（周期）；无采出时系数 1。
+- C25：机组停运率乘 (1 + 2(1 − Qsec))，只在本周期有实际交火或对该国有效封锁的区域生效；此处 Qsec = max(0, 1 − .4·Combat − .3·Blockade)（污染项不计入战区乘数）。Combat 为该区本周期实际交火 tick 数 /10（由战斗系统逐 tick 计数，同时供国力 Qsec 使用）。上限 ×3。
+- C19：编队在通信网内（所在枢纽与 cyber 算力来源属同一 C02 通信分量）、本国有 AI09 且未被 AI 事故停用时，其 ground_drone/air_drone/swarm 有效火力 ×(1 + min(.15, .004·Cap·min(1, a_cyber/10)))，Cap 与 a_cyber 读上一周期部署（`previous_strength(..., 'cyber', 10000)`）。只作用于当 tick 的纯战斗计算副本，不改单位存档的 tech_multiplier。
+- C18：观测方有 AI09、未被停用、并有在线 C08 `fusion_sensor` 系统时，多源（≥2 类传感器）目击的估计误差宽度再乘 (1 − min(.2, .005·Cap·s_c))，Cap·s_c 取其各融合枢纽 `previous_strength(..., 'cyber', 10000)` 最大值。C08 自身的基础收窄在规则中没有量化，未实现。
+- C16：已存在于 `StockMarket._npc_policy`（阈值 max(2%, 5% − Cap/1000)，动量池 × (1 − min(.5, Cap/70))）。
+- C15 线损（2026-11-06 补）：已建高压线路（`utility_network`，E02 起）的线损率乘以 AI06 电网调度系数 `grid_multiplier`，与停运项同一个 (1−min(.3,.01·Cap·s))；一条线取两端 Hub 中系数较小（减损较多）的一端，需作者确认。
+- C28：阻塞。现有高压线路要求两端和全部陆地格都由本国控制，没有跨境线路；03 类型 1 的跨境电力子项也未实现。
+
+
+## import_parity_v1（2026-11-06）
+
+- 净进口按市场成交现金流记录：每笔跨主体成交，买方国家该物品 +成交额（RU），卖方国家 −成交额；只统计已完成的最近 5 个周期，本周期成交不影响本 tick 已冻结的报价。
+- 对净进口国 p 的任一枢纽，`price(g, hub)` 取 max(本地报价, p_g^RU / e_p × (1+本地场所关税) × 1.002)；p_g^RU 取该枢纽 RU 出口场所价，没有则取 10×w_cat。芯片、加速器等（C07）同样适用。该价进入所有调用 `price` 的环节（调度边际成本、VA、CPI、投入成本）。
+- 数据中心扩建成本：只有经 `price` 计价采购的材料会随汇率变化；未单独核对扩建路径。
+
+
+## tech_effects_v1（2026-11-06）
+
+- A07：已知 A07、P029/P030 产线装 `sensor` 附件，且本国有在线 C08 `fusion_sensor` 系统（"C08 遥测覆盖"按此读取，需作者确认）时，水与化肥投入 ×0.75；天气因子 <1 时 +.15（上限 1）。
+- I12：已知 I12、产线装 `ai_core`、所在设施为 S5 时，P013/P016/P087 全部投入 ×0.7，且不吃 6% 次品折减。断电报废（2026-11-06 补）：该类产线某 tick 收到的电力少于需求（任何不足都算"断电"，需作者确认是否只算全停）时，其输入余量与未释放在制品全部按 DESTRUCTION 报废。
+- G07：已知 G07 时，同一国家在同一区域、装有电台或传感器（slot_a 为 radio/sensor）的编队若覆盖 ≥2 个兵种域，其单位伤害 ×1.2（当 tick 战斗计算副本，不改存档）。"共享最高追踪精度 0.92×max(q)"无需另做：引擎里编队的目标精度本来就取本国全部传感器的最高值（`sensors.quality(owner, …)` 按国家计算），比规则更宽松——没有 G07 的编队也已共享全国最高精度。这一处与规则不一致，是否改成按编队计算需作者决定（改动会影响所有战斗结果）。
+- G12（03）：在 G07 条件之上再 ×1.1（合计 ×1.32）。"指挥枢纽"取本国首都 `{国}-h0`：该 Hub 所在区控制者不是本国，或该 Hub 处于 S03/S08 网络冻结期，即视为"毁坏/失联"，此后 10 tick 内联合条令冻结（只停 ×1.1，G07 的 ×1.2 和本地任务照常）。跨战区接力与补给源自动切换见 `joint_relay_v1`。首都取法需作者确认。
+- V07：已知 V07 的国家，其 biomass 资源点从拥有 V07 起计时；若连续 120 周期存量没有被采出（任何一 tick 存量下降即重新计时），退化状态（B<.4Bmax）下的再生率从 .04 恢复一半到 .06。拥有 V07 之前的停采时间不计入，需作者确认。water 在本引擎是逐 tick 流量、没有"再生率"状态，V07 对 water 无可挂之处，未实现。
+
+- E12（部分）：已知 E12 时，电力线路允许穿越海洋格（单段 ≤60 格），海洋格不要求控制权，造价另加 superconductor×40；穿越海洋的线路线损封顶 8%。"跨国电力合同按实际潮流自动结算"仍阻塞（同 C28）。
+
+## active_scale 计量补全（2026-11-06）
+
+以下待定计量已按 07 表实现（2026-11-06 起已接入 full_match 评分）：E12 实际在线的跨海电力线路数；L12 已建成巨构数；G07 满足多兵种协同条件的编队数；G12 同上且联合条令在线；V07 满 120 周期恢复的 biomass 点数；V08 本国在运且所有受影响分区均同意的干预区数。I12 的 `running_molecular_lines` 原先按 P101 计数，P101 是 R09 突破验证包，已改为 P013/P016/P087 且满足 S5+ai_core。仍待定：L10 海上矿、L11 自动路线、G02 野战补给站。
+
+## megaproject_v1（2026-11-06，L12 巨构工程，部分）
+
+- 跨海峡大桥/海底隧道：`logistics/build_corridor` 的 road 或 rail 路径可以穿越 ≤8 个海洋格，需 L12；海洋格不要求主权。造价在普通陆路/铁路材料之上另加 structure_module×40 + steel×80 + cement×120 + metamaterial×4，全部在起点 Hub 预锁（不远程扣首都）；工期取 max(普通工期, 120 周期)。建成后该走廊容量为 800 标准载重/周期（800,000 mU），并记入 `megaprojects`。
+- 双模式与桥上高压线（2026-11-06）：建成时在同一资产上另建一条另一模式（road↔rail）的孪生走廊 `<eid>~<mode>`，同路径、各 800,000 mU/周期；再建一条 2 级输电线 `<eid>~power`（额定按普通 2 级线与 E09 规则）。三者共用桥体资产，桥体受损则一起受影响。「容量 800 兼容陆铁」理解为公路、铁路各 800；「同容量高压线」理解为 2 级高压线。两处都需作者确认。
+- 人工岛见 `artificial_island_v1`。
+- 工地作为军事目标沿用现有资产损伤规则，没有额外加权。工地作为军事目标沿用现有资产损伤规则，没有额外加权。
+
+## equity_stake_v1（2026-11-06，F04 主权基金）
+
+- 指令：`diplomacy/propose_contract`，`clause_type: 4`，`params: {mode: "stake", asset_id, share_mU, price_ru_mU}`。03 的九类合同没有给 F04 单独类型，这里挂在 4 joint_venture 下用 `mode: "stake"` 区分，需作者确认。
+- 买方（提案方）需 F04；对手方须是该设施的经营方且持有足够未质押份额；同一买方对同一设施的直接份额累计 ≤490 mU（49%）。设施须已建成，双方不在战争中，联合禁运禁止新合同。
+- 对手方 `accept_contract` 即"对方允许"：同一提交内 `price_ru_mU` 从买方 RU 储备转到卖方 RU 储备，份额过户；设施的产线登记到该设施的产权下，此后产出按经济产权拆分（P7 分红即产出按份额归属）。
+- 战时冻结：持有方与经营方处于战争状态时，持有方份额的产出暂归经营方，和平后恢复。规则原文是"可被对方冻结"，这里做成自动冻结，未提供手动冻结指令，需作者确认。
+- 合同 `duration_cycles` 只限定提案有效期，份额随设施永久存在。
+
+## C05 医疗系数 B1 修正（2026-11-06）
+
+- `M_eff = min(1, M) · (1 − 0.5 · δ_B1)`。`δ_B1 = 1 − b1_received / b1_needed`，按本枢纽本周期的 B1 电力服务计算，与 E26 的支持度扣分同口径；本周期没有 B1 需求时 δ_B1 = 0。
+- 此前按家庭用电满足率修正，现改为规则原文的 B1 欠供份额。
+- 测试：`tests/test_support_events.py::MedicalB1CouplingTests`。
+
+## active_scale 接入评分（2026-11-06）
+
+- 只在 `full_match`（scoring=True）装配：`active_scale_clock`（COMMANDS 阶段）重置周期计数，`active_scale`（SETTLEMENT，排在其余结算之后、`national_power` 之前）逐 Tick 计量，周期末写出 values/licensed。
+- 生产计量挂在 `economy.py` 的产线结算处，与 `industry_activity.production` 同一位置。
+- `national_power.technology(p)` 用当周期末的 ActiveScale 与 LicensedScale 调用 `scoring.technology_pillar`。COVERAGE 的 `technology.active_scale` 已改写。
+- 三个计量（`online_offshore_mines`、`active_automated_routes`、`supplied_field_depots`）没有业务回执，仍为 0；对应节点只拿 .15 底分。
+- `opening_economy` 不装配，空局哈希不变。快照在 full_match 中新增 `active_scale` 键。
+- 测试：`tests/test_full_match.py::ActiveScaleWiringTests`。
+
+## 国力控制支柱：供电槽位与战备补给比（2026-11-06）
+
+- `powered_slots`：本周期有正产出的产线，且运行 Tick 内累计「实收电 / 按批次所需电」≥ 0.8 才计。所需电与 `industry_activity.use_power` 同口径（`required_power × 批次 × 模式系数`）。
+- `Vready` 的 `supply_ratio`：编队本周期食、水累计「实拨 / 需求」取两者较小值，需求为零记 1。不在编队中的单位记 1。
+- `supply_ratio` 中的「实际补给连通标志」已实现（见 supply_flag_v1）；`connected` 已改为补给路径判定（见 supply_connected_v1）。`chokepoint_phi` 已实现（见下文 chokepoint_phi_v1）。
+- 测试：`tests/test_full_match.py::ControlInputsTests`。
+
+## batch_v1：64 seed 批次、影子基准与 INVALID_EVALUATION（2026-11-06）
+
+- `BatchRunner(batch, journal, run_match)`。每个 seed 跑两局：`player`（选手坐 `seat = k mod 8`，其余七席为 Super）与 `shadow`（同 seed、八席 Super）。`run_match` 由宿主提供，返回 `finalize_match` 报告。
+- 日志为追加式 JSON 行，每行 fsync；首行写批次 ID，换批次的日志拒绝复用。重启后跳过已完成的局。
+- 选手故障在局内托管为空命令，不进入这里。`run_match` 抛出的任何异常都按裁判、参考策略或宿主故障处理：写入 `INVALID_EVALUATION`，整批作废，不丢 seed、不重算均值，续跑也不再执行。
+- 计分：每个 seed 用 `seat_score(V_player[seat], V_shadow[seat])`，64 局均值。下界向下取整、上界向上取整，保持区间。任一局轨迹不满 2,880 周期时不给分（`incomplete`）。全部报告 `full_rules_accepted` 才标 `certified`。
+- 测试：`tests/test_batch_runner.py`。
+
+## checkpoint_v1：长局分段续跑（2026-11-06，开发用）
+
+- `engine/checkpoint.py`：在 Tick 边界把整个 state pickle 到磁盘（临时文件 + fsync + rename）。头部记录 tick、total_ticks、规则哈希、地图 seed 与版本、状态指纹和正文 SHA-256。
+- 续跑时用 `full_match(..., resume_state=state)` 重新装配：Economy 与命令处理器绑定到读回的 state，不重新初始化，也不新建 national_power/active_scale。读取时校验规则哈希、正文摘要和状态指纹，任一不符即拒绝。
+- CLI：`python3 -m organizer.rift_era match --checkpoint F [--checkpoint-every N] [--budget-s S] [--resume]`。超出墙钟预算时先写检查点，再以退出码 3 结束；带 `--resume` 再次运行即可接着跑。
+- 为了能 pickle，把常驻状态里的 lambda 换成模块级工厂或可调用类（`national_power`、`active_scale`、`industry_activity`、`stock_market` 的手续费折扣），取值不变，空局哈希一致。
+- 检查点只供开发与批次主机使用，不是回放，也不进入评分。正式记录仍以回放为准。
+- 验证：跨两个周期末续跑，结果与不中断的运行逐位一致（`tests/test_checkpoint.py`）；CLI 30 Tick 分两段跑，最终状态哈希与一次跑完相同。
+
+## 科技效果核对（2026-11-06）
+
+- 123 项科技全部有落点：要么引擎代码直接引用，要么作为配方或产线模式的 `requires_all` 解锁条件。
+- 新接：V03 海水淡化 P106 只能设在临海枢纽（atlas 的 `coastal_hubs`，或所在分区与海洋分区相邻，与港口口径相同），否则 `ERR_SITE_INCOMPATIBLE`。测试：`tests/test_tech_siting.py`。
+- 仍未接的附加效果：
+  - N11 与 P099 见 `orbital_platform_v1`。
+  - L12 双模式、桥上高压线、人工岛（见 megaproject_v1 后续段）。
+
+## desalination_brine_v1（2026-11-06）
+
+- 05 P106「浓盐水排放使所在海域分区渔获与 biomass 再生 −10%」：上一个已结束周期内有 P106 产线实际产出（batch>0）时，该产线所在分区及与之相邻的海洋分区记为受影响分区；位于这些分区的 biomass 资源点，本周期每 10 tick 的再生率乘 0.9。多座 P106 不叠加。
+- 「所在海域分区」把产线所在的沿岸陆地分区也算进去，因为现有 biomass 点都在陆地分区，只算海洋分区将永远不生效。需作者确认。
+- 渔获：引擎没有渔业，无可挂之处。
+- 测试：`tests/test_couplings.py::DesalinationBrineTests`。
+
+## V07 水源（2026-11-06，未实现）
+
+- 引擎里 water 是每周期由降水和上游决定的流量，没有储量、退化或再生率状态，采掘也不会让水源退化。V07「关停 120 周期后 water 再生率恢复 50%」因此没有可恢复的对象。需作者先定义水源退化（例如超采使分区自然来水下降），再接 V07。
+
+## joint_relay_v1（2026-11-06，G12 跨战区接力与补给源切换）
+
+- 前提：本国已知 G12 且联合条令在线（`joint_doctrine_online`，首都失守或网络冻结后 10 tick 内不在线）。
+- 任务接力：持久的 `military/blockade` 任务，若原编队已不存在、不属本国、在改装、不在边端点、正在行军或撤退，则交给本国另一支已站在该边端点、兵种合适、没有其他封锁任务且不在执行 escort 的编队（按编队 ID 取第一支）。任务保留原 command_id，`cancel_by_id` 仍有效；观测 `blockades.interdictions` 记一条 `RELAYED`。没有 G12 时任务照旧失效。
+- 补给源切换：编队所在 Hub 不能供给时，食水口粮（经济结算）和封锁的 `combat_tick` 补给依次改从本国在同一分区内其他可用基地（`base_online`）提取，按 Hub ID 排序。只取同分区实物，不远程从首都调货。普通交战的弹药补给仍按原规则，未接。
+- 「战区」引擎没有定义，这里把「跨战区」理解为任务在编队间接力、补给在同分区基地间切换，需作者确认。
+- 测试：`tests/test_blockade.py::BlockadeTests::test_g12_relays_the_blockade_task`、`test_g12_relay_supply_hubs_only_same_region_online_bases`。
+
+## artificial_island_v1（2026-11-06，L12 人工岛）
+
+- 命令：`industry/build_facility {hub_id, facility_type: "public", profile_id: "L12_island"}`，需 L12，工地须是本国控制的临海 Hub。岛址取离工地最近的海洋格（曼哈顿距离，平局取格号小者），同一格不能同时开两项工程。
+- 造价 structure_module×80、steel×160、cement×300、metamaterial×8，全部在工地 Hub 预锁；工期 240 周期。
+- 建成时原地扩展地图：新增陆地分区 `~islNNNN`（编号递增，排序恒在最后，`region_cells` 用的分区调色板不移位）与 Hub `<国>-islNNNN`；该格改为平原；与工地分区、原所在海域分区互设邻接；主权与控制属建造国，无人口、无河流来水；岛体资产即该 Hub 的公共仓库（300 基础容量，岛体受损则仓容按可用度下降）。记入 `megaprojects`，计入 L12 已成巨构数。
+- 岛上没有自带走廊，需另建港口（sea）或 L12 桥隧连通。
+- 需作者确认：岛址的选法、分区的 row/column 与风光取工地分区的值、岛上无人口。
+- 测试：`tests/test_island.py`（命令校验、预锁与建成；建岛后对局继续运行并通过 audit；第二座岛排序仍在最后）。
+
+## orbital_platform_v1（2026-11-06，N11 轨道工业平台）
+
+- 入轨：`intelligence/orbital_launch` 的 `payload` 可取 `orbital_platform`（需 N11），与卫星同样占一个轨道位、走同一发射队列与发射场，载荷为地面 P099 造出的 orbital_platform。入轨后在轨 360 周期，到期连同轨道库存一起销毁。
+- 产线：平台用 `industry/set_line {line_id: <平台 id>, recipe: "P081"|"P087"|null, mode: "general"}` 设定，只能跑 P081 或 P087，需对应配方科技；每周期末若轨道库存够一个周期的投入，就按配方消耗并产出 1.5 倍。平台自带反应堆与智能核心，不占地面电力和劳动力。
+- 往返：每周期末，若平台的基地 Hub（发射地）有空闲、未满 20 次的可复用运载器，以及 fuel×2、superalloy×0.5，就跑一次往返，计运载器 1 次寿命。下行运走轨道上的成品，上行把轨道库存补到一个周期的投入；每个方向至多 20 标准载重。货物在下一个周期末才到达（上行进轨道库存，下行进基地 Hub 的 available）。没有运载器或燃料就不运，原料断供则停产。
+- 每周期的顺序：先到货，再生产，再发下一趟。
+- 未做，需作者确认：04 写的「每次往返占用 orbital 槽位 1 周期」（03 没有这条，这里没有占位）；04 研究公式里 N11 平台对 N11/N12/I12/E12 研究 +15%；轨道产出不计入 industry_activity 的 VA。20 载重按「每个方向各 20」理解。
+- 测试：`tests/test_orbital_platform.py`（N11 校验、只许 P081/P087、上行—生产 ×1.5—下行三个周期、无运载器不运、到期销毁）。
+
+## round6 场景验收中发现并修复（2026-11-06）
+
+- 行动损耗汇总漏项：宣战等零物料敌对政策事件（`relations.action_cycles`，每次 0.001）和禁运/出口管制拒绝（`export_controls.action_cycles`）原先没有计入 `national_power.industry` 的 ACTION_LOSS。现已计入（round6 `zero_material_hostility`）。
+- cyber_compute_v1（03 S03）：已知 AI09 且本国首都通信网上一个算力周期的有效 cyber 算力扣除本周期已用后仍 ≥10 单位时，S03 系列改为消耗 cyber_suite×1 + 10 单位有效 cyber 算力（行动损耗按 `compute` 权重计，不扣 computing_equipment）；否则仍走基础替代 cyber_suite×1 + computing_equipment×1。替代路线的「10 B4 电」仍未计量。round6 `cyber_credit_floor` 的 Loss=240.0308 依此通过。
+- patrol_v1（06 formation_task patrol）：原先 patrol 与 move 等同，到达后停住。现在下令时记下编队所在分区为另一端；到达任一端后同一 tick 立刻按当前路网改道回另一端，循环到任务被替换或取消；回程路线被封锁则结束循环。行军耗油照常计 ACTION_LOSS（round6 `patrol_loop`：12 辆装甲一整周期 fuel 144、Loss 630）。
+- 待作者定义：round6 `world_pool_pressure` 所需的"国家向世界池买卖库存货"通道（02 第 121、220 行）在 06 接口里没有对应命令；`barrage_no_gains` 需要炮击可以设施为目标，目前火力只打单位。
+
+
+## round6 场景验收第二批（2026-11-06）
+
+- **chokepoint_phi_v1**：`Consumption` 按周期记录每个分区被终端回执（目录值，非信用加权）经过的价值，每张回执每分区只算一次；经过的分区 = 消环路径上的所有 Hub 所在分区，加上每段 leg 对应走廊（连接两端且 L1 长度相等的那条，按 id 取第一条；找不到则只算端点）的格子所在分区。`Phi_r=min(100, 近 20 周期之和/20)`，`sigma` 每个连通分区加 `.02*Phi_r`，仍受 `min(5, …)` 封顶。A 自己的出口路过本国分区也计入。
+- **ACL 收紧损耗**：`cargo.action_cycles`（对外国收紧走廊许可后每 tick 每目标 0.001）此前未计入工业支柱 ACTION_LOSS，已补。
+- **power_acl_v1**：`logistics/corridor_policy` 的 `corridor_id` 可以是输电线 id。线路经营者对外国设 `access_tier=0` 即拒入该国电源（电网路径搜索跳过该线），`≥1` 恢复；`toll_rate_bp` 对输电线无效（仍用目录过网费）。输电线默认对所有电源开放，所以每个拒入目标每 tick 记一次敌对政策事件（并入 `cargo.action_cycles`）。依据 03§7.3「输电/输水只有边控制拒入或物理战损可断」。输水线拒入未做。
+- **性能问题（已修，见 grid_fast_v1）**：原先只要存在可用输电线，`power.dispatch` 就退回 1 mU 步进的 `dispatch_reference`，实测全国负荷单次调度约 63 s。
+
+## batch_host_v1：批次宿主（2026-11-06）
+
+- `engine/batch_host.match_runner(submission, reference, replay_dir, ticks, map_kind)` 返回 `run_match(seed, seat, role)`：每次新建该 seed 的 full_match，按座位开 8 个策略会话（player 局选手坐 `seat`，其余参考；shadow 局 8 席参考），用 `MatchDriver` 跑完并返回 `finalize_match` 报告（附 seed/seat/role/submission_owner），回放写 `replay_dir/<seed>-<role>-<seat>.jsonl`。
+- 故障归属：选手故障留在局内（托管空命令、照常计分）。参考席的握手或任一决策出现错误或托管，立即抛 `ReferenceFault`（`InfrastructureFault` 子类）。引擎不变量、驱动/观测故障、宿主异常原样抛出。三者都逃出 `run_match`，由 `BatchRunner` 写 `INVALID_EVALUATION` 作废整批。
+- CLI：`python -m organizer.rift_era batch --manifest M --journal J --submission S --reference R --cgroup C --replay-dir D [--ticks] [--limit]`。manifest 不存在时按 CSPRNG 新建；manifest 的规则或引擎哈希不符则拒绝。参考归档的 sha256 记作 `reference_hash`。正式 Super 池由作者提供。
+
+## grid_fast_v1：有输电线时的快速调度（2026-11-06）
+
+- `dispatch` 有线路时调用 `dispatch_reference(..., fast_local=True)`，结果（receipts、received、spent、剩余电源、剩余线容量）与 1 mU oracle 逐位一致；`iterations` 只是诊断值，会不同。
+- 本地阶段：每个 (rank, band) 组的本地阶段改用无线路快速路径同一套按 Hub、按报价排序电源的 `fair_service` 批量服务（各 Hub 本地电源不共享）。
+- 网络阶段：当组内活跃负荷都没有用户价格上限时，`_group_batch` 一次提交 oracle 序列中最长的一段前缀，这段里每个负荷都沿用当前的 (电源, 路径)。理由：排在它前面的选项失败原因在资源只减少、spent 只增加、别的收据不变时不会恢复；选择顺序就是 `fair_service` 的前缀。前缀在任何负荷触及自身预算、单步成本比（`C(r)≤limit·r`，用 `C(r)<c·r+D` 的界跳过安全区，其余逐步精确检查）或需求时截断，在共享电源或线容量装不下整段时二分缩短。截断点之后交回原 oracle 单步。
+- 有用户价格上限的负荷在网络阶段仍逐 mU（其更早选项可能因收到量增加而恢复可负担）。
+- 验证：`tests/test_power_fast.py` 随机电网 850 例与 oracle 全等；另离线 2,700 例全等；真实对局一个 tick 的全国调度（360 负荷、4 条线）与 oracle 全等，耗时从 62.7 s 降到 0.07 s。
+
+## supply_connected_v1（07 U_ctrl「连接」）
+
+- 根：本国首都 `{p}-h0`（其分区须为 p 实控）与替代指挥 Hub。替代 Hub 位于 p 实控分区，且当前有 `food` ≥1 单位（p 的 available 库存），并有通信设备：`communication_equipment` ≥1 单位的 available 库存，或 p 在该 Hub 有在线的 `radio_backbone`。没有任何根时，全部分区都不连通。
+- 路径：在货运走廊图上做 BFS。可用边须满足 `health_mU>0`（"未损毁"理解为未被摧毁，部分受损仍可通行），且 `CargoOperations.permitted(p, eid)` 为真，即 ACL tier≠0、封锁<1、外国端点有明确授权（tier≥1、过境合同或城邦权）、海空端点码头在线。授权按商业补给（tier 1）判定，不要求军需 tier 2。
+- 到达的分区：已到达 Hub 所在的分区，加上已用走廊格子经过的分区，再与 p 当前实控分区取交集。没有 Hub、也没有可用走廊经过的分区不连通。
+- 待作者确认："未损毁"取 health>0 还是满血；授权层级取 1 还是 2；替代 Hub 的通信设备是否只认已安装系统。
+- 测试：`tests/test_supply_connected.py`（5 项）。
+
+## supply_flag_v1（07 Vready「实际补给连通标志」）
+
+- `supply_ratio = min(本期食水实拨/需求, 标志)`。标志为 0 或 1：单位所在分区属于 `supply_reach(p)` 记 1，否则记 0，该单位不计战备。
+- `supply_reach(p)` 与 supply_connected_v1 同一搜索（同样的根、同样的走廊可用条件），但**不与 p 实控分区取交集**：经授权、未损毁路径到达的外国分区或海域也算连通，远征单位只要补给线通就保留战备。`connected_regions(p) = supply_reach(p) ∩ p 实控分区`。
+- 不在编队中的单位食水比仍记 1，但同样要乘标志。
+- 空局 12 Tick 哈希与基线一致（全部单位都在本国连通分区内）。
+- 待作者确认：远征分区是否也应要求实控；单位按自身 `region` 判定（编队移动时取单位所在分区）。
+- 测试：`tests/test_supply_connected.py` 新增 3 项（共 8 项）。
+

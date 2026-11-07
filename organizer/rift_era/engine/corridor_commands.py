@@ -34,7 +34,14 @@ class CorridorCommands:
         if any(abs(u % SIZE - v % SIZE) + abs(u // SIZE - v // SIZE) != 1 for u, v in zip(cells, cells[1:])):
             raise RuleViolation('ERR_SITE_INCOMPATIBLE', 'non-adjacent path cells')
         palette = sorted(state.initial.map.regions)
-        if order['mode'] not in ('sea', 'air') and any(state.initial.map.regions[palette[state.initial.map.region_cells[c]]].sovereign != owner for c in cells):
+        # 04/03 L12: a strait bridge or undersea tunnel carries a road or railway
+        # over at most 8 sea cells (megaproject_v1).
+        sea = {c for c in cells if state.initial.map.terrain_cells[c] == 0} if mode in ('road', 'rail') else set()
+        if sea:
+            if len(sea) > 8:
+                raise RuleViolation('ERR_SITE_INCOMPATIBLE', 'land corridor crosses ocean')
+            industry._tech(owner, {'L12'})
+        if order['mode'] not in ('sea', 'air') and any(state.initial.map.regions[palette[state.initial.map.region_cells[c]]].sovereign != owner for c in cells if c not in sea):
             raise RuleViolation('ERR_NO_PERMISSION', 'path traverses uncontrolled territory')
         if mode != 'road' and level != 1:
             raise RuleViolation('ERR_SCHEMA', 'only roads have a second construction grade')
@@ -51,8 +58,6 @@ class CorridorCommands:
             if not any(r.mode == 'river' and r.cells in (cells, tuple(reversed(cells)))
                        for r in state.initial.map.routes.values()):
                 raise RuleViolation('ERR_SITE_INCOMPATIBLE', 'no mapped river on channelization path')
-        if mode in ('road', 'rail') and any(state.initial.map.terrain_cells[c] == 0 for c in cells):
-            raise RuleViolation('ERR_SITE_INCOMPATIBLE', 'land corridor crosses ocean')
         if level == 2 and mode == 'road':
             industry._tech(owner, {'L01', 'L02'})
         existing = next((e for e, path in ops.paths.items()
@@ -79,12 +84,17 @@ class CorridorCommands:
         scale = Q(1) if mode in ('sea', 'air') else blocks
         materials = {g: ceil(q * 1000 * scale) for g, q in coefficients.items()}
         duration = ceil((4 if level == 1 else 8) * blocks if mode == 'road' else (12 if mode == 'rail' else 8 if mode == 'river' else 20 if mode == 'sea' else 18) * scale) * ctx.clock.cycle_ticks
+        if sea:
+            for good, q in {'structure_module': 40, 'steel': 80, 'cement': 120, 'metamaterial': 4}.items():
+                materials[good] = materials.get(good, 0) + q * 1000
+            duration = max(duration, 120 * ctx.clock.cycle_ticks)
         jid, aid = industry._ids(owner, order)
         target = existing or f'{mode}:{aid}'
         asset = industry._asset(aid, owner, a, materials)
         job = WorkOrder(jid, str(int(order['id'])), owner, a, 'build_corridor', aid, duration,
                         materials, industry._service_cost(owner, blocks), temporary_asset=aid,
-                        payload={'corridor_id': target, 'a': a, 'b': b, 'cells': cells, 'level': level, 'mode': mode})
+                        payload={'corridor_id': target, 'a': a, 'b': b, 'cells': cells, 'level': level, 'mode': mode,
+                                 **({'megaproject': 'L12_bridge'} if sea else {})})
         return state.work.prepare_start(job, lambda: state.initial.assets.__setitem__(aid, asset))
 
     @staticmethod
@@ -105,6 +115,25 @@ class CorridorCommands:
         ops.road_assets[eid] = job.target
         ops.corridors[eid].capacity_mU_cycle = ({'road': 30000 if data['level'] == 1 else 100000,
             'rail': 320000, 'river': 180000, 'sea': 240000, 'air': 60000}[data['mode']])
+        if data.get('megaproject') == 'L12_bridge':
+            ops.corridors[eid].capacity_mU_cycle = 800000  # L12: 800 standard loads per cycle
+            # 03 L12 (megaproject_v1): the structure carries road and rail at
+            # once and a high-voltage line of the same span. The twin deck and
+            # the line are separate edges on the same asset, so damage to the
+            # structure takes all three down together.
+            other = 'rail' if data['mode'] == 'road' else 'road'
+            twin = f'{eid}~{other}'
+            ops.corridors[twin] = Corridor(twin, data['a'], data['b'], len(data['cells']) - 1, 800000)
+            ops.corridors[twin].mode = other
+            ops.levels[twin] = 1
+            ops.paths[twin] = data['cells']
+            ops.road_assets[twin] = job.target
+            from .utility_network import UtilityLink
+            line = f'{eid}~power'
+            state.utilities.links[line] = UtilityLink(line, job.owner, data['a'], data['b'], 'power', 2,
+                                                      tuple(data['cells']), job.target)
+            state.megaprojects[eid] = {'kind': 'L12_bridge', 'owner': job.owner, 'asset': job.target,
+                                       'twin': twin, 'power_line': line}
         if data['mode'] in ('sea', 'air'):
             # One commissioned terminal at each endpoint is required. The
             # work order paid both facilities' materials above; no free route

@@ -69,7 +69,20 @@ class Construction:
         return self.state.native(job.owner, f'build:{job.id}')
 
     def payer(self, job: WorkOrder) -> CashAccount:
+        escrow = job.payload.get('capex_escrow')
+        if escrow is not None:  # 06 C30: secondary-offering proceeds fund only the listed facilities
+            return CashAccount(job.owner, f'capex_escrow:{escrow}', self.state.native(job.owner, 'treasury').currency)
         return self.state.native(job.owner, 'treasury')
+
+    def _assign_escrow(self, job: WorkOrder) -> None:
+        market = self.state.stock_market
+        facility = job.target if job.target in self.state.initial.facilities else job.payload.get('facility')
+        for cid in sorted(market.escrow_targets):
+            if facility in market.escrow_targets[cid]:
+                account = CashAccount(job.owner, f'capex_escrow:{cid}', self.state.native(job.owner, 'treasury').currency)
+                if self.state.initial.cash.balance(account).native_mU > 0:
+                    job.payload['capex_escrow'] = cid
+                return
 
     def _required(self, job: WorkOrder, *, initial=False):
         goods, cash, _, _ = job.due(self.whole)
@@ -95,6 +108,8 @@ class Construction:
         if (job.id in self.jobs or job.duration_ticks <= 0 or job.elapsed or job.consumed_mU or job.cash_paid_mU
                 or self.on_complete is None or self.on_cancel is None):
             raise InvariantViolation('invalid work order or unbound lifecycle handler')
+        if 'capex_escrow' not in job.payload and getattr(self.state.stock_market, 'escrow_targets', None):
+            self._assign_escrow(job)
         goods, money = self._required(job, initial=True)
         due_goods,_,_,_=job.due(self.whole)
         money+=self.material_budget(job,due_goods)

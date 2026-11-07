@@ -168,6 +168,13 @@ class Payments:
     def unpaid_fraction(self, payer: CashAccount) -> Fraction:
         return sum((q for (source, _, _), q in self.residuals.items() if source == payer), Q(0))
 
+    def unpaid_by_source(self) -> dict[CashAccount, Fraction]:
+        """unpaid_fraction for every payer at once; valid until residuals change."""
+        result: dict[CashAccount, Fraction] = {}
+        for (source, _, _), q in self.residuals.items():
+            result[source] = result.get(source, Q(0)) + q
+        return result
+
 
 @dataclass(frozen=True)
 class FXRequest:

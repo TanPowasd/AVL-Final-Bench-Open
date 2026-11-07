@@ -5,6 +5,7 @@ and compute require a real civilian use; research/housing/data flow counters
 and extraction never manufacture positive industrial VA. No method issues cash.
 """
 from collections import defaultdict,deque
+from fractions import Fraction
 from dataclasses import dataclass,field
 
 from .errors import InvariantViolation
@@ -34,9 +35,9 @@ class IndustryActivity:
         self.power_sources={}
         self.history={cid:deque(maxlen=20) for cid in state.initial.companies}
         self.last_asset_va={};self.last_company_va={};self.last_company_value={}
-        self.power_need=defaultdict(lambda:Q(0));self.power_short=defaultdict(lambda:Q(0))
+        self.power_need=defaultdict(Fraction);self.power_short=defaultdict(Fraction)
         self.shortage_history={cid:deque(maxlen=5) for cid in state.initial.companies}
-        self.finance_used=defaultdict(lambda:Q(0));self.completed_finance={}
+        self.finance_used=defaultdict(Fraction);self.completed_finance={}
 
     def begin_tick(self,ctx):
         if ctx.cycle!=self.cycle:

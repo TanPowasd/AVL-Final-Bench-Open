@@ -576,6 +576,13 @@ class CargoOperations:
             for target, tier in edge.restricted.items():
                 if operator not in (None, target) and edge.tier(target) < tier:
                     targets[operator].add(target)
+        # power_acl_v1: a refused foreign source on a controlled power line is a
+        # standing restriction too (lines are open to every source by default).
+        utilities = getattr(self.s, 'utilities', None)
+        for link in sorted(utilities.links.values(), key=lambda l: l.id) if utilities is not None else ():
+            if link.mode == 'power' and link.denied:
+                operator = utilities.operator(link)
+                targets[operator].update(t for t in link.denied if t != operator)
         row = self.action_cycles.setdefault(ctx.cycle, {})
         for owner, others in targets.items():
             row[owner] = row.get(owner, Q(0)) + Q(len(others), 1000)
@@ -738,12 +745,29 @@ class CorridorPolicyCommands:
     def __init__(self, state):
         self.s = state
 
+    def _power_line(self, owner, link, target, tier):
+        """power_acl_v1 (03 section 7 item 3): the controller of a power line may refuse
+        a foreign nation's generation on it (tier 0) or admit it again (tier >= 1).
+        Tolls stay the dispatch's catalogue toll; toll_rate_bp is ignored here."""
+        if self.s.utilities.operator(link) != owner:
+            raise RuleViolation('ERR_NO_PERMISSION')
+        if target not in self.s.initial.diplomacy.actors or target == owner:
+            raise RuleViolation('ERR_SCHEMA')
+        def commit():
+            denied = set(link.denied)
+            (denied.add if tier == 0 else denied.discard)(target)
+            link.denied = tuple(sorted(denied))
+        return PreparedCommand(commit)
+
     def prepare(self, owner, order, ctx):
         fields(order, {'corridor_id': str, 'target_nation': str, 'access_tier': int, 'toll_rate_bp': int})
         eid, target = order['corridor_id'], order['target_nation']
         tier, bp = order['access_tier'], order['toll_rate_bp']
         if not 0 <= tier <= 3 or not 0 <= bp <= 2000:
             raise RuleViolation('ERR_SCHEMA')
+        link = self.s.utilities.links.get(eid) if hasattr(self.s, 'utilities') else None
+        if link is not None and link.mode == 'power' and eid not in self.s.cargo.corridors:
+            return self._power_line(owner, link, target, tier)
         if eid not in self.s.cargo.corridors:
             raise RuleViolation('ERR_NO_VISIBLE_TARGET')
         if self.s.cargo.operator(eid) != owner:

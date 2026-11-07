@@ -36,7 +36,11 @@ def settle_residents(state, ctx):
                                      max(Q(1), population.total_mU * Q(3, 100))))
         medical = min(Q(1), Q(len(known & {'A04', 'A08', 'A11'}), 3) *
                       (min(Q(1), satisfaction['medicine']) + min(Q(1), satisfaction['medical_supplies'])))
-        medical *= 1 - Q(1, 2) * (1 - min(Q(1), satisfaction['electricity']))
+        # C05: M_eff = min(1, M) * (1 - 0.5 * delta_B1), delta_B1 the unserved
+        # share of this hub's B1 power demand (same measure E26 uses).
+        delta_b1 = (1 - min(Q(1), Q(metric.b1_received_mU, metric.b1_needed_mU))
+                    if metric.b1_needed_mU else Q(0))
+        medical *= 1 - Q(1, 2) * delta_b1
         gene = min(Q(1), metric.household_consumed.get('gene_therapy', Q(0)) /
                    max(Q(1), population.total_mU * Q(1, 1000))) if 'A11' in known else Q(0)
         satisfaction['gene_therapy'] = gene
